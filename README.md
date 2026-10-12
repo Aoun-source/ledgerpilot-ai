@@ -71,7 +71,7 @@ docker compose up --build -d   # http://localhost:8501
 ## Tests and evaluation
 
 ```bash
-python -m pytest -q                      # rules engine + pipeline, offline
+python -m pytest -q                      # 143 tests, offline, about 40 s
 python eval/run_eval.py --label "Qwen2.5-32B"     # full live pipeline on 20 cases -> docs/evaluation.md
 python scripts/benchmark_amd.py --label "Qwen2.5-32B"   # cost and speed on MI300X -> docs/benchmark.md
 ```
@@ -95,8 +95,13 @@ src/ledgerpilot/
   audit.py                  SQLite audit log
 scripts/                    make_samples, smoke_test, upload_library, benchmark_amd
 eval/run_eval.py            live evaluation against ground truth
-tests/                      offline tests (54)
+tests/                      143 offline tests: rules, edge cases, real HTTP against a local
+                            fake of Evolus and vLLM, and a click-through of every app screen
 ```
+
+## Quality checks
+
+See [docs/QA_REPORT.md](docs/QA_REPORT.md) for what was tested and what was fixed.
 
 ## Limitations
 

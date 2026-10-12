@@ -7,7 +7,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
-RUN python scripts/make_samples.py && python -m pytest -q
+# Fast offline sanity check of the rules engine (the full suite runs in CI)
+RUN python scripts/make_samples.py && python -m pytest -q tests/test_rules.py tests/test_edge_cases.py
 
 # Audit DB lives on a volume so it survives restarts
 ENV AUDIT_DB=/data/ledgerpilot_audit.db
