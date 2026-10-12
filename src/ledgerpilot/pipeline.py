@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from pydantic import ValidationError
 
@@ -19,9 +20,16 @@ from .agent_client import AgentVerdict, ClerkAgent
 from .audit import AuditLog
 from .config import Settings
 from .evolus_client import EvolusClient, EvolusError
-from .fraud import _mask, load_vendor_master
+from .fraud import load_vendor_master, mask
 from .rules import evaluate, final_route
-from .schemas import Discrepancy, GoodsReceipt, Invoice, PastInvoice, PurchaseOrder, Route
+from .schemas import (
+    Discrepancy,
+    GoodsReceipt,
+    Invoice,
+    PastInvoice,
+    PurchaseOrder,
+    Route,
+)
 
 DOC_KINDS = ("po", "grn", "invoice")
 MODELS = {"po": PurchaseOrder, "grn": GoodsReceipt, "invoice": Invoice}
@@ -44,6 +52,10 @@ class CaseResult:
     trace: dict[str, Any] = field(default_factory=dict)
     error: Optional[str] = None
     audit_id: Optional[int] = None
+    steps: list[dict[str, Any]] = field(default_factory=list)  # timeline shown in the UI
+
+    def step(self, name: str, where: str, seconds: float, ok: bool = True, note: str = "") -> None:
+        self.steps.append({"step": name, "where": where, "seconds": round(seconds, 2), "ok": ok, "note": note})
 
 
 def unwrap(data: Any) -> dict[str, Any]:
@@ -97,6 +109,8 @@ class Pipeline:
             res.rule_route, res.discrepancies = decision.route, decision.discrepancies
             res.money_at_risk = decision.money_at_risk
             res.timings["rules_s"] = time.perf_counter() - t
+            res.step("Three-way match + fraud checks", "Python (Decimal)", res.timings["rules_s"],
+                     note=f"{len(decision.discrepancies)} finding(s)")
 
             progress("Asking the LedgerPilot agent (open model on AMD MI300X via Evolus)")
             res.agent = self._ask_agent(po, grn, inv, decision, res)
@@ -111,8 +125,13 @@ class Pipeline:
                 res.workflow_execution_id = self._start_workflow(inv, res)
         except _CaseError as exc:
             res.route, res.error = Route.ERROR, str(exc)
+        except Exception as exc:  # noqa: BLE001 - a case must never crash the app or be silently approved
+            res.route, res.error = Route.ERROR, f"Unexpected error ({type(exc).__name__}: {str(exc)[:200]}). A person must process this invoice."
         res.timings["total_s"] = time.perf_counter() - t0
-        res.audit_id = self._record(res)
+        try:
+            res.audit_id = self._record(res)
+        except Exception as exc:  # noqa: BLE001
+            res.trace["audit_error"] = f"{type(exc).__name__}: {exc}"[:300]
         return res
 
     # ------------------------------------------------------------------ steps
@@ -122,13 +141,17 @@ class Pipeline:
             if kind not in docs:
                 raise _CaseError(f"Missing document: {kind}")
             name, blob = docs[kind]
+            if not blob:
+                raise _CaseError(f"The {kind} file is empty. Upload it again.")
             progress(f"Extracting {kind.upper()} with Evolus document extractor")
             t = time.perf_counter()
             try:
                 result = self.evolus.extract(self.extractor_ids[kind], name, blob)
             except EvolusError as exc:
+                res.step(f"Extract {kind.upper()}", "Evolus extractor", time.perf_counter() - t, ok=False, note=str(exc)[:120])
                 raise _CaseError(f"Could not read the {kind} document ({exc}). A person must process it.") from exc
             res.timings[f"extract_{kind}_s"] = time.perf_counter() - t
+            res.step(f"Extract {kind.upper()}", "Evolus extractor", res.timings[f"extract_{kind}_s"])
             res.trace[f"extract_{kind}"] = {"execution_id": result.execution_id, "audit_id": result.audit_id}
             data = unwrap(result.data)
             res.extracted[kind] = data
@@ -142,7 +165,7 @@ class Pipeline:
 
     def _ask_agent(self, po, grn, inv, decision, res: CaseResult) -> Optional[AgentVerdict]:
         inv_view = inv.model_dump(mode="json")
-        inv_view["bank_iban"] = _mask(inv.bank_iban)  # the agent never needs the full account number
+        inv_view["bank_iban"] = mask(inv.bank_iban)  # the agent never needs the full account number
         case = {
             "purchase_order": po.model_dump(mode="json"),
             "goods_received_note": grn.model_dump(mode="json"),
@@ -155,8 +178,11 @@ class Pipeline:
             verdict = self.agent.review(case)
         except Exception as exc:  # noqa: BLE001
             res.trace["agent_error"] = f"{type(exc).__name__}: {exc}"[:300]
+            res.step("Agent review", "Evolus agent on AMD MI300X", 0, ok=False, note="unreachable: rule route used")
             return None
         res.timings["agent_s"] = verdict.latency_s
+        res.step("Agent review", "Evolus agent on AMD MI300X", verdict.latency_s, ok=verdict.parsed,
+                 note=f"route {verdict.route.value}" if verdict.route else "reply not understood: rule route used")
         res.trace["agent"] = {"conversation_id": verdict.conversation_id, "parsed": verdict.parsed}
         return verdict
 
@@ -164,12 +190,12 @@ class Pipeline:
         bullets = "\n".join(f"- {d.message}" for d in res.discrepancies)
         if res.route is Route.FRAUD:
             facts = (f"Internal alert to the finance manager. Payment for invoice {inv.invoice_number} from "
-                     f"{inv.supplier_name} ({inv.supplier_id}), total {inv.total} {inv.currency}, is blocked "
+                     f"{inv.supplier_name or 'the supplier'} ({inv.supplier_id}), total {inv.total} {inv.currency}, is blocked "
                      f"as possible fraud. Findings:\n{bullets}\nAsk them to verify with the supplier by phone "
                      f"using the contact on file, not details printed on the invoice.")
         else:
             question = res.agent.supplier_question if res.agent and res.agent.supplier_question else ""
-            facts = (f"To {inv.supplier_name}, accounts receivable. Our ref: PO {inv.po_number}. Your invoice "
+            facts = (f"To {inv.supplier_name or 'the supplier'}, accounts receivable. Our ref: PO {inv.po_number}. Your invoice "
                      f"{inv.invoice_number} dated {inv.invoice_date}, total {inv.total} {inv.currency}, is on hold. "
                      f"Findings:\n{bullets}\n{question}\nAsk for a credit note or corrected invoice.")
         t = time.perf_counter()
@@ -177,8 +203,10 @@ class Pipeline:
             draft = self.evolus.draft_supplier_email(facts)
         except EvolusError as exc:
             res.trace["email_error"] = str(exc)
+            res.step("Draft email", "Evolus AI Tool", time.perf_counter() - t, ok=False, note=str(exc)[:120])
             return ""
         res.timings["email_s"] = time.perf_counter() - t
+        res.step("Draft email", "Evolus AI Tool", res.timings["email_s"])
         return draft
 
     def _start_workflow(self, inv: Invoice, res: CaseResult) -> Optional[str]:
@@ -191,8 +219,10 @@ class Pipeline:
             exec_id = self.evolus.start_workflow(f"LedgerPilot case {res.label}: {res.route.value}. {summary}", params)
         except EvolusError as exc:
             res.trace["workflow_error"] = str(exc)
+            res.step("Start routing workflow", "Evolus workflow", time.perf_counter() - t, ok=False, note=str(exc)[:120])
             return None
         res.timings["workflow_start_s"] = time.perf_counter() - t
+        res.step("Start routing workflow", "Evolus workflow", res.timings["workflow_start_s"], note=f"execution {exec_id}")
         return exec_id
 
     def _record(self, res: CaseResult) -> int:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,8 +21,19 @@ class ConfigError(RuntimeError):
 
 
 def _get(name: str, default: str | None = None) -> str | None:
-    value = os.getenv(name, default)
-    return value.strip() if isinstance(value, str) else value
+    """Read an env var; empty or whitespace-only values count as unset."""
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    return value.strip()
+
+
+def _decimal_env(name: str, default: str) -> Decimal:
+    raw = _get(name, default)
+    try:
+        return Decimal(raw)
+    except InvalidOperation as exc:
+        raise ConfigError(f"{name} must be a number, got {raw!r}") from exc
 
 
 @dataclass
@@ -47,10 +58,13 @@ class Settings:
     library_id: str | None = field(default_factory=lambda: _get("EVOLUS_LIBRARY_ID"))
 
     # Business rules
-    price_tolerance: Decimal = field(default_factory=lambda: Decimal(_get("PRICE_TOLERANCE", "0.00")))
+    price_tolerance: Decimal = field(default_factory=lambda: _decimal_env("PRICE_TOLERANCE", "0.00"))
     vendor_master_path: Path = field(default_factory=lambda: Path(_get("VENDOR_MASTER", str(ROOT / "data" / "vendor_master.csv"))))
     history_path: Path = field(default_factory=lambda: Path(_get("PAYMENT_HISTORY", str(ROOT / "data" / "history.json"))))
     audit_db: Path = field(default_factory=lambda: Path(_get("AUDIT_DB", str(ROOT / "ledgerpilot_audit.db"))))
+
+    def placeholder_vllm(self) -> bool:
+        return bool(self.vllm_base_url and "<" in self.vllm_base_url)
 
     def missing(self) -> list[str]:
         required = {

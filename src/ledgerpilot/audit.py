@@ -64,8 +64,11 @@ class AuditLog:
     def history(self) -> list[PastInvoice]:
         """Invoices already processed here count for duplicate detection."""
         with self._conn() as c:
+            # Failed extractions and invoices a person rejected were never payable, so a
+            # corrected resubmission must not be flagged as a duplicate of them.
             rows = c.execute("SELECT supplier_id, invoice_number, invoice_date, total FROM cases "
-                             "WHERE invoice_number IS NOT NULL").fetchall()
+                             "WHERE invoice_number IS NOT NULL AND final_route != 'processing_error' "
+                             "AND (review_decision IS NULL OR review_decision != 'rejected_by_reviewer')").fetchall()
         out = []
         for r in rows:
             try:

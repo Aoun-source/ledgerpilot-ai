@@ -71,15 +71,31 @@ class ClerkAgent:
         return parse_verdict(text, raw_resp.headers.get("X-Conversation-Id"), latency)
 
 
-def parse_verdict(text: str, conversation_id: Optional[str] = None, latency: float = 0.0) -> AgentVerdict:
-    data: dict[str, Any] = {}
-    match = re.search(r"\{.*\}", text, re.S)
-    if match:
+def _first_json_object(text: str) -> dict[str, Any]:
+    """Find the first JSON object in a reply, ignoring code fences and surrounding prose."""
+    decoder = json.JSONDecoder()
+    cleaned = re.sub(r"```(?:json)?", "", text)
+    for i, ch in enumerate(cleaned):
+        if ch != "{":
+            continue
         try:
-            data = json.loads(match.group(0))
+            obj, _ = decoder.raw_decode(cleaned[i:])
         except json.JSONDecodeError:
-            data = {}
-    route_text = str(data.get("route", "")).strip()
+            continue
+        if isinstance(obj, dict) and "route" in obj:
+            return obj
+    return {}
+
+
+def parse_verdict(text: str, conversation_id: Optional[str] = None, latency: float = 0.0) -> AgentVerdict:
+    data = _first_json_object(text)
+    evidence = data.get("evidence", [])
+    if isinstance(evidence, str):
+        evidence = [evidence]
+    elif not isinstance(evidence, list):
+        evidence = []
+    data["evidence"] = evidence
+    route_text = str(data.get("route", "")).strip().lower()
     route = Route(route_text) if route_text in ROUTES else None
     return AgentVerdict(
         route=route,

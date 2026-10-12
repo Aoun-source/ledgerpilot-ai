@@ -17,6 +17,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from reportlab import rl_config
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -27,6 +28,7 @@ DATA = ROOT / "data"
 OUT = DATA / "samples"
 TODAY = date(2026, 10, 5)
 random.seed(7)
+rl_config.invariant = 1  # byte-identical PDFs on every run
 
 VENDORS = [
     {"supplier_id": "V001", "name": "Acme Office Supplies Ltd", "iban": "GB82ACME00001234567801", "currency": "USD"},
@@ -75,7 +77,7 @@ def build_case(n: int, supplier: str, picks: list[tuple[int, int]], tax_rate: st
         grn_lines.append({"sku": sku, "description": desc, "qty_received": str(qty)})
         inv_lines.append({"sku": sku, "description": desc, "qty": str(qty), "unit_price": price,
                           "line_total": str(d(qty) * d(price))})
-    subtotal = sum(d(l["line_total"]) for l in inv_lines)
+    subtotal = sum(d(ln["line_total"]) for ln in inv_lines)
     tax = (subtotal * d(tax_rate)).quantize(Decimal("0.01"))
     po_date = TODAY - timedelta(days=20 + n % 5)
     return {
@@ -92,9 +94,9 @@ def build_case(n: int, supplier: str, picks: list[tuple[int, int]], tax_rate: st
 
 
 def retotal(inv: dict) -> None:
-    for l in inv["lines"]:
-        l["line_total"] = str(d(l["qty"]) * d(l["unit_price"]))
-    sub = sum(d(l["line_total"]) for l in inv["lines"])
+    for ln in inv["lines"]:
+        ln["line_total"] = str(d(ln["qty"]) * d(ln["unit_price"]))
+    sub = sum(d(ln["line_total"]) for ln in inv["lines"])
     inv["subtotal"] = str(sub)
     inv["total"] = str(sub + d(inv["tax"]))
 
@@ -116,11 +118,13 @@ def cases() -> list[dict]:
 
     # Price variance: the $200 demo case
     c = build_case(7, "V001", [(0, 100)])
-    c["invoice"]["lines"][0]["unit_price"] = "22.00"; retotal(c["invoice"])
+    c["invoice"]["lines"][0]["unit_price"] = "22.00"
+    retotal(c["invoice"])
     add("Unit price $22 billed vs $20 on PO for 100 chairs ($200 overcharge)", "hold_for_review", ["PRICE_VARIANCE"], c)
 
     c = build_case(8, "V002", [(1, 5)])
-    c["invoice"]["lines"][0]["unit_price"] = "214.50"; retotal(c["invoice"])
+    c["invoice"]["lines"][0]["unit_price"] = "214.50"
+    retotal(c["invoice"])
     add("Small price increase on monitors", "hold_for_review", ["PRICE_VARIANCE"], c)
 
     c = build_case(9, "V004", [(1, 100)])
@@ -128,12 +132,15 @@ def cases() -> list[dict]:
     add("Billed 100 towel sets, only 90 received", "hold_for_review", ["QTY_NOT_RECEIVED"], c)
 
     c = build_case(10, "V005", [(0, 10)])
-    c["invoice"]["lines"][0]["qty"] = "12"; c["grn"]["lines"][0]["qty_received"] = "12"; retotal(c["invoice"])
+    c["invoice"]["lines"][0]["qty"] = "12"
+    c["grn"]["lines"][0]["qty_received"] = "12"
+    retotal(c["invoice"])
     add("Billed 12 packs, PO ordered 10 (12 delivered)", "hold_for_review", ["QTY_OVER_PO"], c)
 
     c = build_case(11, "V001", [(2, 20)])
     c["invoice"]["lines"][0]["line_total"] = "390.00"
-    c["invoice"]["subtotal"] = "390.00"; c["invoice"]["total"] = "390.00"
+    c["invoice"]["subtotal"] = "390.00"
+    c["invoice"]["total"] = "390.00"
     add("Line total wrong: 20 x 18.50 printed as 390.00", "hold_for_review", ["LINE_ARITHMETIC"], c)
 
     c = build_case(12, "V003", [(1, 10)], "0.22")
@@ -156,11 +163,13 @@ def cases() -> list[dict]:
     add("Perfect invoice, but bank account changed (payment-diversion fraud)", "escalate_fraud", ["BANK_MISMATCH"], c)
 
     c = build_case(16, "V002", [(0, 5), (2, 5)])
-    c["invoice"]["invoice_number"] = "NW-55120"; c["invoice"]["total"] = c["invoice"]["subtotal"]
+    c["invoice"]["invoice_number"] = "NW-55120"
+    c["invoice"]["total"] = c["invoice"]["subtotal"]
     add("Invoice number already paid last month", "escalate_fraud", ["DUPLICATE_INVOICE"], c)
 
     c = build_case(17, "V005", [(0, 30), (1, 18)])  # 30 x 38 + 18 x 42 = 1,896.00
-    c["invoice"]["tax"] = "24.00"; retotal(c["invoice"])  # total 1,920.00 = same as HP-3301
+    c["invoice"]["tax"] = "24.00"
+    retotal(c["invoice"])  # total 1,920.00 = same as HP-3301
     add("Same amount as an invoice paid 1 week ago, new number", "escalate_fraud", ["POSSIBLE_DUPLICATE"], c)
 
     c = build_case(18, "V001", [(0, 10)])
@@ -206,12 +215,12 @@ def render(case: dict, folder: Path) -> None:
          [("PO number", po["po_number"]), ("PO date", po["po_date"]), ("Buyer", "Brightline Retail Co."),
           ("Supplier", f'{po["supplier_name"]} (ID {po["supplier_id"]})'), ("Currency", cur)],
          [["SKU", "Description", "Qty", "Unit price", "Amount"]] +
-         [[l["sku"], l["description"], l["qty"], money(d(l["unit_price"])), money(d(l["qty"]) * d(l["unit_price"]))] for l in po["lines"]],
-         [("PO value", money(sum(d(l["qty"]) * d(l["unit_price"]) for l in po["lines"])))])
+         [[ln["sku"], ln["description"], ln["qty"], money(d(ln["unit_price"])), money(d(ln["qty"]) * d(ln["unit_price"]))] for ln in po["lines"]],
+         [("PO value", money(sum(d(ln["qty"]) * d(ln["unit_price"]) for ln in po["lines"])))])
     _doc(folder / "grn.pdf", "GOODS RECEIVED NOTE",
          [("GRN number", grn["grn_number"]), ("Against PO", grn["po_number"]), ("Received on", grn["received_date"]),
           ("Supplier ID", grn["supplier_id"]), ("Checked by", "Warehouse, Gate 2")],
-         [["SKU", "Description", "Qty received"]] + [[l["sku"], l["description"], l["qty_received"]] for l in grn["lines"]], [])
+         [["SKU", "Description", "Qty received"]] + [[ln["sku"], ln["description"], ln["qty_received"]] for ln in grn["lines"]], [])
     if case.get("corrupt_invoice"):
         (folder / "invoice.pdf").write_bytes(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj <<garbled>>\x00\x13\x87 truncated")
         return
@@ -220,14 +229,15 @@ def render(case: dict, folder: Path) -> None:
           ("Supplier", f'{inv["supplier_name"]} (ID {inv["supplier_id"]})'), ("Bill to", "Brightline Retail Co."),
           ("Your PO", inv["po_number"]), ("Currency", inv["currency"]), ("Pay to IBAN", inv["bank_iban"])],
          [["SKU", "Description", "Qty", "Unit price", "Line total"]] +
-         [[l["sku"], l["description"], l["qty"], money(d(l["unit_price"])), money(d(l["line_total"]))] for l in inv["lines"]],
+         [[ln["sku"], ln["description"], ln["qty"], money(d(ln["unit_price"])), money(d(ln["line_total"]))] for ln in inv["lines"]],
          [("Subtotal", money(d(inv["subtotal"]))), ("Tax", money(d(inv["tax"]))), ("TOTAL DUE", money(d(inv["total"])))])
 
 
 def write_vendor_master() -> None:
     with open(DATA / "vendor_master.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["supplier_id", "name", "iban", "currency"])
-        w.writeheader(); w.writerows(VENDORS)
+        w.writeheader()
+        w.writerows(VENDORS)
     story = [Paragraph("<b>Brightline Retail Co. - Approved vendor master and AP policy</b>", styles["Title"]),
              Paragraph("Only these suppliers are approved. Payments may only go to the bank account listed here. "
                        "Bank detail changes must be confirmed by phone with a known contact before any payment.",
@@ -239,7 +249,8 @@ def write_vendor_master() -> None:
     rows = [["Supplier", "SKU", "Description", "Agreed unit price"]]
     for sid, items in CATALOG.items():
         rows += [[sid, s, desc, p] for s, desc, p in items]
-    pt = Table(rows, colWidths=[55, 70, 245, 100]); pt.setStyle(GRID)
+    pt = Table(rows, colWidths=[55, 70, 245, 100])
+    pt.setStyle(GRID)
     story += [pt, Spacer(1, 12), Paragraph("<b>Tolerance rules</b>", styles["Heading2"]),
               Paragraph("Price tolerance: 0.00 (any variance is held). Quantities billed may not exceed quantities "
                         "ordered or received. Duplicate invoice numbers, or the same amount from the same supplier "

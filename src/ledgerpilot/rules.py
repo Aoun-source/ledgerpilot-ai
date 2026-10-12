@@ -1,14 +1,22 @@
 """Combine the deterministic checks into one rule-based decision."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Iterable
 
 from .fraud import fraud_checks, total_impact
 from .reconcile import three_way_match
-from .schemas import (Discrepancy, GoodsReceipt, Invoice, PastInvoice, PurchaseOrder, Route,
-                      Vendor, strictest)
+from .schemas import (
+    Discrepancy,
+    GoodsReceipt,
+    Invoice,
+    PastInvoice,
+    PurchaseOrder,
+    Route,
+    Vendor,
+    strictest,
+)
 
 
 @dataclass

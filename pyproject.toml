@@ -9,7 +9,7 @@ license = { text = "MIT" }
 where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 testpaths = ["tests"]
 markers = ["live: calls the real AMD endpoint and Evolus (needs .env)"]
 addopts = "-m 'not live'"

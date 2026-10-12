@@ -46,7 +46,7 @@ def field_scores(truth: dict, extracted: dict) -> tuple[int, int]:
         for n in names:
             total += 1
             good += norm(t.get(n)) == norm(e.get(n))
-        for tl, el in zip(t.get("lines", []), e.get("lines", []) or []):
+        for tl, el in zip(t.get("lines", []), e.get("lines", []) or [], strict=False):
             for n in ("sku", "qty", "unit_price", "qty_received", "line_total"):
                 if n in tl:
                     total += 1
