@@ -1,0 +1,55 @@
+{
+  "po": {
+    "po_number": "PO-2026-1004",
+    "po_date": "2026-09-11",
+    "supplier_id": "V004",
+    "supplier_name": "Ravi Textiles Pvt Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "CTN-500",
+        "description": "Cotton fabric roll, 50 m",
+        "qty": "12",
+        "unit_price": "120.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5004",
+    "po_number": "PO-2026-1004",
+    "received_date": "2026-09-21",
+    "supplier_id": "V004",
+    "lines": [
+      {
+        "sku": "CTN-500",
+        "description": "Cotton fabric roll, 50 m",
+        "qty_received": "12"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "RT-8004",
+    "invoice_date": "2026-10-05",
+    "po_number": "PO-2026-1004",
+    "supplier_id": "V004",
+    "supplier_name": "Ravi Textiles Pvt Ltd",
+    "currency": "USD",
+    "bank_iban": "PK36RAVI0000001122334404",
+    "lines": [
+      {
+        "sku": "CTN-500",
+        "description": "Cotton fabric roll, 50 m",
+        "qty": "12",
+        "unit_price": "120.00",
+        "line_total": "1440.00"
+      }
+    ],
+    "subtotal": "1440.00",
+    "tax": "0.00",
+    "total": "1440.00"
+  },
+  "description": "Clean three-way match",
+  "expected_route": "approve_for_payment",
+  "expected_codes": [],
+  "case_id": "case_04"
+}

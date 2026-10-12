@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1007",
+    "po_date": "2026-09-13",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty": "100",
+        "unit_price": "20.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5007",
+    "po_number": "PO-2026-1007",
+    "received_date": "2026-09-23",
+    "supplier_id": "V001",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty_received": "100"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "AC-8007",
+    "invoice_date": "2026-10-08",
+    "po_number": "PO-2026-1007",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "bank_iban": "GB82ACME00001234567801",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty": "100",
+        "unit_price": "22.00",
+        "line_total": "2200.00"
+      }
+    ],
+    "subtotal": "2200.00",
+    "tax": "0.00",
+    "total": "2200.00"
+  },
+  "description": "Unit price $22 billed vs $20 on PO for 100 chairs ($200 overcharge)",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "PRICE_VARIANCE"
+  ],
+  "case_id": "case_07"
+}

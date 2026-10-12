@@ -1,0 +1,75 @@
+{
+  "po": {
+    "po_number": "PO-2026-1016",
+    "po_date": "2026-09-14",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "LAP-14",
+        "description": "14-inch business laptop",
+        "qty": "5",
+        "unit_price": "780.00"
+      },
+      {
+        "sku": "DOC-USB",
+        "description": "USB-C docking station",
+        "qty": "5",
+        "unit_price": "95.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5016",
+    "po_number": "PO-2026-1016",
+    "received_date": "2026-09-24",
+    "supplier_id": "V002",
+    "lines": [
+      {
+        "sku": "LAP-14",
+        "description": "14-inch business laptop",
+        "qty_received": "5"
+      },
+      {
+        "sku": "DOC-USB",
+        "description": "USB-C docking station",
+        "qty_received": "5"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "NW-55120",
+    "invoice_date": "2026-10-05",
+    "po_number": "PO-2026-1016",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "bank_iban": "US11NWND00000987654302",
+    "lines": [
+      {
+        "sku": "LAP-14",
+        "description": "14-inch business laptop",
+        "qty": "5",
+        "unit_price": "780.00",
+        "line_total": "3900.00"
+      },
+      {
+        "sku": "DOC-USB",
+        "description": "USB-C docking station",
+        "qty": "5",
+        "unit_price": "95.00",
+        "line_total": "475.00"
+      }
+    ],
+    "subtotal": "4375.00",
+    "tax": "0.00",
+    "total": "4375.00"
+  },
+  "description": "Invoice number already paid last month",
+  "expected_route": "escalate_fraud",
+  "expected_codes": [
+    "DUPLICATE_INVOICE"
+  ],
+  "case_id": "case_16"
+}

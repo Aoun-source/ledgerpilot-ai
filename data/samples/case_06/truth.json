@@ -1,0 +1,55 @@
+{
+  "po": {
+    "po_number": "PO-2026-1006",
+    "po_date": "2026-09-14",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "MON-27",
+        "description": "27-inch monitor",
+        "qty": "8",
+        "unit_price": "210.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5006",
+    "po_number": "PO-2026-1006",
+    "received_date": "2026-09-24",
+    "supplier_id": "V002",
+    "lines": [
+      {
+        "sku": "MON-27",
+        "description": "27-inch monitor",
+        "qty_received": "8"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "NW-8006",
+    "invoice_date": "2026-10-07",
+    "po_number": "PO-2026-1006",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "bank_iban": "US11NWND00000987654302",
+    "lines": [
+      {
+        "sku": "MON-27",
+        "description": "27-inch monitor",
+        "qty": "8",
+        "unit_price": "210.00",
+        "line_total": "1680.00"
+      }
+    ],
+    "subtotal": "1680.00",
+    "tax": "0.00",
+    "total": "1680.00"
+  },
+  "description": "Clean three-way match",
+  "expected_route": "approve_for_payment",
+  "expected_codes": [],
+  "case_id": "case_06"
+}

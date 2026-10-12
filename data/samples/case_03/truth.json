@@ -1,0 +1,73 @@
+{
+  "po": {
+    "po_number": "PO-2026-1003",
+    "po_date": "2026-09-12",
+    "supplier_id": "V003",
+    "supplier_name": "Milano Arredi S.r.l.",
+    "currency": "EUR",
+    "lines": [
+      {
+        "sku": "TAV-180",
+        "description": "Meeting table 180 cm",
+        "qty": "1",
+        "unit_price": "640.00"
+      },
+      {
+        "sku": "SED-02",
+        "description": "Visitor chair",
+        "qty": "6",
+        "unit_price": "85.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5003",
+    "po_number": "PO-2026-1003",
+    "received_date": "2026-09-22",
+    "supplier_id": "V003",
+    "lines": [
+      {
+        "sku": "TAV-180",
+        "description": "Meeting table 180 cm",
+        "qty_received": "1"
+      },
+      {
+        "sku": "SED-02",
+        "description": "Visitor chair",
+        "qty_received": "6"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "MA-8003",
+    "invoice_date": "2026-10-08",
+    "po_number": "PO-2026-1003",
+    "supplier_id": "V003",
+    "supplier_name": "Milano Arredi S.r.l.",
+    "currency": "EUR",
+    "bank_iban": "IT60MILA0000000000456703",
+    "lines": [
+      {
+        "sku": "TAV-180",
+        "description": "Meeting table 180 cm",
+        "qty": "1",
+        "unit_price": "640.00",
+        "line_total": "640.00"
+      },
+      {
+        "sku": "SED-02",
+        "description": "Visitor chair",
+        "qty": "6",
+        "unit_price": "85.00",
+        "line_total": "510.00"
+      }
+    ],
+    "subtotal": "1150.00",
+    "tax": "253.00",
+    "total": "1403.00"
+  },
+  "description": "Clean three-way match, EUR with 22% VAT",
+  "expected_route": "approve_for_payment",
+  "expected_codes": [],
+  "case_id": "case_03"
+}

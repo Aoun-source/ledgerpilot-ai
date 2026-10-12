@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1009",
+    "po_date": "2026-09-11",
+    "supplier_id": "V004",
+    "supplier_name": "Ravi Textiles Pvt Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "TWL-HT",
+        "description": "Hotel towel set",
+        "qty": "100",
+        "unit_price": "14.25"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5009",
+    "po_number": "PO-2026-1009",
+    "received_date": "2026-09-21",
+    "supplier_id": "V004",
+    "lines": [
+      {
+        "sku": "TWL-HT",
+        "description": "Hotel towel set",
+        "qty_received": "90"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "RT-8009",
+    "invoice_date": "2026-10-06",
+    "po_number": "PO-2026-1009",
+    "supplier_id": "V004",
+    "supplier_name": "Ravi Textiles Pvt Ltd",
+    "currency": "USD",
+    "bank_iban": "PK36RAVI0000001122334404",
+    "lines": [
+      {
+        "sku": "TWL-HT",
+        "description": "Hotel towel set",
+        "qty": "100",
+        "unit_price": "14.25",
+        "line_total": "1425.00"
+      }
+    ],
+    "subtotal": "1425.00",
+    "tax": "0.00",
+    "total": "1425.00"
+  },
+  "description": "Billed 100 towel sets, only 90 received",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "QTY_NOT_RECEIVED"
+  ],
+  "case_id": "case_09"
+}

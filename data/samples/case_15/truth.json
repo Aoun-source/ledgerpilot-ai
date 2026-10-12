@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1015",
+    "po_date": "2026-09-15",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "DSK-200",
+        "description": "Standing desk frame",
+        "qty": "6",
+        "unit_price": "145.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5015",
+    "po_number": "PO-2026-1015",
+    "received_date": "2026-09-25",
+    "supplier_id": "V001",
+    "lines": [
+      {
+        "sku": "DSK-200",
+        "description": "Standing desk frame",
+        "qty_received": "6"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "AC-8015",
+    "invoice_date": "2026-10-08",
+    "po_number": "PO-2026-1015",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "bank_iban": "GB15ZQRT00009876543215",
+    "lines": [
+      {
+        "sku": "DSK-200",
+        "description": "Standing desk frame",
+        "qty": "6",
+        "unit_price": "145.00",
+        "line_total": "870.00"
+      }
+    ],
+    "subtotal": "870.00",
+    "tax": "0.00",
+    "total": "870.00"
+  },
+  "description": "Perfect invoice, but bank account changed (payment-diversion fraud)",
+  "expected_route": "escalate_fraud",
+  "expected_codes": [
+    "BANK_MISMATCH"
+  ],
+  "case_id": "case_15"
+}

@@ -1,0 +1,73 @@
+{
+  "po": {
+    "po_number": "PO-2026-1001",
+    "po_date": "2026-09-14",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "DSK-200",
+        "description": "Standing desk frame",
+        "qty": "4",
+        "unit_price": "145.00"
+      },
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty": "10",
+        "unit_price": "18.50"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5001",
+    "po_number": "PO-2026-1001",
+    "received_date": "2026-09-24",
+    "supplier_id": "V001",
+    "lines": [
+      {
+        "sku": "DSK-200",
+        "description": "Standing desk frame",
+        "qty_received": "4"
+      },
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty_received": "10"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "AC-8001",
+    "invoice_date": "2026-10-06",
+    "po_number": "PO-2026-1001",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "bank_iban": "GB82ACME00001234567801",
+    "lines": [
+      {
+        "sku": "DSK-200",
+        "description": "Standing desk frame",
+        "qty": "4",
+        "unit_price": "145.00",
+        "line_total": "580.00"
+      },
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty": "10",
+        "unit_price": "18.50",
+        "line_total": "185.00"
+      }
+    ],
+    "subtotal": "765.00",
+    "tax": "0.00",
+    "total": "765.00"
+  },
+  "description": "Clean three-way match",
+  "expected_route": "approve_for_payment",
+  "expected_codes": [],
+  "case_id": "case_01"
+}

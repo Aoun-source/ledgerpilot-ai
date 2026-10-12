@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1008",
+    "po_date": "2026-09-12",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "MON-27",
+        "description": "27-inch monitor",
+        "qty": "5",
+        "unit_price": "210.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5008",
+    "po_number": "PO-2026-1008",
+    "received_date": "2026-09-22",
+    "supplier_id": "V002",
+    "lines": [
+      {
+        "sku": "MON-27",
+        "description": "27-inch monitor",
+        "qty_received": "5"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "NW-8008",
+    "invoice_date": "2026-10-05",
+    "po_number": "PO-2026-1008",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "bank_iban": "US11NWND00000987654302",
+    "lines": [
+      {
+        "sku": "MON-27",
+        "description": "27-inch monitor",
+        "qty": "5",
+        "unit_price": "214.50",
+        "line_total": "1072.50"
+      }
+    ],
+    "subtotal": "1072.50",
+    "tax": "0.00",
+    "total": "1072.50"
+  },
+  "description": "Small price increase on monitors",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "PRICE_VARIANCE"
+  ],
+  "case_id": "case_08"
+}

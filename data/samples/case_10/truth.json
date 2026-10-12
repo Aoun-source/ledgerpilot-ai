@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1010",
+    "po_date": "2026-09-15",
+    "supplier_id": "V005",
+    "supplier_name": "Helios Packaging GmbH",
+    "currency": "EUR",
+    "lines": [
+      {
+        "sku": "BOX-M",
+        "description": "Corrugated box, medium (pack of 100)",
+        "qty": "10",
+        "unit_price": "38.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5010",
+    "po_number": "PO-2026-1010",
+    "received_date": "2026-09-25",
+    "supplier_id": "V005",
+    "lines": [
+      {
+        "sku": "BOX-M",
+        "description": "Corrugated box, medium (pack of 100)",
+        "qty_received": "12"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "HP-8010",
+    "invoice_date": "2026-10-07",
+    "po_number": "PO-2026-1010",
+    "supplier_id": "V005",
+    "supplier_name": "Helios Packaging GmbH",
+    "currency": "EUR",
+    "bank_iban": "DE89HELI0000000044556605",
+    "lines": [
+      {
+        "sku": "BOX-M",
+        "description": "Corrugated box, medium (pack of 100)",
+        "qty": "12",
+        "unit_price": "38.00",
+        "line_total": "456.00"
+      }
+    ],
+    "subtotal": "456.00",
+    "tax": "0.00",
+    "total": "456.00"
+  },
+  "description": "Billed 12 packs, PO ordered 10 (12 delivered)",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "QTY_OVER_PO"
+  ],
+  "case_id": "case_10"
+}

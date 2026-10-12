@@ -1,0 +1,13 @@
+services:
+  ledgerpilot:
+    build: .
+    image: ledgerpilot-ai:latest
+    env_file: .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ledgerpilot-data:/data
+    restart: unless-stopped
+
+volumes:
+  ledgerpilot-data:

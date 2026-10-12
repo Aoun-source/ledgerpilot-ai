@@ -1,0 +1,64 @@
+{
+  "po": {
+    "po_number": "PO-2026-1013",
+    "po_date": "2026-09-12",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "LAP-14",
+        "description": "14-inch business laptop",
+        "qty": "2",
+        "unit_price": "780.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5013",
+    "po_number": "PO-2026-1013",
+    "received_date": "2026-09-22",
+    "supplier_id": "V002",
+    "lines": [
+      {
+        "sku": "LAP-14",
+        "description": "14-inch business laptop",
+        "qty_received": "2"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "NW-8013",
+    "invoice_date": "2026-10-06",
+    "po_number": "PO-2026-1013",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "bank_iban": "US11NWND00000987654302",
+    "lines": [
+      {
+        "sku": "LAP-14",
+        "description": "14-inch business laptop",
+        "qty": "2",
+        "unit_price": "780.00",
+        "line_total": "1560.00"
+      },
+      {
+        "sku": "EXT-WTY",
+        "description": "Extended warranty 3 years",
+        "qty": "2",
+        "unit_price": "120.00",
+        "line_total": "240.00"
+      }
+    ],
+    "subtotal": "1800.00",
+    "tax": "0.00",
+    "total": "1800.00"
+  },
+  "description": "Extra warranty line that is not on the PO",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "ITEM_NOT_ON_PO"
+  ],
+  "case_id": "case_13"
+}

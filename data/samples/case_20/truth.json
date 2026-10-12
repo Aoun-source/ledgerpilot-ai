@@ -1,0 +1,35 @@
+{
+  "po": {
+    "po_number": "PO-2026-1020",
+    "po_date": "2026-09-15",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty": "5",
+        "unit_price": "20.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5020",
+    "po_number": "PO-2026-1020",
+    "received_date": "2026-09-25",
+    "supplier_id": "V001",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty_received": "5"
+      }
+    ]
+  },
+  "invoice": null,
+  "description": "Invoice PDF is corrupt / unreadable",
+  "expected_route": "processing_error",
+  "expected_codes": [],
+  "case_id": "case_20"
+}

@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1018",
+    "po_date": "2026-09-12",
+    "supplier_id": "V099",
+    "supplier_name": "Acme Office Suplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty": "10",
+        "unit_price": "20.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5018",
+    "po_number": "PO-2026-1018",
+    "received_date": "2026-09-22",
+    "supplier_id": "V099",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty_received": "10"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "AC-8018",
+    "invoice_date": "2026-10-07",
+    "po_number": "PO-2026-1018",
+    "supplier_id": "V099",
+    "supplier_name": "Acme Office Suplies Ltd",
+    "currency": "USD",
+    "bank_iban": "GB82ACME00001234567801",
+    "lines": [
+      {
+        "sku": "CHR-100",
+        "description": "Ergonomic office chair",
+        "qty": "10",
+        "unit_price": "20.00",
+        "line_total": "200.00"
+      }
+    ],
+    "subtotal": "200.00",
+    "tax": "0.00",
+    "total": "200.00"
+  },
+  "description": "Look-alike supplier not in vendor master",
+  "expected_route": "escalate_fraud",
+  "expected_codes": [
+    "UNKNOWN_VENDOR"
+  ],
+  "case_id": "case_18"
+}

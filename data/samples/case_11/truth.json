@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1011",
+    "po_date": "2026-09-14",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty": "20",
+        "unit_price": "18.50"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5011",
+    "po_number": "PO-2026-1011",
+    "received_date": "2026-09-24",
+    "supplier_id": "V001",
+    "lines": [
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty_received": "20"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "AC-8011",
+    "invoice_date": "2026-10-08",
+    "po_number": "PO-2026-1011",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "bank_iban": "GB82ACME00001234567801",
+    "lines": [
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty": "20",
+        "unit_price": "18.50",
+        "line_total": "390.00"
+      }
+    ],
+    "subtotal": "390.00",
+    "tax": "0.00",
+    "total": "390.00"
+  },
+  "description": "Line total wrong: 20 x 18.50 printed as 390.00",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "LINE_ARITHMETIC"
+  ],
+  "case_id": "case_11"
+}

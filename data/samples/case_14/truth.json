@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1014",
+    "po_date": "2026-09-11",
+    "supplier_id": "V003",
+    "supplier_name": "Milano Arredi S.r.l.",
+    "currency": "EUR",
+    "lines": [
+      {
+        "sku": "TAV-180",
+        "description": "Meeting table 180 cm",
+        "qty": "2",
+        "unit_price": "640.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5014",
+    "po_number": "PO-2026-1014",
+    "received_date": "2026-09-21",
+    "supplier_id": "V003",
+    "lines": [
+      {
+        "sku": "TAV-180",
+        "description": "Meeting table 180 cm",
+        "qty_received": "2"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "MA-8014",
+    "invoice_date": "2026-10-07",
+    "po_number": "PO-2026-1014",
+    "supplier_id": "V003",
+    "supplier_name": "Milano Arredi S.r.l.",
+    "currency": "USD",
+    "bank_iban": "IT60MILA0000000000456703",
+    "lines": [
+      {
+        "sku": "TAV-180",
+        "description": "Meeting table 180 cm",
+        "qty": "2",
+        "unit_price": "640.00",
+        "line_total": "1280.00"
+      }
+    ],
+    "subtotal": "1280.00",
+    "tax": "0.00",
+    "total": "1280.00"
+  },
+  "description": "Invoice in USD, PO in EUR",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "CURRENCY_MISMATCH"
+  ],
+  "case_id": "case_14"
+}

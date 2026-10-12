@@ -1,0 +1,8 @@
+pydantic>=2.6,<3
+requests>=2.31
+openai>=1.40
+python-dotenv>=1.0
+streamlit>=1.50
+pandas>=2.0
+reportlab>=4.0
+pytest>=8.0

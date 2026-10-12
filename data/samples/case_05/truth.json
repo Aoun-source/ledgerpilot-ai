@@ -1,0 +1,73 @@
+{
+  "po": {
+    "po_number": "PO-2026-1005",
+    "po_date": "2026-09-15",
+    "supplier_id": "V005",
+    "supplier_name": "Helios Packaging GmbH",
+    "currency": "EUR",
+    "lines": [
+      {
+        "sku": "BOX-M",
+        "description": "Corrugated box, medium (pack of 100)",
+        "qty": "20",
+        "unit_price": "38.00"
+      },
+      {
+        "sku": "TAPE-48",
+        "description": "Packing tape 48 mm (36 rolls)",
+        "qty": "5",
+        "unit_price": "42.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5005",
+    "po_number": "PO-2026-1005",
+    "received_date": "2026-09-25",
+    "supplier_id": "V005",
+    "lines": [
+      {
+        "sku": "BOX-M",
+        "description": "Corrugated box, medium (pack of 100)",
+        "qty_received": "20"
+      },
+      {
+        "sku": "TAPE-48",
+        "description": "Packing tape 48 mm (36 rolls)",
+        "qty_received": "5"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "HP-8005",
+    "invoice_date": "2026-10-06",
+    "po_number": "PO-2026-1005",
+    "supplier_id": "V005",
+    "supplier_name": "Helios Packaging GmbH",
+    "currency": "EUR",
+    "bank_iban": "DE89HELI0000000044556605",
+    "lines": [
+      {
+        "sku": "BOX-M",
+        "description": "Corrugated box, medium (pack of 100)",
+        "qty": "20",
+        "unit_price": "38.00",
+        "line_total": "760.00"
+      },
+      {
+        "sku": "TAPE-48",
+        "description": "Packing tape 48 mm (36 rolls)",
+        "qty": "5",
+        "unit_price": "42.00",
+        "line_total": "210.00"
+      }
+    ],
+    "subtotal": "970.00",
+    "tax": "184.30",
+    "total": "1154.30"
+  },
+  "description": "Clean three-way match, EUR with 19% VAT",
+  "expected_route": "approve_for_payment",
+  "expected_codes": [],
+  "case_id": "case_05"
+}
