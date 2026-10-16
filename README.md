@@ -51,34 +51,57 @@ Follow [docs/evolus_setup.md](docs/evolus_setup.md): connect the model, then cre
 
 ### 3. App
 
+Needs Python 3.10 or newer (the Docker image uses 3.11).
+
 ```bash
-git clone <this repo> && cd ledgerpilot-ai
-cp .env.example .env          # fill in your endpoint, keys and IDs
+git clone https://github.com/<your-account>/ledgerpilot-ai.git
+cd ledgerpilot-ai
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python scripts/make_samples.py   # 24 synthetic cases + vendor master
-python scripts/upload_library.py # vendor master -> Evolus library
-python scripts/smoke_test.py     # all five checks should PASS
-streamlit run app.py
+cp .env.example .env               # Windows: copy .env.example .env  -- then fill it in
+python -m pytest -q                # offline tests, no keys needed
+python scripts/upload_library.py   # vendor master -> Evolus library (needs keys)
+python scripts/smoke_test.py       # live check: all five lines should say PASS
+streamlit run app.py               # http://localhost:8501
 ```
+
+The sample cases ship with the repo; `python scripts/make_samples.py` regenerates them.
+Without a filled-in `.env` the app still opens and says exactly which settings are missing.
 
 Or with Docker:
 
 ```bash
-cp .env.example .env   # fill it in
-docker compose up --build -d   # http://localhost:8501
+cp .env.example .env               # fill it in
+docker compose up --build -d       # http://localhost:8501
 ```
+
+### Settings (`.env`)
+
+| Variable | Required | What it is |
+| --- | --- | --- |
+| `VLLM_BASE_URL` | for the model badge, speed test and benchmark | `http://<DROPLET_IP>:8000/v1` |
+| `VLLM_API_KEY` | yes, with the above | the `--api-key` you gave vLLM |
+| `VLLM_MODEL` | no (default `ledgerpilot-model`) | vLLM `--served-model-name` |
+| `EVOLUS_API_KEY`, `EVOLUS_APP_ID` | yes | Evolus API key and space (application) ID |
+| `EVOLUS_AGENT_ID` | yes | the LedgerPilot Clerk agent |
+| `EVOLUS_EXTRACTOR_INVOICE_ID`, `EVOLUS_EXTRACTOR_PO_ID`, `EVOLUS_EXTRACTOR_GRN_ID` | yes | the three document extractors |
+| `EVOLUS_EXTRACTOR_AGENT_ID` | no | agent that owns the extractors, if not the Clerk |
+| `EVOLUS_WORKFLOW_ID` | no | "Exception routing" workflow; skipped when empty |
+| `EVOLUS_LIBRARY_ID` | for `upload_library.py` | "Vendor master and AP policy" library |
+| `PRICE_TOLERANCE`, `MAX_TAX_RATE` | no | business rules, defaults `0.00` and `0.30` |
 
 ## Tests and evaluation
 
 ```bash
-python -m pytest -q                      # 187 tests, offline, about 45 s
-python eval/run_eval.py --label "Qwen2.5-32B"     # full live pipeline on 24 cases -> docs/evaluation.md
-python scripts/benchmark_amd.py --label "Qwen2.5-32B"   # cost and speed on MI300X -> docs/benchmark.md
+python -m pytest -q                                     # offline, about a minute
+python eval/run_eval.py --label "Qwen2.5-32B"           # live pipeline on all cases -> docs/evaluation.md
+python scripts/benchmark_amd.py --label "Qwen2.5-32B"   # speed and cost on MI300X -> docs/benchmark.md
 ```
 
 The 24 synthetic cases cover clean invoices, price variance, short delivery, over-billing, arithmetic errors, items not on the PO, currency mismatch, changed bank account, duplicate and near-duplicate invoices, a look-alike invoice number, padded tax, a credit note sent as an invoice, a PO billed twice, an unknown look-alike supplier and a corrupt PDF. All data is fictional.
 
-Results: see [docs/evaluation.md](docs/evaluation.md) and [docs/benchmark.md](docs/benchmark.md).
+Results: the two commands above write `docs/evaluation.md` and `docs/benchmark.md` from a live run; they also appear in the app's Results tab.
 
 ## Project layout
 
@@ -95,7 +118,7 @@ src/ledgerpilot/
   audit.py                  SQLite audit log
 scripts/                    make_samples, smoke_test, upload_library, benchmark_amd
 eval/run_eval.py            live evaluation against ground truth
-tests/                      187 offline tests: rules, edge cases, real HTTP against a local
+tests/                      offline tests: rules, edge cases, real HTTP against a local
                             fake of Evolus and vLLM, and a click-through of every app screen
 ```
 
