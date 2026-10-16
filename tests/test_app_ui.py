@@ -164,6 +164,117 @@ def test_document_text_is_escaped(configured):
     assert "&lt;script&gt;" in md
 
 
+def test_rehearsal_button_checks_the_case_in_one_click(configured):
+    serve(configured, "case_07")
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    next(b for b in at.button if b.label.startswith("Overcharged by $200")).click()
+    at.run()
+    md = all_markdown(at)
+    assert not at.exception and ">On hold</span>" in md
+    assert at.selectbox[0].value.startswith("Case 07")
+
+
+def test_every_decision_shows_fields_rule_code_and_reason(configured):
+    serve(configured, "case_07")
+    at = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_07")
+    md = all_markdown(at)
+    assert '<code class="lp-code">PRICE_VARIANCE</code>' in md
+    assert "Rule: Three-way match: unit price vs PO → on hold" in md
+    assert "High confidence" in md
+    truth = json.loads((SAMPLES / "case_07" / "truth.json").read_text())["invoice"]
+    fields = next(d.value for d in at.dataframe if "Field" in d.value.columns)
+    inv = dict(zip(fields["Field"], fields["Invoice"], strict=True))
+    assert inv["Number"] == truth["invoice_number"] and inv["Total due"] == str(truth["total"])
+    shown = inv["Pay-to bank account"]
+    assert shown.startswith("****") and shown.endswith(truth["bank_iban"].replace(" ", "")[-4:])  # masked
+    assert truth["bank_iban"].replace(" ", "") not in md
+
+
+def test_low_confidence_is_handed_to_a_person(configured):
+    serve(configured, "case_01")
+    configured.agent_reply = lambda case: "I think it's fine?"
+    at = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_01")
+    md = all_markdown(at)
+    assert ">On hold</span>" in md and "Low confidence, handed to a human reviewer" in md
+    assert "LOW_CONFIDENCE" in md
+
+
+def test_every_finding_code_has_a_label_and_a_rule():
+    import re
+
+    # every quoted CODE_NAME in the files that raise findings
+    src = "\n".join((ROOT / "src" / "ledgerpilot" / f).read_text() for f in ("reconcile.py", "fraud.py", "rules.py"))
+    codes = set(re.findall(r'"([A-Z]+(?:_[A-Z]+)+)"', src))
+    app = (ROOT / "app.py").read_text()
+    labelled = [c for c in sorted(codes) if f'"{c}": "' in app]  # FINDING entry
+    ruled = [c for c in sorted(codes) if f'"{c}"' in app.split("RULE = {", 1)[1].split("CHECKS_RUN", 1)[0]]
+    assert len(codes) >= 25, sorted(codes)
+    assert labelled == sorted(codes) and ruled == sorted(codes), (set(codes) - set(labelled), set(codes) - set(ruled))
+
+
+def _record(configured, case, tmp_path):
+    """Run a case live (against the fakes) and save it, the way the Save button does."""
+    serve(configured, case)
+    at = check_case(AppTest.from_file(APP, default_timeout=60).run(), case)
+    next(b for b in at.button if b.label == "Save for demo mode").click()
+    at.run()
+    assert any("Saved" in s.value for s in at.success)
+    return at
+
+
+def test_demo_mode_replays_recordings_and_labels_them(configured, monkeypatch, tmp_path):
+    monkeypatch.setenv("RECORDINGS_DIR", str(tmp_path / "rec"))
+    fresh_caches()
+    _record(configured, "case_15", tmp_path)
+    assert (tmp_path / "rec" / "case_15.json").exists()
+
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    at.sidebar.toggle[0].set_value(True)
+    at.run()
+    assert "Results below are replays of recorded live runs" in all_markdown(at)
+    calls_before = len(configured.calls)
+    next(b for b in at.button if b.label.startswith("Bank account changed")).click()
+    at.run()
+    md = all_markdown(at)
+    assert ">Payment blocked</span>" in md and "<b>Recorded run</b>" in md and "not a live call" in md
+    assert "What ran, where (when recorded)" in md
+    assert not [c for c in configured.calls[calls_before:] if "ask-file" in c["path"] or "completions" in c["path"]]
+    assert at.tabs[1].label == "Review queue (1)"  # the replay didn't add a case to the live queue
+
+    next(b for b in at.button if b.label.startswith("Clean invoice")).click()
+    at.run()
+    assert "No recording for case_01 yet" in " ".join(i.value for i in at.info)
+    assert "<b>Recorded run</b>" not in all_markdown(at)
+
+
+def test_demo_link_opens_a_recorded_case(configured, monkeypatch, tmp_path):
+    monkeypatch.setenv("RECORDINGS_DIR", str(tmp_path / "rec"))
+    fresh_caches()
+    _record(configured, "case_07", tmp_path)
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.query_params["demo"] = "1"
+    at.query_params["case"] = "case_07"
+    at.run()
+    md = all_markdown(at)
+    assert at.sidebar.toggle[0].value is True and "<b>Recorded run</b>" in md and ">On hold</span>" in md
+    at.run()  # later reruns don't re-trigger the URL case
+    assert not at.exception
+
+
+def test_failed_live_check_offers_the_recording(configured, monkeypatch, tmp_path):
+    monkeypatch.setenv("RECORDINGS_DIR", str(tmp_path / "rec"))
+    fresh_caches()
+    _record(configured, "case_07", tmp_path)
+    configured.extract_data = lambda eid, fn: 503  # Evolus goes down mid-demo
+    monkeypatch.setenv("EVOLUS_TIMEOUT", "5")
+    at = check_case(AppTest.from_file(APP, default_timeout=120).run(), "case_07")
+    assert ">Needs a person</span>" in all_markdown(at)
+    next(b for b in at.button if b.label == "Show the recorded run of this case instead").click()
+    at.run()
+    md = all_markdown(at)
+    assert ">On hold</span>" in md and "<b>Recorded run</b>" in md and not at.exception
+
+
 def test_results_tab_without_measurements(configured, monkeypatch):
     at = AppTest.from_file(APP, default_timeout=60).run()
     infos = " ".join(i.value for i in at.info)

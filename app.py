@@ -16,9 +16,11 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from ledgerpilot import recording  # noqa: E402
 from ledgerpilot.agent_client import vllm_health, vllm_speed  # noqa: E402
 from ledgerpilot.audit import AuditLog  # noqa: E402
 from ledgerpilot.config import ConfigError, load_settings  # noqa: E402
+from ledgerpilot.fraud import mask  # noqa: E402
 from ledgerpilot.pipeline import CaseResult, Pipeline, load_case_folder  # noqa: E402
 from ledgerpilot.schemas import Route  # noqa: E402
 
@@ -57,7 +59,32 @@ FINDING = {
     "UNKNOWN_VENDOR": "Supplier not in the vendor master",
     "DUPLICATE_INVOICE": "Invoice number already processed",
     "POSSIBLE_DUPLICATE": "Same amount billed recently",
+    "LOW_CONFIDENCE": "Agent review incomplete",
+    "AGENT_CONCERN": "The agent raised a concern",
 }
+# Which check produced each finding code (shown beside the finding)
+RULE = {
+    **dict.fromkeys(["PRICE_VARIANCE", "PO_PRICE_AMBIGUOUS"], "Three-way match: unit price vs PO"),
+    **dict.fromkeys(["QTY_NOT_RECEIVED"], "Three-way match: billed vs received"),
+    **dict.fromkeys(["QTY_OVER_PO", "ITEM_NOT_ON_PO"], "Three-way match: billed vs ordered"),
+    **dict.fromkeys(["LINE_ARITHMETIC", "SUBTOTAL_ARITHMETIC", "TOTAL_ARITHMETIC"], "Arithmetic check"),
+    **dict.fromkeys(["TAX_OUT_OF_RANGE"], "Tax rate check"),
+    **dict.fromkeys(["NEGATIVE_VALUE"], "Negative amount check"),
+    **dict.fromkeys(["MISSING_FIELD"], "Completeness check"),
+    **dict.fromkeys(["PO_MISMATCH", "GRN_PO_MISMATCH", "SUPPLIER_MISMATCH", "GRN_SUPPLIER_MISMATCH"],
+                    "Document consistency"),
+    **dict.fromkeys(["CURRENCY_MISMATCH"], "Currency check"),
+    **dict.fromkeys(["PO_ALREADY_BILLED"], "PO balance check"),
+    **dict.fromkeys(["BANK_MISMATCH", "BANK_MISSING"], "Fraud check: bank account vs vendor master"),
+    **dict.fromkeys(["UNKNOWN_VENDOR"], "Fraud check: vendor master"),
+    **dict.fromkeys(["DUPLICATE_INVOICE", "LOOKALIKE_INVOICE_NUMBER", "POSSIBLE_DUPLICATE"],
+                    "Fraud check: duplicate invoices"),
+    **dict.fromkeys(["LOW_CONFIDENCE", "AGENT_CONCERN"], "Human hand-off"),
+}
+CHECKS_RUN = ("three-way match (price, quantity received, quantity ordered)", "arithmetic", "tax rate",
+              "currency", "PO balance", "vendor master", "bank account", "duplicate invoices")
+# One click loads and checks the cases rehearsed for the demo
+REHEARSAL = (("case_01", "Clean invoice"), ("case_07", "Overcharged by $200"), ("case_15", "Bank account changed"))
 
 st.markdown("""
 <style>
@@ -98,6 +125,19 @@ h1, h2, h3, h4 { font-family: 'Public Sans', system-ui, sans-serif; letter-spaci
 .lp-trail .bad { color: var(--fraud); font-weight: 600; }
 .lp-chip { display: inline-block; font-size: .8rem; font-weight: 600; padding: .1rem .5rem; border-radius: 4px;
            border: 1.5px solid currentColor; }
+.lp-code { font-size: .78rem; color: var(--muted); background: transparent; padding: 0; }
+.lp-rule { color: var(--muted); font-size: .85rem; margin-top: .1rem; }
+.lp-conf { margin: .5rem 0 0; font-size: .92rem; color: var(--muted); max-width: 60ch; }
+.lp-conf-low { color: var(--hold); font-weight: 600; }
+.lp-banner { border: 2px dashed var(--hold); color: var(--ink); border-radius: 6px; padding: .55rem .8rem;
+             margin: .6rem 0; font-size: .92rem; overflow-wrap: anywhere; }
+.lp-banner b { color: var(--hold); text-transform: uppercase; letter-spacing: .04em; }
+.lp-model, .lp-doc, .lp-verdict { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .block-container { padding-left: 1rem; padding-right: 1rem; }
+  .lp-stamp { font-size: 1.35rem; }
+  .lp-finding .lp-amt { float: none; display: block; }
+}
 </style>""", unsafe_allow_html=True)
 
 
@@ -174,6 +214,16 @@ with st.sidebar:
     st.caption("Checks run in Python. Reading, reasoning and actions run on Evolus, "
                "with the agent's model served by vLLM on an AMD Instinct MI300X.")
     st.divider()
+    recorded_cases = recording.available(settings.recordings_dir)
+    # ?demo=1 opens the app in demo mode (a link to hand judges if the live services are down)
+    demo_mode = st.toggle("Demo mode: replay recorded runs", key="demo_mode",
+                          value=st.query_params.get("demo") == "1",
+                          help="Shows saved outputs of earlier live runs, clearly labelled as recorded. "
+                               "Use it if the live services are slow or down.")
+    st.caption(f"{len(recorded_cases)} recorded case(s) available." if recorded_cases else
+               "No recordings yet. `python eval/run_eval.py` saves one per case, or use "
+               "'Save for demo mode' after a live check.")
+    st.divider()
     if st.button("Clear demo history", help="Empties the audit log so sample invoices can be checked again "
                                             "without being flagged as duplicates."):
         audit.reset()
@@ -199,6 +249,10 @@ elif health:
                 unsafe_allow_html=True)
 else:
     st.markdown('<p class="lp-model"><b>Model:</b> not connected (set VLLM_BASE_URL)</p>', unsafe_allow_html=True)
+if demo_mode:
+    st.markdown('<div class="lp-banner"><b>Demo mode</b> · Results below are replays of recorded live runs, '
+                'not live calls to Evolus or the AMD model. Turn it off in the sidebar to check invoices live.</div>',
+                unsafe_allow_html=True)
 if checked:
     st.markdown(f'<div class="lp-sofar">So far: {checked} invoice{"s" if checked != 1 else ""} checked, '
                 f'{money(held)} held for review, {blocked} payment{"s" if blocked != 1 else ""} blocked as possible fraud.</div>',
@@ -244,13 +298,59 @@ def style_match(df: pd.DataFrame):
     return df.style.apply(per_row, axis=1)
 
 
-def show_result(res: CaseResult) -> None:
+def _val(doc: dict, key: str | None) -> str:
+    if key is None:
+        return "–"  # this document doesn't carry the field
+    value = doc.get(key)
+    return "not read" if value in (None, "") else str(value)
+
+
+def fields_table(res: CaseResult) -> pd.DataFrame:
+    po, grn, inv = (res.extracted.get(k) or {} for k in ("po", "grn", "invoice"))
+    rows = [("Number", "po_number", "grn_number", "invoice_number"),
+            ("Date", "po_date", "received_date", "invoice_date"),
+            ("PO it refers to", None, "po_number", "po_number"),
+            ("Supplier ID", "supplier_id", "supplier_id", "supplier_id"),
+            ("Supplier name", "supplier_name", None, "supplier_name"),
+            ("Currency", "currency", None, "currency"),
+            ("Subtotal", None, None, "subtotal"), ("Tax", None, None, "tax"), ("Total due", None, None, "total")]
+    table = [{"Field": name, "Purchase order": _val(po, a), "Delivery note": _val(grn, b), "Invoice": _val(inv, c)}
+             for name, a, b, c in rows]
+    iban = inv.get("bank_iban")
+    table.append({"Field": "Pay-to bank account", "Purchase order": "–", "Delivery note": "–",
+                  "Invoice": mask(str(iban)) if iban else "not read"})
+    return pd.DataFrame(table)
+
+
+def finding_html(d) -> str:
+    amount = f'<span class="lp-amt">{money(d.impact)}</span>' if d.impact is not None else ""
+    effect = STAMP.get(d.route.value, ("",))[0].lower()
+    return (f'<div class="lp-finding">{amount}<b>{E(FINDING.get(d.code, d.code))}</b> '
+            f'<code class="lp-code">{E(d.code)}</code>'
+            f'<div class="lp-rule">Rule: {E(RULE.get(d.code, "Rules engine"))} → {E(effect)}</div>'
+            f'<p>{E(d.message)}</p></div>')
+
+
+def show_result(res: CaseResult, recorded: dict | None = None) -> None:
     route = res.route.value
     label, cls, sentence = STAMP[route]
+    if recorded:
+        st.markdown(f'<div class="lp-banner"><b>Recorded run</b> · {E(str(recorded.get("case")))} recorded '
+                    f'{E(str(recorded.get("at")))} with {E(str(recorded.get("model") or "unknown model"))} '
+                    f'({E(str(recorded.get("source") or ""))}). This is a replay, not a live call.</div>',
+                    unsafe_allow_html=True)
     top_l, top_r = st.columns([2.2, 1])
     with top_l:
         st.markdown(stamp_html(route), unsafe_allow_html=True)
         st.markdown(f'<p class="lp-verdict">{E(sentence)}</p>', unsafe_allow_html=True)
+        if not res.error:
+            reasons = res.confidence_reasons
+            if reasons:
+                st.markdown(f'<p class="lp-conf lp-conf-low">Low confidence, handed to a human reviewer: '
+                            f'{E("; ".join(reasons))}.</p>', unsafe_allow_html=True)
+            else:
+                st.markdown('<p class="lp-conf">High confidence: every value was read and the agent agrees with '
+                            'the checks. A person still gives the final yes.</p>', unsafe_allow_html=True)
     with top_r:
         st.markdown(f'<div class="lp-figure">{money(res.money_at_risk)}</div><div class="lp-figlabel">money at risk</div>',
                     unsafe_allow_html=True)
@@ -278,16 +378,15 @@ def show_result(res: CaseResult) -> None:
             st.dataframe(style_match(df), hide_index=True, width="stretch")
         st.markdown("##### What the checks found")
         if res.discrepancies:
-            parts = []
-            for d in res.discrepancies:
-                amount = f'<span class="lp-amt">{money(d.impact)}</span>' if d.impact is not None else ""
-                parts.append(f'<div class="lp-finding">{amount}<b>{E(FINDING.get(d.code, d.code))}</b>'
-                             f'<p>{E(d.message)}</p></div>')
-            st.markdown("".join(parts), unsafe_allow_html=True)
+            st.markdown("".join(finding_html(d) for d in res.discrepancies), unsafe_allow_html=True)
             st.caption("Every figure here is calculated by code, not by the language model.")
         else:
-            st.markdown('<p>Nothing to flag. Quantities, prices, totals, supplier and bank account all check out.</p>',
+            st.markdown('<p>Nothing to flag. Quantities, prices, totals, supplier and bank account all check out.</p>'
+                        f'<p class="lp-small">Checks that ran and passed: {E(", ".join(CHECKS_RUN))}.</p>',
                         unsafe_allow_html=True)
+        st.markdown("##### Fields read from the documents")
+        st.dataframe(fields_table(res), hide_index=True, width="stretch")
+        st.caption("Read by the Evolus document extractors. The bank account is masked on screen.")
     with right:
         st.markdown("##### The agent's note")
         if res.agent:
@@ -299,14 +398,15 @@ def show_result(res: CaseResult) -> None:
             elif res.agent.route and res.rule_route and res.agent.route.rank < res.rule_route.rank:
                 st.warning(f"The agent suggested a softer decision ({STAMP[res.agent.route.value][0].lower()}). "
                            "The checks require the stricter one, so it was kept.")
-            st.caption(f"Open model on AMD MI300X via Evolus, answered in {res.agent.latency_s:.1f} s")
+            st.caption(f"{'Recorded: o' if recorded else 'O'}pen model on AMD MI300X via Evolus, "
+                       f"answered in {res.agent.latency_s:.1f} s")
         else:
             st.warning("The agent didn't answer, so the checks decided on their own. "
                        + E(res.trace.get("agent_error", "")))
         if res.email_draft:
             st.markdown("##### Draft email for a person to send" if route == "hold_for_review" else "##### Draft alert to the finance manager")
             st.text_area("Draft email", res.email_draft, height=210, label_visibility="collapsed")
-        st.markdown("##### What ran, where")
+        st.markdown("##### What ran, where" + (" (when recorded)" if recorded else ""))
         st.markdown(trail_html(res), unsafe_allow_html=True)
 
 
@@ -321,18 +421,52 @@ def trail_html(res: CaseResult) -> str:
 
 
 # ------------------------------------------------------------------ check tab
+def sample_options() -> dict[str, Path]:
+    options = {}
+    for f in sorted(SAMPLES.glob("case_*")):
+        try:
+            t = json.loads((f / "truth.json").read_text())
+        except (OSError, ValueError, KeyError):
+            continue  # a broken sample folder is skipped, not fatal
+        options[f"{f.name.replace('_', ' ').capitalize()}: {t.get('description', '')}"] = f
+    return options
+
+
+def queue_case(option: str) -> None:
+    """Rehearsal button: pick the sample and check it on the next run, in one click."""
+    st.session_state["doc_mode"] = "Use a sample case"
+    st.session_state["sample_pick"] = option
+    st.session_state["run_now"] = True
+
+
+def replay(case: str) -> bool:
+    rec = recording.load(settings.recordings_dir, case)
+    if rec is None:
+        return False
+    st.session_state.update(result=rec[0], result_meta=rec[1], result_case=case)
+    return True
+
+
 with tab_check:
-    mode = st.radio("Documents", ["Use a sample case", "Upload my own"], horizontal=True)
+    options = sample_options()
+    by_case = {f.name: name for name, f in options.items()}
+    # ?case=case_07 checks that sample once when the page opens
+    if not st.session_state.get("url_case_done") and st.query_params.get("case") in by_case:
+        st.session_state["url_case_done"] = True
+        queue_case(by_case[st.query_params["case"]])
+    rehearsal = [(case, text) for case, text in REHEARSAL if case in by_case]
+    if rehearsal:
+        st.markdown('<p class="lp-small">Demo cases, one click to check:</p>', unsafe_allow_html=True)
+        for col, (case, text) in zip(st.columns(len(rehearsal)), rehearsal, strict=True):
+            col.button(f"{text} ({case.replace('_', ' ')})", key=f"rehearse-{case}", on_click=queue_case,
+                       args=(by_case[case],), width="stretch")
+    mode = st.radio("Documents", ["Use a sample case", "Upload my own"], horizontal=True, key="doc_mode")
     docs, label = None, ""
     if mode == "Use a sample case":
-        options = {}
-        for f in sorted(SAMPLES.glob("case_*")):
-            t = json.loads((f / "truth.json").read_text())
-            options[f"{f.name.replace('_', ' ').capitalize()}: {t['description']}"] = f
         if not options:
             st.warning("No sample cases found. Run `python scripts/make_samples.py` first.")
         else:
-            pick = st.selectbox("Sample case", list(options))
+            pick = st.selectbox("Sample case", list(options), key="sample_pick")
             folder = options[pick]
             c1, c2, c3 = st.columns(3)
             for col, (kind, name) in zip((c1, c2, c3), (("po", "Purchase order"), ("grn", "Delivery note"),
@@ -352,22 +486,55 @@ with tab_check:
         else:
             st.caption("Add all three documents to check the invoice.")
 
-    if st.button("Check invoice", type="primary", disabled=docs is None):
+    clicked = st.button("Replay recorded result" if demo_mode else "Check invoice", type="primary",
+                        disabled=docs is None)
+    if (clicked or st.session_state.pop("run_now", False)) and docs is not None:
+        st.session_state.pop("notice", None)
+        if demo_mode:
+            if not replay(label):
+                for k in ("result", "result_meta"):
+                    st.session_state.pop(k, None)
+                st.session_state["notice"] = (
+                    f"No recording for {label} yet. Turn demo mode off to check it live, or record it first."
+                    if mode == "Use a sample case" else
+                    "Demo mode only replays recorded sample cases. Turn it off to check your own documents.")
+            st.rerun()
         try:
             pipe = get_pipeline()
         except ConfigError as exc:
             st.error(f"Can't check invoices yet. {exc}")
+            if recording.load(settings.recordings_dir, label):
+                st.caption("A recorded run of this case exists: turn on demo mode in the sidebar to show it.")
+            st.stop()
+        except Exception as exc:  # noqa: BLE001 - never show a stack trace to a clerk or a judge
+            st.error(f"LedgerPilot couldn't start ({type(exc).__name__}). Check the settings and data files.")
             st.stop()
         with st.status("Checking the invoice", expanded=True) as status:
             result = pipe.run(docs, label=label, progress=lambda m: status.write(m))
             status.update(label=STAMP[result.route.value][0], expanded=False,
                           state="error" if result.route is Route.ERROR else "complete")
-        st.session_state["result"] = result
+        st.session_state.update(result=result, result_meta=None, result_case=label)
         st.rerun()
 
+    if st.session_state.get("notice"):
+        st.info(st.session_state["notice"])
     if "result" in st.session_state:
+        res, meta, case = (st.session_state["result"], st.session_state.get("result_meta"),
+                           st.session_state.get("result_case", ""))
         st.divider()
-        show_result(st.session_state["result"])
+        show_result(res, meta)
+        if meta is None and res.route is Route.ERROR and recording.load(settings.recordings_dir, case):
+            st.button("Show the recorded run of this case instead", key="fallback",
+                      help="Replays a saved live run, clearly labelled as recorded.", on_click=replay, args=(case,))
+        if meta is None and res.route is not Route.ERROR and case in by_case:
+            if st.button("Save for demo mode", key="save-rec",
+                         help="Stores this live result so demo mode can replay it, labelled as recorded."):
+                try:
+                    recording.save(settings.recordings_dir, res, case,
+                                   model=(health or {}).get("weights") or settings.vllm_model, source="app, live check")
+                    st.success(f"Saved. Demo mode will replay this run of {case}.")
+                except OSError as exc:
+                    st.error(f"Couldn't save the recording ({type(exc).__name__}). Check RECORDINGS_DIR is writable.")
 
 
 # ------------------------------------------------------------------ review queue
