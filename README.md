@@ -141,6 +141,11 @@ tests/                      offline tests: rules, edge cases, real HTTP against 
                             fake of Evolus and vLLM, and a click-through of every app screen
 ```
 
+## Submission assets
+
+`docs/submission/`: demo video script, project descriptions and tags, the cover image
+(`python scripts/make_cover.py`) and the submission checklist.
+
 ## Quality checks
 
 See [docs/QA_REPORT.md](docs/QA_REPORT.md) for what was tested and what was fixed.
