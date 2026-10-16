@@ -1,0 +1,25 @@
+name: docker
+on: [push, pull_request]
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (also runs the rules tests inside the build)
+        run: docker build -t ledgerpilot-ai:ci .
+      - name: Start the app without credentials
+        run: docker run -d --name lp -p 8501:8501 ledgerpilot-ai:ci
+      - name: Wait for the Streamlit health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8501/_stcore/health | grep -q ok; then echo "healthy after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          docker logs lp
+          exit 1
+      - name: The page is served
+        run: curl -fsS http://localhost:8501/ | grep -qi "<html"
+      - name: Runs as a non-root user
+        run: test "$(docker exec lp id -u)" = "10001"
+      - name: No .env baked into the image
+        run: test -z "$(docker run --rm --entrypoint sh ledgerpilot-ai:ci -c 'ls -a /app | grep -E "^\.env$" || true')"
