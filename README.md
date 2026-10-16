@@ -38,12 +38,15 @@ Create a 1x MI300X GPU droplet with the **vLLM** Quick Start image, then:
 ssh root@<DROPLET_IP>
 docker exec -it rocm /bin/bash
 export VLLM_API_KEY=$(openssl rand -hex 32); echo $VLLM_API_KEY
-python -m vllm.entrypoints.openai.api_server \
+nohup python -m vllm.entrypoints.openai.api_server \
   --model Qwen/Qwen2.5-32B-Instruct --served-model-name ledgerpilot-model \
   --host 0.0.0.0 --port 8000 --dtype float16 --max-model-len 32768 \
   --api-key $VLLM_API_KEY --enable-auto-tool-choice --tool-call-parser hermes \
   > /tmp/vllm.log 2>&1 &
 ```
+
+`nohup` keeps the server running after you close the SSH window. Working from Windows with no Linux
+machine? Everything above runs on the droplet; see [docs/setup_windows.md](docs/setup_windows.md).
 
 ### 2. Evolus workspace
 

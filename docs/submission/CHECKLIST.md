@@ -4,6 +4,8 @@ Deadline: **Saturday 17 October 2026, 17:00 UTC** (22:00 in Pakistan, UTC+5). Ai
 
 ## 1. Live run (Phase 3), in the `ledgerpilot-ai` folder
 
+First time? Set up the AMD droplet and Evolus from Windows with [../setup_windows.md](../setup_windows.md).
+
 1. Save the filled-in settings as `ledgerpilot-ai\.env` (exactly that name: in Notepad choose
    "All files", or it saves as `.env.txt`). Never commit it; `git status` must not list it.
 2. Run these in order and keep each one's full output:
