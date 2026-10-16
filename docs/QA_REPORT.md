@@ -1,8 +1,31 @@
 # QA report
 
-Date: 16 October 2026. Result: **187 passed, 1 skipped by design, 0 failures** on Windows with Python 3.11.9
-(the Docker image's version), after adding cases 21-24 and updating three stale UI tests to the "Ready to pay" stamp.
-The per-area counts below are from the 12 October run (143 tests) and were not re-counted.
+## 16 October 2026: submission hardening
+
+Result: **208 passed, 1 skipped by design, 0 failures** on Windows, Python 3.11.9, and the same on a fresh
+clone in a new virtual environment. Regenerating the samples changes no committed file.
+
+| Change | How it was checked |
+| --- | --- |
+| Model badge: weights reported by vLLM, endpoint response time, tokens/s button | HTTP tests against a local vLLM stand-in; UI test |
+| Demo mode replays recorded live runs with a "Recorded run" banner; never calls services, never touches the queue | UI tests; recording round-trip test |
+| `?demo=1` and `?case=case_07` links; one-click buttons for cases 01, 07, 15 | UI tests |
+| Each finding shows its code, the rule that fired and what it does to the payment; extracted fields table with the bank account masked | UI tests |
+| Clean invoice with no readable agent review is held for a person (`LOW_CONFIDENCE`); a stricter agent is explained (`AGENT_CONCERN`) | pipeline tests |
+| Empty, wrong-type and cut-off files stopped before any Evolus call; a timed-out Evolus call is not retried | pipeline tests |
+| No tracebacks in the browser (`showErrorDetails = "none"`) | config |
+| `eval/run_eval.py` adds false approvals, p95 latency and accuracy by case type, and saves recordings | run end to end against the local stand-ins |
+| Layout at 1280x720, 1366x768 and 375x812: no sideways scroll, nothing past the edge, no clipped text, title clear of the top bar | measured in a browser for ready-to-pay, hold, blocked and needs-a-person screens |
+| Docker image builds and starts | new GitHub Actions workflow (`.github/workflows/docker.yml`); not run locally, no Docker here |
+
+Not verified: anything against the live Evolus workspace or AMD endpoint (no credentials on this machine).
+In the browser pane's phone emulation, a mouse click on the sidebar's demo switch didn't toggle it; the
+switch worked at laptop width and the `?demo=1` link works at every width. Check it once on a real phone.
+
+## 12 October 2026
+
+Result: 143 tests passed, 1 skipped by design. (Cases 21-24 were added afterwards; on 16 October, before the
+hardening above, the suite stood at 187 passed, 1 skipped.) The per-area counts below are from 12 October.
 
 ## What was tested
 

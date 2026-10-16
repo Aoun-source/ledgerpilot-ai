@@ -24,7 +24,7 @@ Accounts-payable teams match invoices by hand. Two things slip through:
 | 5. Act | Evolus **AI Tool** (`email`) + **workflow** | Drafts the supplier query or fraud alert; starts the routing workflow |
 | 6. Review | Streamlit review queue + SQLite audit log | A person approves or rejects; every step and execution ID is logged |
 
-**Safety rule:** the model reads and explains; code does every number; the agent can make a case stricter than the rules but never looser. A fraud finding can't be approved by the model.
+**Safety rule:** the model reads and explains; code does every number; the agent can make a case stricter than the rules but never looser. A fraud finding can't be approved by the model. A clean invoice is only marked ready to pay when the checks and a readable agent review agree; otherwise it goes to a person with the reason shown.
 
 Evolus building blocks used: document extractors, agent, knowledge library, AI Tool, workflow.
 
@@ -90,6 +90,24 @@ docker compose up --build -d       # http://localhost:8501
 | `EVOLUS_WORKFLOW_ID` | no | "Exception routing" workflow; skipped when empty |
 | `EVOLUS_LIBRARY_ID` | for `upload_library.py` | "Vendor master and AP policy" library |
 | `PRICE_TOLERANCE`, `MAX_TAX_RATE` | no | business rules, defaults `0.00` and `0.30` |
+| `EVOLUS_TIMEOUT`, `AGENT_TIMEOUT` | no | seconds before a slow call hands the case to a person, default `90` |
+| `RECORDINGS_DIR` | no | where demo-mode recordings live, default `data/recordings` |
+
+### Demo mode
+
+For judging when the live services are slow or down. `python eval/run_eval.py` saves each case's
+**live** output to `data/recordings/`, and after any live check in the app, **Save for demo mode** does
+the same for that case. Switching on **Demo mode** in the sidebar then replays those outputs. Every replayed
+screen carries a "Recorded run" banner with the time and model it was recorded with. Replays never call
+Evolus or the model and are never added to the review queue or audit log.
+
+Links for the demo (replace the host with yours):
+
+- `http://localhost:8501/?case=case_07` opens and checks case 07 live
+- `http://localhost:8501/?demo=1&case=case_15` opens demo mode and replays case 15
+
+The three rehearsal cases also have one-click buttons at the top of the page:
+case 01 (ready to pay), case 07 (on hold, $200 over the PO price) and case 15 (payment blocked, bank account changed).
 
 ## Tests and evaluation
 
@@ -116,6 +134,7 @@ src/ledgerpilot/
   agent_client.py           agent via Evolus OpenAI-compatible endpoint; vLLM health check
   pipeline.py               one case end to end, timed and logged
   audit.py                  SQLite audit log
+  recording.py              save and replay live runs for demo mode
 scripts/                    make_samples, smoke_test, upload_library, benchmark_amd
 eval/run_eval.py            live evaluation against ground truth
 tests/                      offline tests: rules, edge cases, real HTTP against a local
