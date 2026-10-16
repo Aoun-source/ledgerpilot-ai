@@ -107,14 +107,40 @@ def parse_verdict(text: str, conversation_id: Optional[str] = None, latency: flo
 
 
 def vllm_health(settings: Settings, timeout: float = 10.0) -> dict[str, Any]:
-    """Ping your AMD-hosted vLLM endpoint directly (shown in the app sidebar)."""
+    """Ping your AMD-hosted vLLM endpoint directly (shown in the app sidebar).
+
+    vLLM reports the served name (--served-model-name) as `id` and the weights it
+    loaded (e.g. Qwen/Qwen2.5-32B-Instruct) as `root`; the UI shows the weights."""
     if not settings.vllm_base_url:
         return {"ok": False, "detail": "VLLM_BASE_URL not set"}
     try:
         client = OpenAI(base_url=settings.vllm_base_url, api_key=settings.vllm_api_key or "none",
                         timeout=timeout, max_retries=0)
         start = time.perf_counter()
-        models = [m.id for m in client.models.list().data]
-        return {"ok": True, "models": models, "latency_ms": round((time.perf_counter() - start) * 1000)}
+        data = client.models.list().data
+        latency_ms = round((time.perf_counter() - start) * 1000)
+        models = [m.id for m in data]
+        served = next((m for m in data if m.id == settings.vllm_model), data[0] if data else None)
+        weights = (getattr(served, "root", None) or served.id) if served else None
+        return {"ok": True, "models": models, "weights": weights, "latency_ms": latency_ms}
     except Exception as exc:  # noqa: BLE001 - surface any connection problem to the UI
+        return {"ok": False, "detail": f"{type(exc).__name__}: {exc}"[:300]}
+
+
+def vllm_speed(settings: Settings, max_tokens: int = 64, timeout: float = 30.0) -> dict[str, Any]:
+    """One short generation on the AMD endpoint, timed end to end (includes time to first token)."""
+    if not settings.vllm_base_url:
+        return {"ok": False, "detail": "VLLM_BASE_URL not set"}
+    try:
+        client = OpenAI(base_url=settings.vllm_base_url, api_key=settings.vllm_api_key or "none",
+                        timeout=timeout, max_retries=0)
+        start = time.perf_counter()
+        r = client.chat.completions.create(
+            model=settings.vllm_model, max_tokens=max_tokens, temperature=0,
+            messages=[{"role": "user", "content": "In three sentences, explain a three-way invoice match."}])
+        seconds = time.perf_counter() - start
+        tokens = r.usage.completion_tokens if r.usage else 0
+        return {"ok": True, "tokens": tokens, "seconds": round(seconds, 2),
+                "tokens_per_s": round(tokens / seconds, 1) if seconds > 0 else 0.0}
+    except Exception as exc:  # noqa: BLE001
         return {"ok": False, "detail": f"{type(exc).__name__}: {exc}"[:300]}

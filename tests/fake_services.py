@@ -105,7 +105,8 @@ class FakeServices:
                     return self._send(201, {"id": "doc-1", "status": "Indexing"})
                 if path == "/v1/models":
                     return self._send(200, {"object": "list", "data": [{"id": "app:agent", "object": "model", "created": 0, "owned_by": "x"},
-                                                                       {"id": "ledgerpilot-model", "object": "model", "created": 0, "owned_by": "vllm"}]})
+                                                                       {"id": "ledgerpilot-model", "object": "model", "created": 0, "owned_by": "vllm",
+                                                                        "root": "Qwen/Qwen2.5-32B-Instruct"}]})
                 if path == "/v1/chat/completions":
                     payload = json.loads(body)
                     call["json"] = payload

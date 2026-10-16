@@ -16,7 +16,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from ledgerpilot.agent_client import vllm_health  # noqa: E402
+from ledgerpilot.agent_client import vllm_health, vllm_speed  # noqa: E402
 from ledgerpilot.audit import AuditLog  # noqa: E402
 from ledgerpilot.config import ConfigError, load_settings  # noqa: E402
 from ledgerpilot.pipeline import CaseResult, Pipeline, load_case_folder  # noqa: E402
@@ -69,6 +69,7 @@ html, body, [class*="css"], .stMarkdown, .stDataFrame, button, input, textarea {
 h1, h2, h3, h4 { font-family: 'Public Sans', system-ui, sans-serif; letter-spacing: -0.01em; color: var(--ink); }
 .lp-title { font-size: 1.9rem; font-weight: 700; margin: 0; color: var(--ink); }
 .lp-lede { color: var(--muted); font-size: 1.02rem; margin: .2rem 0 0; max-width: 62ch; }
+.lp-model { color: var(--ink); font-size: .88rem; margin: .45rem 0 0; font-variant-numeric: tabular-nums; }
 .lp-sofar { margin: .9rem 0 .2rem; padding: .55rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
             color: var(--ink); font-variant-numeric: tabular-nums; }
 .lp-stamp { display: inline-block; font-family: 'Archivo Narrow', 'Arial Narrow', sans-serif; font-weight: 700;
@@ -143,16 +144,25 @@ def chip(route: str) -> str:
 
 
 # ------------------------------------------------------------------ sidebar
+vllm_set = bool(settings.vllm_base_url) and not settings.placeholder_vllm()
+health = cached_health(settings.vllm_base_url, settings.vllm_model) if vllm_set else None
+
 with st.sidebar:
     st.markdown("#### Connections")
-    if not settings.vllm_base_url or settings.placeholder_vllm():
+    if not vllm_set:
         st.warning("AMD model endpoint isn't set. Add VLLM_BASE_URL to .env.")
+    elif health["ok"]:
+        st.success(f"AMD MI300X model online ({health['latency_ms']} ms)  \n`{', '.join(health['models'])}`")
+        if st.button("Measure model speed", help="Sends one short request straight to the vLLM endpoint and times it."):
+            st.session_state["speed"] = vllm_speed(settings)
+        speed = st.session_state.get("speed")
+        if speed and speed["ok"]:
+            st.caption(f"{speed['tokens_per_s']} tokens/s: {speed['tokens']} tokens in {speed['seconds']} s, "
+                       "including time to first token.")
+        elif speed:
+            st.caption(f"Speed test failed: {speed['detail']}")
     else:
-        health = cached_health(settings.vllm_base_url, settings.vllm_model)
-        if health["ok"]:
-            st.success(f"AMD MI300X model online ({health['latency_ms']} ms)  \n`{', '.join(health['models'])}`")
-        else:
-            st.error(f"AMD model endpoint not reachable.  \n{health['detail']}")
+        st.error(f"AMD model endpoint not reachable.  \n{health['detail']}")
     missing = settings.missing()
     if missing:
         st.warning("Evolus isn't connected. Missing in .env: " + ", ".join(missing))
@@ -179,6 +189,16 @@ blocked = sum(1 for r in rows_all if r["final_route"] == "escalate_fraud")
 st.markdown('<p class="lp-title">LedgerPilot</p>'
             '<p class="lp-lede">Checks every supplier invoice against the purchase order and the delivery note, '
             'and stops wrong or fraudulent payments before they go out.</p>', unsafe_allow_html=True)
+if health and health["ok"]:
+    speed = st.session_state.get("speed") or {}
+    rate = f' · {speed["tokens_per_s"]} tokens/s' if speed.get("ok") else ""
+    st.markdown(f'<p class="lp-model"><b>Model:</b> {E(str(health["weights"]))} served on AMD Developer Cloud'
+                f' · endpoint answered in {health["latency_ms"]} ms{rate}</p>', unsafe_allow_html=True)
+elif health:
+    st.markdown('<p class="lp-model"><b>Model:</b> AMD Developer Cloud endpoint not reachable</p>',
+                unsafe_allow_html=True)
+else:
+    st.markdown('<p class="lp-model"><b>Model:</b> not connected (set VLLM_BASE_URL)</p>', unsafe_allow_html=True)
 if checked:
     st.markdown(f'<div class="lp-sofar">So far: {checked} invoice{"s" if checked != 1 else ""} checked, '
                 f'{money(held)} held for review, {blocked} payment{"s" if blocked != 1 else ""} blocked as possible fraud.</div>',

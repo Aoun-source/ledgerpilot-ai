@@ -99,6 +99,15 @@ def test_check_each_outcome(configured, case, stamp):
         assert "Draft alert to the finance manager" in md
 
 
+def test_model_indicator_and_speed_probe(configured):
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    assert "<b>Model:</b> Qwen/Qwen2.5-32B-Instruct served on AMD Developer Cloud" in all_markdown(at)
+    next(b for b in at.sidebar.button if b.label == "Measure model speed").click()
+    at.run()
+    assert not at.exception and "tokens/s" in all_markdown(at)
+    assert any("tokens/s" in c.value for c in at.sidebar.caption)
+
+
 def test_review_queue_requires_note_to_release_blocked_payment(configured):
     serve(configured, "case_15")
     at = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_15")

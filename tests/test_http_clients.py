@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fake_services import FakeServices
 
-from ledgerpilot.agent_client import ClerkAgent, vllm_health
+from ledgerpilot.agent_client import ClerkAgent, vllm_health, vllm_speed
 from ledgerpilot.audit import AuditLog
 from ledgerpilot.config import Settings
 from ledgerpilot.evolus_client import EvolusClient, EvolusError
@@ -137,8 +137,18 @@ def test_agent_reply_in_code_fence_with_prose(svc, settings):
 def test_vllm_health_ok_and_down(svc, settings):
     h = vllm_health(settings)
     assert h["ok"] and "ledgerpilot-model" in h["models"]
+    assert h["weights"] == "Qwen/Qwen2.5-32B-Instruct"  # vLLM's `root`, not the served alias
     settings.vllm_base_url = "http://127.0.0.1:9/v1"
     assert vllm_health(settings, timeout=1)["ok"] is False
+
+
+def test_vllm_speed_measures_tokens_per_second(svc, settings):
+    s = vllm_speed(settings)
+    call = svc.calls[-1]
+    assert call["path"] == "/v1/chat/completions" and call["json"]["model"] == "ledgerpilot-model"
+    assert s["ok"] and s["tokens"] == 5 and s["tokens_per_s"] > 0
+    settings.vllm_base_url = "http://127.0.0.1:9/v1"
+    assert vllm_speed(settings, timeout=1)["ok"] is False
 
 
 # --------------------------------------------- full pipeline over real HTTP
