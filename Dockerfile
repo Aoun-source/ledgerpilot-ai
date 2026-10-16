@@ -11,7 +11,8 @@ COPY . .
 RUN python scripts/make_samples.py && python -m pytest -q -p no:cacheprovider tests/test_rules.py tests/test_edge_cases.py
 
 # Run as a normal user; the audit DB lives on a volume it owns, so it survives restarts
-RUN useradd --create-home --uid 10001 app && mkdir -p /data && chown app /data
+RUN useradd --create-home --uid 10001 app && mkdir -p /data /app/data/recordings \
+ && chown app /data /app/data/recordings
 USER app
 ENV AUDIT_DB=/data/ledgerpilot_audit.db
 VOLUME ["/data"]

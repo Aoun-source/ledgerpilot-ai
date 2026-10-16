@@ -26,10 +26,13 @@ from ledgerpilot.agent_client import AGENT_INSTRUCTIONS  # noqa: E402
 from ledgerpilot.config import load_settings  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+# Every sample case with a readable invoice (the corrupt-PDF case has none to send)
+TRUTHS = [t for t in (json.loads(p.read_text()) for p in sorted((ROOT / "data/samples").glob("case_*/truth.json")))
+          if t["invoice"]]
 
 
 def case_prompt(i: int) -> str:
-    truth = json.loads((ROOT / "data/samples" / f"case_{(i % 19) + 1:02d}" / "truth.json").read_text())
+    truth = TRUTHS[i % len(TRUTHS)]
     return "CASE:\n" + json.dumps({k: truth[k] for k in ("po", "grn", "invoice")}, indent=2)
 
 
