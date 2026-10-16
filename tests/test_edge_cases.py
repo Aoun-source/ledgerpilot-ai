@@ -10,6 +10,7 @@ from ledgerpilot.audit import AuditLog
 from ledgerpilot.config import ConfigError, Settings
 from ledgerpilot.fraud import fraud_checks, total_impact
 from ledgerpilot.reconcile import three_way_match
+from ledgerpilot.rules import evaluate
 from ledgerpilot.schemas import (
     Discrepancy,
     GoodsReceipt,
@@ -128,6 +129,136 @@ def test_money_at_risk_never_exceeds_invoice_on_fraud():
               Discrepancy(code="PRICE_VARIANCE", route=Route.HOLD, field="p", impact=D("200"), message="m")]
     assert total_impact(issues) == D("1000")
     assert total_impact([issues[1], issues[1]]) == D("400")
+
+
+# ------------------------------------------- unreadable PO / GRN never approves
+def test_unreadable_po_price_is_held_not_approved():
+    po, grn, inv = _docs([100])
+    po.lines[0].unit_price = None
+    inv.lines[0].unit_price, inv.lines[0].line_total = D(99), D(9900)
+    inv.subtotal = inv.total = D(9900)
+    (issue,) = three_way_match(po, grn, inv)
+    assert issue.code == "MISSING_FIELD" and issue.field == "po line A" and issue.route is Route.HOLD
+
+
+@pytest.mark.parametrize("name", ["po_number", "supplier_id", "currency"])
+def test_unreadable_po_header_is_held(name):
+    po, grn, inv = _docs([100])
+    setattr(po, name, None)
+    assert [(i.code, i.field) for i in three_way_match(po, grn, inv)] == [("MISSING_FIELD", f"po.{name}")]
+
+
+def test_grn_without_po_number_is_held():
+    po, grn, inv = _docs([100])
+    grn.po_number = None
+    assert [(i.code, i.field) for i in three_way_match(po, grn, inv)] == [("MISSING_FIELD", "grn.po_number")]
+
+
+# ------------------------------------------------- credit notes, negative values
+def test_credit_note_is_never_approved_for_payment():
+    po, grn, inv = _docs([-10])  # -10 units, total -100
+    issues = three_way_match(po, grn, inv)
+    assert {(i.code, i.field) for i in issues} == {("NEGATIVE_VALUE", "total"), ("NEGATIVE_VALUE", "line A")}
+    assert all(i.route is Route.HOLD for i in issues)
+
+
+def test_negative_unit_price_is_flagged():
+    po, grn, inv = _docs([100])
+    inv.lines[0].unit_price, inv.lines[0].line_total = D(-10), D(-1000)
+    assert "NEGATIVE_VALUE" in {i.code for i in three_way_match(po, grn, inv)}
+
+
+# ------------------------------------------------- same item twice on the PO
+def test_item_on_po_at_two_prices_goes_to_a_person():
+    po, grn, inv = _docs([100, 100], received=200)  # all 200 billed at 10
+    po = PurchaseOrder(**{**po.model_dump(), "lines": [{"sku": "A", "qty": 100, "unit_price": 10},
+                                                       {"sku": "A", "qty": 100, "unit_price": 8}]})
+    (issue,) = three_way_match(po, grn, inv)       # reported once, not once per invoice line
+    assert issue.code == "PO_PRICE_AMBIGUOUS" and issue.actual == "8, 10"
+
+
+def test_item_on_two_po_lines_at_one_price_passes():
+    po, grn, inv = _docs([100])
+    po = PurchaseOrder(**{**po.model_dump(), "lines": [{"sku": "A", "qty": 50, "unit_price": 10}] * 2})
+    assert three_way_match(po, grn, inv) == []
+
+
+# ---------------------------------------------------------------- money at risk
+def _price_issue(impact):
+    return Discrepancy(code="PRICE_VARIANCE", route=Route.HOLD, field="p", impact=D(impact), message="m")
+
+
+def test_undercharge_does_not_hide_an_overcharge():
+    assert total_impact([_price_issue("200"), _price_issue("-200")]) == D("200")
+
+
+def test_extra_units_are_counted_once():
+    po, grn, inv = _docs([60, 60])  # 20 units too many: not ordered AND not received
+    assert total_impact(three_way_match(po, grn, inv)) == D("200.00")
+
+
+def test_money_at_risk_is_capped_at_the_invoice_total():
+    assert total_impact([_price_issue("200"), _price_issue("200")], cap=D("300")) == D("300")
+    assert total_impact([_price_issue("200")], cap=None) == D("200")
+
+
+# ------------------------------------------------- invoice-number tricks
+_V1 = {"V1": Vendor(supplier_id="V1", name="X", iban="IB1", currency="USD")}
+_PAID = [PastInvoice(supplier_id="V1", invoice_number="AC-7710", invoice_date="2026-06-01", total=512)]
+
+
+def _resubmit(number, supplier_id="V1"):
+    inv = Invoice(supplier_id=supplier_id, bank_iban="IB1", currency="USD", invoice_number=number,
+                  invoice_date="2026-10-05", total=999)
+    return fraud_checks(inv, _V1, _PAID)
+
+
+@pytest.mark.parametrize("number", ["AC7710", "ac 7710", "AC/7710", "AC-07710", "AC‑7710", "AC-7710.",
+                                    "AC-7710-A", "AC-7710rev", "ＡＣ-7710", "AC-771O", "AC-77I0"])
+def test_reformatted_invoice_number_is_still_a_duplicate(number):
+    (issue,) = _resubmit(number)
+    assert issue.code == "LOOKALIKE_INVOICE_NUMBER" and issue.route is Route.FRAUD
+    assert "AC-7710" in issue.message and issue.impact == D(999)
+
+
+def test_identical_invoice_number_keeps_the_exact_duplicate_code():
+    assert [i.code for i in _resubmit("ac-7710 ")] == ["DUPLICATE_INVOICE"]
+
+
+@pytest.mark.parametrize("number", ["AC-7711", "AC-77101", "AC-7710-2", "BC-7710"])
+def test_genuinely_different_invoice_number_passes(number):
+    assert _resubmit(number) == []
+
+
+def test_lookalike_number_from_another_supplier_is_not_a_duplicate():
+    vendors = {**_V1, "V2": Vendor(supplier_id="V2", name="Y", iban="IB1", currency="USD")}
+    inv = Invoice(supplier_id="V2", bank_iban="IB1", currency="USD", invoice_number="AC7710",
+                  invoice_date="2026-10-05", total=999)
+    assert fraud_checks(inv, vendors, _PAID) == []
+
+
+# ------------------------------------------------- vendor checks that used to be skipped
+def test_missing_supplier_id_still_gets_the_bank_check():
+    inv = Invoice(bank_iban="XX99EVIL", currency="USD", invoice_number="N-1", invoice_date="2026-10-05", total=100)
+    assert fraud_checks(inv, _V1) == []  # nothing to look up without any supplier
+    (issue,) = fraud_checks(inv, _V1, fallback_supplier_id="V1")
+    assert issue.code == "BANK_MISMATCH" and issue.route is Route.FRAUD
+
+
+def test_evaluate_uses_the_po_supplier_when_the_invoice_has_none():
+    po, grn, inv = _docs([100])
+    inv.supplier_id, inv.bank_iban = None, "XX99EVIL"
+    decision = evaluate(po, grn, inv, _V1)
+    assert decision.route is Route.FRAUD
+    assert {d.code for d in decision.discrepancies} == {"MISSING_FIELD", "BANK_MISMATCH"}
+    assert decision.money_at_risk == D(1000)
+
+
+def test_invoice_currency_must_match_the_vendor_master():
+    inv = Invoice(supplier_id="V1", bank_iban="IB1", currency="EUR", invoice_number="N-1", total=100)
+    (issue,) = fraud_checks(inv, _V1)
+    assert (issue.code, issue.field, issue.route) == ("CURRENCY_MISMATCH", "vendor.currency", Route.HOLD)
+    assert (issue.expected, issue.actual) == ("USD", "EUR")
 
 
 # ---------------------------------------------------------------- audit + config

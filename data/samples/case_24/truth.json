@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1024",
+    "po_date": "2026-09-11",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "DOC-USB",
+        "description": "USB-C docking station",
+        "qty": "10",
+        "unit_price": "95.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5024",
+    "po_number": "PO-2026-1024",
+    "received_date": "2026-09-21",
+    "supplier_id": "V002",
+    "lines": [
+      {
+        "sku": "DOC-USB",
+        "description": "USB-C docking station",
+        "qty_received": "10"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "NW-8024",
+    "invoice_date": "2026-10-05",
+    "po_number": "PO-2026-1024",
+    "supplier_id": "V002",
+    "supplier_name": "Northwind Electronics LLC",
+    "currency": "USD",
+    "bank_iban": "US11NWND00000987654302",
+    "lines": [
+      {
+        "sku": "DOC-USB",
+        "description": "USB-C docking station",
+        "qty": "4",
+        "unit_price": "95.00",
+        "line_total": "380.00"
+      }
+    ],
+    "subtotal": "380.00",
+    "tax": "0.00",
+    "total": "380.00"
+  },
+  "description": "PO for 10 docks was fully billed last month; this invoice bills 4 more",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "PO_ALREADY_BILLED"
+  ],
+  "case_id": "case_24"
+}

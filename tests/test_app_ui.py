@@ -74,13 +74,13 @@ def test_unconfigured_app_renders_with_clear_guidance(monkeypatch, tmp_path):
     warnings = " ".join(w.value for w in at.sidebar.warning)
     assert "VLLM_BASE_URL" in warnings and "EVOLUS_API_KEY" in warnings
     assert [t.label for t in at.tabs] == ["Check an invoice", "Review queue (0)", "Audit log", "Results"]
-    assert len(at.selectbox[0].options) == 20
+    assert len(at.selectbox[0].options) == 24
     next(b for b in at.button if b.label == "Check invoice").click()
     at.run()
     assert not at.exception and "Can't check invoices yet" in at.error[0].value
 
 
-@pytest.mark.parametrize("case,stamp", [("case_01", "Approved to pay"), ("case_07", "On hold"),
+@pytest.mark.parametrize("case,stamp", [("case_01", "Ready to pay"), ("case_07", "On hold"),
                                         ("case_15", "Payment blocked"), ("case_20", "Needs a person")])
 def test_check_each_outcome(configured, case, stamp):
     serve(configured, case)
@@ -127,7 +127,7 @@ def test_audit_log_filter_and_clear_history(configured):
     at = check_case(at, "case_07")
     assert "So far: 2 invoices checked, 200.00 held for review, 0 payments blocked" in all_markdown(at)
     audit_df = at.dataframe[-1].value
-    assert len(audit_df) == 2 and set(audit_df["Decision"]) == {"Approved to pay", "On hold"}
+    assert len(audit_df) == 2 and set(audit_df["Decision"]) == {"Ready to pay", "On hold"}
     at.multiselect[0].set_value(["On hold"])
     at.run()
     assert list(at.dataframe[-1].value["Decision"]) == ["On hold"]

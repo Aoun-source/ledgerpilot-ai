@@ -26,7 +26,7 @@ def load(path: Path):
 
 
 def test_dataset_present():
-    assert len(CASES) == 20, "run: python scripts/make_samples.py"
+    assert len(CASES) == 24, "run: python scripts/make_samples.py"
 
 
 @pytest.mark.parametrize("truth_path", CASES, ids=lambda p: p.parent.name)

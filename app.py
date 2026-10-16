@@ -28,7 +28,7 @@ SAMPLES = ROOT / "data" / "samples"
 E = html.escape  # everything from documents or the model is escaped before it touches HTML
 
 STAMP = {
-    "approve_for_payment": ("Approved to pay", "ok", "Purchase order, delivery and invoice agree. It can go to normal payment approval."),
+    "approve_for_payment": ("Ready to pay", "ok", "Purchase order, delivery and invoice agree. A person gives the final yes in the review queue."),
     "hold_for_review": ("On hold", "hold", "Payment is held until the supplier explains or corrects the invoice."),
     "escalate_fraud": ("Payment blocked", "fraud", "Possible fraud. Nothing is paid until a manager verifies the supplier by phone."),
     "processing_error": ("Needs a person", "err", "This invoice could not be checked automatically."),
@@ -41,7 +41,12 @@ FINDING = {
     "LINE_ARITHMETIC": "Line total doesn't add up",
     "SUBTOTAL_ARITHMETIC": "Subtotal doesn't add up",
     "TOTAL_ARITHMETIC": "Total doesn't add up",
-    "CURRENCY_MISMATCH": "Different currency from the PO",
+    "CURRENCY_MISMATCH": "Currency differs from the PO or vendor records",
+    "NEGATIVE_VALUE": "Negative amount (possible credit note)",
+    "PO_PRICE_AMBIGUOUS": "PO lists more than one price for the item",
+    "LOOKALIKE_INVOICE_NUMBER": "Invoice number looks like one already processed",
+    "TAX_OUT_OF_RANGE": "Tax looks too high",
+    "PO_ALREADY_BILLED": "Purchase order already billed",
     "PO_MISMATCH": "Invoice cites a different PO",
     "GRN_PO_MISMATCH": "Delivery note is for a different PO",
     "SUPPLIER_MISMATCH": "Different supplier from the PO",
@@ -60,7 +65,7 @@ st.markdown("""
 :root { --paper:#F7F8F6; --ink:#1D2A36; --muted:#5B6670; --rule:#D5DCE3;
         --ok:#1F7A4D; --hold:#A86400; --fraud:#B3261E; --err:#5B6670; }
 html, body, [class*="css"], .stMarkdown, .stDataFrame, button, input, textarea { font-family: 'Public Sans', system-ui, sans-serif; }
-.block-container { padding-top: 2rem; max-width: 1240px; }
+.block-container { padding-top: 4.5rem; max-width: 1240px; }
 h1, h2, h3, h4 { font-family: 'Public Sans', system-ui, sans-serif; letter-spacing: -0.01em; color: var(--ink); }
 .lp-title { font-size: 1.9rem; font-weight: 700; margin: 0; color: var(--ink); }
 .lp-lede { color: var(--muted); font-size: 1.02rem; margin: .2rem 0 0; max-width: 62ch; }
@@ -346,10 +351,20 @@ with tab_check:
 
 
 # ------------------------------------------------------------------ review queue
+def review_case(case_id: int, decision: str, note_required: bool = False) -> None:
+    """Button callback: runs before the page is redrawn, so the queue shows the new state straight away."""
+    note = st.session_state.get(f"note{case_id}", "")
+    if note_required and not note.strip():
+        st.session_state["note_missing"] = case_id
+        return
+    audit.review(case_id, decision, note)
+
+
 with tab_queue:
     pending = audit.pending_review()
+    note_missing = st.session_state.pop("note_missing", None)
     if not pending:
-        st.info("Nothing waiting. Held and blocked invoices land here for a person to decide.")
+        st.info("Nothing waiting. Every checked invoice lands here, and nothing is paid until a person releases it.")
     for row in pending:
         with st.container(border=True):
             info, act = st.columns([3, 1.1])
@@ -364,18 +379,19 @@ with tab_queue:
             for d in json.loads(row["discrepancies"] or "[]"):
                 info.markdown(f'<div class="lp-small">• {E(FINDING.get(d["code"], d["code"]))}: {E(d["message"])}</div>',
                               unsafe_allow_html=True)
-            note = act.text_input("Reviewer note", key=f"note{row['id']}",
-                                  placeholder="Required to release a blocked payment"
-                                  if row["final_route"] == "escalate_fraud" else "Optional note")
-            if act.button("Release for payment", key=f"ok{row['id']}"):
-                if row["final_route"] == "escalate_fraud" and not note.strip():
+            blocked_row = row["final_route"] == "escalate_fraud"
+            act.text_input("Reviewer note", key=f"note{row['id']}",
+                           placeholder="Required to release a blocked payment" if blocked_row else "Optional note")
+            if row["final_route"] == "processing_error":
+                # An invoice that could not be read can never be released from here.
+                act.caption("Can't be paid from here. Check the documents by hand or upload readable copies.")
+            else:
+                act.button("Release for payment", key=f"ok{row['id']}", on_click=review_case,
+                           args=(row["id"], "approved_by_reviewer", blocked_row))
+                if note_missing == row["id"]:
                     act.error("Add a note saying how the supplier was verified.")
-                else:
-                    audit.review(row["id"], "approved_by_reviewer", note)
-                    st.rerun()
-            if act.button("Reject invoice", key=f"no{row['id']}", type="primary"):
-                audit.review(row["id"], "rejected_by_reviewer", note)
-                st.rerun()
+            act.button("Reject invoice", key=f"no{row['id']}", type="primary", on_click=review_case,
+                       args=(row["id"], "rejected_by_reviewer"))
 
 
 # ------------------------------------------------------------------ audit log

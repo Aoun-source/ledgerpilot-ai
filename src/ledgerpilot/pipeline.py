@@ -105,7 +105,7 @@ class Pipeline:
             progress("Running three-way match and fraud checks (Python, Decimal)")
             t = time.perf_counter()
             history = load_history(self.s) + self.audit.history()
-            decision = evaluate(po, grn, inv, self.vendors, history, self.s.price_tolerance)
+            decision = evaluate(po, grn, inv, self.vendors, history, self.s.price_tolerance, self.s.max_tax_rate)
             res.rule_route, res.discrepancies = decision.route, decision.discrepancies
             res.money_at_risk = decision.money_at_risk
             res.timings["rules_s"] = time.perf_counter() - t

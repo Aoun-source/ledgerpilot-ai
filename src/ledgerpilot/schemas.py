@@ -202,9 +202,13 @@ class PastInvoice(_Base):
     invoice_number: Optional[str] = None
     invoice_date: Optional[date] = None
     total: Optional[Decimal] = None
+    # What it billed and against which PO, when known: used for the PO balance check.
+    po_number: Optional[str] = None
+    lines: list[InvoiceLine] = Field(default_factory=list)
 
     _dec = _decimal_validator("total")
     _date = field_validator("invoice_date", mode="before")(lambda v: to_date(v))
+    _lines = field_validator("lines", mode="before")(_lines_or_empty)
 
 
 class Route(str, Enum):

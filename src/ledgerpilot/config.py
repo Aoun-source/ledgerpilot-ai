@@ -59,6 +59,7 @@ class Settings:
 
     # Business rules
     price_tolerance: Decimal = field(default_factory=lambda: _decimal_env("PRICE_TOLERANCE", "0.00"))
+    max_tax_rate: Decimal = field(default_factory=lambda: _decimal_env("MAX_TAX_RATE", "0.30"))
     vendor_master_path: Path = field(default_factory=lambda: Path(_get("VENDOR_MASTER", str(ROOT / "data" / "vendor_master.csv"))))
     history_path: Path = field(default_factory=lambda: Path(_get("PAYMENT_HISTORY", str(ROOT / "data" / "history.json"))))
     audit_db: Path = field(default_factory=lambda: Path(_get("AUDIT_DB", str(ROOT / "ledgerpilot_audit.db"))))

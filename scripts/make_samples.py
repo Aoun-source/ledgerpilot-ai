@@ -1,4 +1,4 @@
-"""Generate the synthetic evaluation set: 20 cases of PO + GRN + invoice PDFs.
+"""Generate the synthetic evaluation set: 24 cases of PO + GRN + invoice PDFs.
 
 Each case folder holds po.pdf, grn.pdf, invoice.pdf and truth.json (the exact
 values printed on the documents plus the expected route). All companies,
@@ -55,6 +55,9 @@ HISTORY = [
     {"supplier_id": "V002", "invoice_number": "NW-55120", "invoice_date": "2026-09-14", "total": "4440.00"},
     {"supplier_id": "V005", "invoice_number": "HP-3301", "invoice_date": "2026-09-28", "total": "1920.00"},
     {"supplier_id": "V001", "invoice_number": "AC-7710", "invoice_date": "2026-08-30", "total": "512.00"},
+    # Billed all 10 docking stations ordered on PO-2026-1024 (see case 24).
+    {"supplier_id": "V002", "invoice_number": "NW-7024", "invoice_date": "2026-09-22", "total": "950.00",
+     "po_number": "PO-2026-1024", "lines": [{"sku": "DOC-USB", "qty": "10"}]},
 ]
 
 
@@ -183,6 +186,27 @@ def cases() -> list[dict]:
     c = build_case(20, "V001", [(0, 5)])
     c["corrupt_invoice"] = True
     add("Invoice PDF is corrupt / unreadable", "processing_error", [], c)
+
+    # Tricks a plain invoice-vs-PO check lets through
+    c = build_case(21, "V001", [(2, 30)])
+    c["invoice"]["invoice_number"] = "AC7710"
+    add("Paid invoice AC-7710 sent again as AC7710 (dash removed)", "escalate_fraud", ["LOOKALIKE_INVOICE_NUMBER"], c)
+
+    c = build_case(22, "V003", [(1, 8)])
+    c["invoice"]["tax"] = "408.00"  # 60% of the 680.00 subtotal
+    retotal(c["invoice"])
+    add("Tax padded to 60% of the subtotal; the sums still add up", "hold_for_review", ["TAX_OUT_OF_RANGE"], c)
+
+    c = build_case(23, "V004", [(0, 12)])
+    c["invoice"]["lines"][0]["qty"] = "-2"
+    retotal(c["invoice"])
+    add("Credit note for 2 returned rolls sent in as an invoice", "hold_for_review", ["NEGATIVE_VALUE"], c)
+
+    c = build_case(24, "V002", [(2, 10)])
+    c["invoice"]["lines"][0]["qty"] = "4"
+    retotal(c["invoice"])
+    add("PO for 10 docks was fully billed last month; this invoice bills 4 more", "hold_for_review",
+        ["PO_ALREADY_BILLED"], c)
     return out
 
 
@@ -254,7 +278,12 @@ def write_vendor_master() -> None:
     story += [pt, Spacer(1, 12), Paragraph("<b>Tolerance rules</b>", styles["Heading2"]),
               Paragraph("Price tolerance: 0.00 (any variance is held). Quantities billed may not exceed quantities "
                         "ordered or received. Duplicate invoice numbers, or the same amount from the same supplier "
-                        "within 30 days, are escalated as possible fraud.", styles["Normal"])]
+                        "within 30 days, are escalated as possible fraud.", styles["Normal"]),
+              Paragraph("An invoice number that differs from a processed one only in punctuation, spacing, leading "
+                        "zeros or look-alike characters is treated as a duplicate. Each ordered unit may be billed "
+                        "once across all invoices for a purchase order. Tax above 30% of the subtotal is held. "
+                        "Credit notes and negative amounts are held for a person. No payment is released without "
+                        "a person's decision in the review queue.", styles["Normal"])]
     SimpleDocTemplate(str(DATA / "vendor_master.pdf"), pagesize=A4).build(story)
     (DATA / "history.json").write_text(json.dumps(HISTORY, indent=2))
 

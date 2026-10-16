@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1023",
+    "po_date": "2026-09-12",
+    "supplier_id": "V004",
+    "supplier_name": "Ravi Textiles Pvt Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "CTN-500",
+        "description": "Cotton fabric roll, 50 m",
+        "qty": "12",
+        "unit_price": "120.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5023",
+    "po_number": "PO-2026-1023",
+    "received_date": "2026-09-22",
+    "supplier_id": "V004",
+    "lines": [
+      {
+        "sku": "CTN-500",
+        "description": "Cotton fabric roll, 50 m",
+        "qty_received": "12"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "RT-8023",
+    "invoice_date": "2026-10-08",
+    "po_number": "PO-2026-1023",
+    "supplier_id": "V004",
+    "supplier_name": "Ravi Textiles Pvt Ltd",
+    "currency": "USD",
+    "bank_iban": "PK36RAVI0000001122334404",
+    "lines": [
+      {
+        "sku": "CTN-500",
+        "description": "Cotton fabric roll, 50 m",
+        "qty": "-2",
+        "unit_price": "120.00",
+        "line_total": "-240.00"
+      }
+    ],
+    "subtotal": "-240.00",
+    "tax": "0.00",
+    "total": "-240.00"
+  },
+  "description": "Credit note for 2 returned rolls sent in as an invoice",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "NEGATIVE_VALUE"
+  ],
+  "case_id": "case_23"
+}

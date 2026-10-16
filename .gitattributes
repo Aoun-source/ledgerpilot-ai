@@ -1,0 +1,5 @@
+# Generated documents and images are binary: never rewrite their line endings.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.db binary

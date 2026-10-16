@@ -16,5 +16,18 @@
     "invoice_number": "AC-7710",
     "invoice_date": "2026-08-30",
     "total": "512.00"
+  },
+  {
+    "supplier_id": "V002",
+    "invoice_number": "NW-7024",
+    "invoice_date": "2026-09-22",
+    "total": "950.00",
+    "po_number": "PO-2026-1024",
+    "lines": [
+      {
+        "sku": "DOC-USB",
+        "qty": "10"
+      }
+    ]
   }
 ]

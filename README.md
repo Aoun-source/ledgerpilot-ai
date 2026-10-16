@@ -55,7 +55,7 @@ Follow [docs/evolus_setup.md](docs/evolus_setup.md): connect the model, then cre
 git clone <this repo> && cd ledgerpilot-ai
 cp .env.example .env          # fill in your endpoint, keys and IDs
 pip install -r requirements.txt
-python scripts/make_samples.py   # 20 synthetic cases + vendor master
+python scripts/make_samples.py   # 24 synthetic cases + vendor master
 python scripts/upload_library.py # vendor master -> Evolus library
 python scripts/smoke_test.py     # all five checks should PASS
 streamlit run app.py
@@ -71,12 +71,12 @@ docker compose up --build -d   # http://localhost:8501
 ## Tests and evaluation
 
 ```bash
-python -m pytest -q                      # 143 tests, offline, about 40 s
-python eval/run_eval.py --label "Qwen2.5-32B"     # full live pipeline on 20 cases -> docs/evaluation.md
+python -m pytest -q                      # 187 tests, offline, about 45 s
+python eval/run_eval.py --label "Qwen2.5-32B"     # full live pipeline on 24 cases -> docs/evaluation.md
 python scripts/benchmark_amd.py --label "Qwen2.5-32B"   # cost and speed on MI300X -> docs/benchmark.md
 ```
 
-The 20 synthetic cases cover clean invoices, price variance, short delivery, over-billing, arithmetic errors, items not on the PO, currency mismatch, changed bank account, duplicate and near-duplicate invoices, an unknown look-alike supplier and a corrupt PDF. All data is fictional.
+The 24 synthetic cases cover clean invoices, price variance, short delivery, over-billing, arithmetic errors, items not on the PO, currency mismatch, changed bank account, duplicate and near-duplicate invoices, a look-alike invoice number, padded tax, a credit note sent as an invoice, a PO billed twice, an unknown look-alike supplier and a corrupt PDF. All data is fictional.
 
 Results: see [docs/evaluation.md](docs/evaluation.md) and [docs/benchmark.md](docs/benchmark.md).
 
@@ -95,7 +95,7 @@ src/ledgerpilot/
   audit.py                  SQLite audit log
 scripts/                    make_samples, smoke_test, upload_library, benchmark_amd
 eval/run_eval.py            live evaluation against ground truth
-tests/                      143 offline tests: rules, edge cases, real HTTP against a local
+tests/                      187 offline tests: rules, edge cases, real HTTP against a local
                             fake of Evolus and vLLM, and a click-through of every app screen
 ```
 

@@ -1,7 +1,8 @@
 # QA report
 
-Date: 12 October 2026. Result: **143 tests passed, 1 skipped by design, 0 failures**, lint clean,
-on Python 3.13 and on a fresh clone with Python 3.11 (the Docker image's version).
+Date: 16 October 2026. Result: **187 passed, 1 skipped by design, 0 failures** on Windows with Python 3.11.9
+(the Docker image's version), after adding cases 21-24 and updating three stale UI tests to the "Ready to pay" stamp.
+The per-area counts below are from the 12 October run (143 tests) and were not re-counted.
 
 ## What was tested
 
@@ -37,7 +38,7 @@ Total: 144 tests, 143 passed, 1 skipped (the corrupt-PDF case in the rules-only 
 
 ## UI changes
 
-- The decision is shown as an ink stamp (Approved to pay, On hold, Payment blocked, Needs a person) with a matching plain-language sentence.
+- The decision is shown as an ink stamp (Ready to pay, On hold, Payment blocked, Needs a person) with a matching plain-language sentence.
 - Findings are written for a finance clerk ("Price above the agreed PO price") with the amount at risk beside each.
 - Order, delivery and invoice quantities and prices sit side by side, with mismatches highlighted.
 - A "What ran, where" trail shows each step, where it ran (Evolus, the AMD-hosted model or Python) and how long it took.

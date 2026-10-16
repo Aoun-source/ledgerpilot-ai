@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from .fraud import fraud_checks, total_impact
-from .reconcile import three_way_match
+from .reconcile import MAX_TAX_RATE, po_balance, three_way_match
 from .schemas import (
     Discrepancy,
     GoodsReceipt,
@@ -23,17 +23,21 @@ from .schemas import (
 class RuleDecision:
     route: Route
     discrepancies: list[Discrepancy] = field(default_factory=list)
+    invoice_total: Decimal | None = None
 
     @property
     def money_at_risk(self) -> Decimal:
-        return total_impact(self.discrepancies)
+        return total_impact(self.discrepancies, cap=self.invoice_total)
 
 
 def evaluate(po: PurchaseOrder, grn: GoodsReceipt, inv: Invoice, vendors: dict[str, Vendor],
-             history: Iterable[PastInvoice] = (), price_tolerance: Decimal = Decimal("0")) -> RuleDecision:
-    issues = three_way_match(po, grn, inv, price_tolerance=price_tolerance)
-    issues += fraud_checks(inv, vendors, history)
-    return RuleDecision(route=strictest([i.route for i in issues]), discrepancies=issues)
+             history: Iterable[PastInvoice] = (), price_tolerance: Decimal = Decimal("0"),
+             max_tax_rate: Decimal | None = MAX_TAX_RATE) -> RuleDecision:
+    history = list(history)
+    issues = three_way_match(po, grn, inv, price_tolerance=price_tolerance, max_tax_rate=max_tax_rate)
+    issues += po_balance(po, inv, history)
+    issues += fraud_checks(inv, vendors, history, fallback_supplier_id=po.supplier_id)
+    return RuleDecision(route=strictest([i.route for i in issues]), discrepancies=issues, invoice_total=inv.total)
 
 
 def final_route(rule_route: Route, agent_route: Route | None) -> Route:

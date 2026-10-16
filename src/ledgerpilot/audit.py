@@ -56,9 +56,9 @@ class AuditLog:
         return [dict(r) for r in rows]
 
     def pending_review(self) -> list[dict[str, Any]]:
+        """Every case waits for a person, clean ones included: a human approves every payment."""
         with self._conn() as c:
-            rows = c.execute("SELECT * FROM cases WHERE review_decision IS NULL "
-                             "AND final_route != 'approve_for_payment' ORDER BY id DESC").fetchall()
+            rows = c.execute("SELECT * FROM cases WHERE review_decision IS NULL ORDER BY id DESC").fetchall()
         return [dict(r) for r in rows]
 
     def history(self) -> list[PastInvoice]:
@@ -66,17 +66,31 @@ class AuditLog:
         with self._conn() as c:
             # Failed extractions and invoices a person rejected were never payable, so a
             # corrected resubmission must not be flagged as a duplicate of them.
-            rows = c.execute("SELECT supplier_id, invoice_number, invoice_date, total FROM cases "
+            rows = c.execute("SELECT supplier_id, invoice_number, invoice_date, total, extracted FROM cases "
                              "WHERE invoice_number IS NOT NULL AND final_route != 'processing_error' "
                              "AND (review_decision IS NULL OR review_decision != 'rejected_by_reviewer')").fetchall()
         out = []
         for r in rows:
+            row = dict(r)
+            billed = _billed(row.pop("extracted"))
             try:
-                out.append(PastInvoice(**dict(r)))
+                out.append(PastInvoice(**row, **billed))
             except ValueError:
-                continue
+                try:  # unreadable lines must not hide the invoice from the duplicate check
+                    out.append(PastInvoice(**row))
+                except ValueError:
+                    continue
         return out
 
     def reset(self) -> None:
         with self._conn() as c:
             c.execute("DELETE FROM cases")
+
+
+def _billed(extracted: str | None) -> dict[str, Any]:
+    """PO number and lines of a logged invoice, so later invoices on the same PO can be added up."""
+    try:
+        inv = json.loads(extracted or "{}").get("invoice") or {}
+        return {"po_number": inv.get("po_number"), "lines": inv.get("lines")}
+    except (ValueError, AttributeError):
+        return {}

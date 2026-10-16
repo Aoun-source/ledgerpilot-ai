@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1022",
+    "po_date": "2026-09-13",
+    "supplier_id": "V003",
+    "supplier_name": "Milano Arredi S.r.l.",
+    "currency": "EUR",
+    "lines": [
+      {
+        "sku": "SED-02",
+        "description": "Visitor chair",
+        "qty": "8",
+        "unit_price": "85.00"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5022",
+    "po_number": "PO-2026-1022",
+    "received_date": "2026-09-23",
+    "supplier_id": "V003",
+    "lines": [
+      {
+        "sku": "SED-02",
+        "description": "Visitor chair",
+        "qty_received": "8"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "MA-8022",
+    "invoice_date": "2026-10-07",
+    "po_number": "PO-2026-1022",
+    "supplier_id": "V003",
+    "supplier_name": "Milano Arredi S.r.l.",
+    "currency": "EUR",
+    "bank_iban": "IT60MILA0000000000456703",
+    "lines": [
+      {
+        "sku": "SED-02",
+        "description": "Visitor chair",
+        "qty": "8",
+        "unit_price": "85.00",
+        "line_total": "680.00"
+      }
+    ],
+    "subtotal": "680.00",
+    "tax": "408.00",
+    "total": "1088.00"
+  },
+  "description": "Tax padded to 60% of the subtotal; the sums still add up",
+  "expected_route": "hold_for_review",
+  "expected_codes": [
+    "TAX_OUT_OF_RANGE"
+  ],
+  "case_id": "case_22"
+}

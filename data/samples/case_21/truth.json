@@ -1,0 +1,57 @@
+{
+  "po": {
+    "po_number": "PO-2026-1021",
+    "po_date": "2026-09-14",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "lines": [
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty": "30",
+        "unit_price": "18.50"
+      }
+    ]
+  },
+  "grn": {
+    "grn_number": "GRN-5021",
+    "po_number": "PO-2026-1021",
+    "received_date": "2026-09-24",
+    "supplier_id": "V001",
+    "lines": [
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty_received": "30"
+      }
+    ]
+  },
+  "invoice": {
+    "invoice_number": "AC7710",
+    "invoice_date": "2026-10-06",
+    "po_number": "PO-2026-1021",
+    "supplier_id": "V001",
+    "supplier_name": "Acme Office Supplies Ltd",
+    "currency": "USD",
+    "bank_iban": "GB82ACME00001234567801",
+    "lines": [
+      {
+        "sku": "PPR-A4",
+        "description": "A4 paper, box of 5 reams",
+        "qty": "30",
+        "unit_price": "18.50",
+        "line_total": "555.00"
+      }
+    ],
+    "subtotal": "555.00",
+    "tax": "0.00",
+    "total": "555.00"
+  },
+  "description": "Paid invoice AC-7710 sent again as AC7710 (dash removed)",
+  "expected_route": "escalate_fraud",
+  "expected_codes": [
+    "LOOKALIKE_INVOICE_NUMBER"
+  ],
+  "case_id": "case_21"
+}
