@@ -51,10 +51,10 @@ class AgentVerdict:
 
 
 class ClerkAgent:
-    def __init__(self, settings: Settings, timeout: float = 120.0):
+    def __init__(self, settings: Settings, timeout: float | None = None):
         self.s = settings
         self.client = OpenAI(base_url=settings.evolus_chat_base, api_key=settings.evolus_api_key or "missing",
-                             timeout=timeout, max_retries=2)
+                             timeout=float(timeout or settings.agent_timeout), max_retries=1)
 
     @property
     def model(self) -> str:

@@ -21,7 +21,7 @@ from .audit import AuditLog
 from .config import Settings
 from .evolus_client import EvolusClient, EvolusError
 from .fraud import load_vendor_master, mask
-from .rules import evaluate, final_route
+from .rules import confidence_reasons, evaluate, final_route, human_handoff
 from .schemas import (
     Discrepancy,
     GoodsReceipt,
@@ -29,10 +29,12 @@ from .schemas import (
     PastInvoice,
     PurchaseOrder,
     Route,
+    strictest,
 )
 
 DOC_KINDS = ("po", "grn", "invoice")
 MODELS = {"po": PurchaseOrder, "grn": GoodsReceipt, "invoice": Invoice}
+DOC_NAMES = {"po": "purchase order", "grn": "delivery note", "invoice": "invoice"}
 
 Progress = Callable[[str], None]
 
@@ -56,6 +58,10 @@ class CaseResult:
 
     def step(self, name: str, where: str, seconds: float, ok: bool = True, note: str = "") -> None:
         self.steps.append({"step": name, "where": where, "seconds": round(seconds, 2), "ok": ok, "note": note})
+
+    @property
+    def confidence_reasons(self) -> list[str]:
+        return confidence_reasons(self.discrepancies)
 
 
 def unwrap(data: Any) -> dict[str, Any]:
@@ -114,7 +120,11 @@ class Pipeline:
 
             progress("Asking the LedgerPilot agent (open model on AMD MI300X via Evolus)")
             res.agent = self._ask_agent(po, grn, inv, decision, res)
-            res.route = final_route(decision.route, res.agent.route if res.agent else None)
+            agent_route = res.agent.route if res.agent else None
+            res.route = final_route(decision.route, agent_route)
+            handoff = human_handoff(decision.route, agent_route, agent_answered=res.agent is not None)
+            res.discrepancies = res.discrepancies + handoff
+            res.route = strictest([res.route] + [d.route for d in handoff])
 
             if res.route in (Route.HOLD, Route.FRAUD):
                 progress("Drafting the follow-up email (Evolus AI Tool)")
@@ -141,8 +151,11 @@ class Pipeline:
             if kind not in docs:
                 raise _CaseError(f"Missing document: {kind}")
             name, blob = docs[kind]
-            if not blob:
-                raise _CaseError(f"The {kind} file is empty. Upload it again.")
+            try:
+                check_document(kind, name, blob)
+            except _CaseError as exc:
+                res.step(f"Check {kind.upper()} file", "Python", 0, ok=False, note=str(exc)[:120])
+                raise
             progress(f"Extracting {kind.upper()} with Evolus document extractor")
             t = time.perf_counter()
             try:
@@ -246,6 +259,21 @@ class Pipeline:
 
 class _CaseError(RuntimeError):
     pass
+
+
+def check_document(kind: str, name: str, blob: bytes) -> None:
+    """Catch empty, wrong-type and cut-off files before spending an Evolus call on them."""
+    doc = DOC_NAMES[kind]
+    if not blob:
+        raise _CaseError(f"The {doc} file is empty. Upload it again.")
+    if blob.startswith(b"%PDF"):
+        if b"%%EOF" not in blob[-2048:]:
+            raise _CaseError(f"The {doc} PDF ({name}) is damaged or cut off. Ask the sender for a new copy; "
+                             "a person must process this invoice.")
+        return
+    if blob.startswith((b"\x89PNG", b"\xff\xd8\xff")):
+        return
+    raise _CaseError(f"The {doc} file ({name}) isn't a PDF, PNG or JPG. Upload the document itself.")
 
 
 def load_case_folder(folder: str | Path) -> dict[str, tuple[str, bytes]]:

@@ -63,6 +63,12 @@ class Settings:
     vendor_master_path: Path = field(default_factory=lambda: Path(_get("VENDOR_MASTER", str(ROOT / "data" / "vendor_master.csv"))))
     history_path: Path = field(default_factory=lambda: Path(_get("PAYMENT_HISTORY", str(ROOT / "data" / "history.json"))))
     audit_db: Path = field(default_factory=lambda: Path(_get("AUDIT_DB", str(ROOT / "ledgerpilot_audit.db"))))
+    # Saved outputs of real live runs, replayed by the app's demo mode
+    recordings_dir: Path = field(default_factory=lambda: Path(_get("RECORDINGS_DIR", str(ROOT / "data" / "recordings"))))
+
+    # Seconds to wait for one Evolus call / one agent answer before giving the case to a person
+    evolus_timeout: Decimal = field(default_factory=lambda: _decimal_env("EVOLUS_TIMEOUT", "90"))
+    agent_timeout: Decimal = field(default_factory=lambda: _decimal_env("AGENT_TIMEOUT", "90"))
 
     def placeholder_vllm(self) -> bool:
         return bool(self.vllm_base_url and "<" in self.vllm_base_url)

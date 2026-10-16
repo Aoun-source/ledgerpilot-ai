@@ -6,6 +6,10 @@ secondaryBackgroundColor = "#EDF0EE"
 textColor = "#1D2A36"
 font = "sans serif"
 
+[client]
+# Tracebacks go to the server log, never to the page
+showErrorDetails = "none"
+
 [server]
 headless = true
 maxUploadSize = 20

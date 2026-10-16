@@ -38,9 +38,9 @@ class ExtractionResult:
 class EvolusClient:
     RETRY_STATUSES = {429, 500, 502, 503, 504}
 
-    def __init__(self, settings: Settings, timeout: float = 120.0, max_retries: int = 3, backoff: float = 1.0):
+    def __init__(self, settings: Settings, timeout: float | None = None, max_retries: int = 3, backoff: float = 1.0):
         self.s = settings
-        self.timeout = timeout
+        self.timeout = float(timeout or settings.evolus_timeout)
         self.max_retries = max_retries
         self.backoff = backoff
         self.http = requests.Session()
@@ -56,6 +56,9 @@ class EvolusClient:
         for attempt in range(self.max_retries + 1):
             try:
                 resp = self.http.request(method, url, timeout=self.timeout, **kwargs)
+            except requests.ReadTimeout as exc:
+                # Evolus got the request but didn't answer in time: retrying would only double the wait.
+                raise EvolusError(f"Evolus didn't answer within {self.timeout:.0f} s. A person must process this invoice.") from exc
             except (requests.ConnectionError, requests.Timeout) as exc:
                 if retry_network and attempt < self.max_retries:
                     time.sleep(self.backoff * 2 ** attempt)
