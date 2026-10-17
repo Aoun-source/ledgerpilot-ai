@@ -33,9 +33,8 @@ teammate must click **Redeem API Key**) and set up Evolus from Windows with [../
    `docs/evaluation.json` and one demo recording per case in `data/recordings/`. The benchmark writes
    `docs/benchmark.md` and `docs/benchmark.json`. On Token Factory your team shares one key (about
    20 requests a minute): let one person run these while the others stay off the app.
-3. Paste the four outputs to Claude. It will check them, link the two result files from the README,
-   write the README's Business value section and fill every `[__]` in the deck, script and descriptions
-   from these files only.
+3. Link the two result files from the README, write the README's Business value section and fill every
+   `[__]` in the deck, script and descriptions from these files only.
 4. Check the per-case table in `docs/evaluation.md`. Any `(miss)` gets a sentence in the README's
    Limitations rather than a re-run until it passes.
 
@@ -61,8 +60,7 @@ teammate must click **Redeem API Key**) and set up Evolus from Windows with [../
 
 ## 4. Assets
 
-- [ ] Deck: fill the brackets, then share it and export a PDF from its Share menu
-      (Share › Export). The deck is private until you share it.
+- [ ] Deck: fill the brackets, then export it as a PDF.
 - [ ] Demo video, about 3 minutes, from `docs/submission/video_script.md`. Upload it (YouTube unlisted or
       the form's upload) and test the link in a private window.
 - [ ] Cover image: `docs/submission/cover.png` (1920×1080). Regenerate with `python scripts/make_cover.py`.

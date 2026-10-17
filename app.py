@@ -24,7 +24,7 @@ from ledgerpilot.fraud import mask  # noqa: E402
 from ledgerpilot.pipeline import CaseResult, Pipeline, load_case_folder  # noqa: E402
 from ledgerpilot.schemas import Route  # noqa: E402
 
-st.set_page_config(page_title="LedgerPilot AI", page_icon="🧾", layout="wide")
+st.set_page_config(page_title="LedgerPilot", page_icon=":material/receipt_long:", layout="wide")
 
 SAMPLES = ROOT / "data" / "samples"
 E = html.escape  # everything from documents or the model is escaped before it touches HTML
@@ -86,170 +86,120 @@ CHECKS_RUN = ("three-way match (price, quantity received, quantity ordered)", "a
 # One click loads and checks the cases rehearsed for the demo
 REHEARSAL = (("case_01", "Clean invoice"), ("case_07", "Overcharged by $200"), ("case_15", "Bank account changed"))
 
-# Colours for LedgerPilot's own cards, matched to the Streamlit theme the viewer picked (⋮ › Settings)
+# Colours for LedgerPilot's own panels, matched to the Streamlit theme the viewer picked (⋮ › Settings)
 THEME = "dark" if getattr(getattr(st.context, "theme", None), "type", None) == "dark" else "light"
 PALETTE = {
-    "light": {"card": "#FFFFFF", "ink": "#0F1B2D", "muted": "#5A6779", "rule": "#DCE3EC", "soft": "#EEF2F7",
-              "ok": "#15803D", "hold": "#B45309", "fraud": "#B91C1C", "err": "#64748B", "accent": "#0F766E",
-              "shadow": "0 1px 2px rgba(15,27,45,.06), 0 6px 18px rgba(15,27,45,.06)"},
-    "dark": {"card": "#111A2B", "ink": "#E6ECF3", "muted": "#93A1B5", "rule": "#26344B", "soft": "#17233A",
-             "ok": "#4ADE80", "hold": "#FBBF24", "fraud": "#F87171", "err": "#94A3B8", "accent": "#2DD4BF",
-             "shadow": "0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25)"},
+    "light": {"surface": "#FFFFFF", "subtle": "#F6F7F9", "ink": "#1B1F24", "muted": "#59636E", "rule": "#E1E4E8",
+              "brand": "#1F3A5F", "ok": "#1A7F37", "hold": "#9A6700", "fraud": "#C4321C", "err": "#6E7781",
+              "ok-bg": "#DAFBE1", "hold-bg": "#FFF1C2", "fraud-bg": "#FFE4DE", "err-bg": "#EAEEF2"},
+    "dark": {"surface": "#15181B", "subtle": "#1A1D21", "ink": "#E6E8EB", "muted": "#9AA3AD", "rule": "#2B3036",
+             "brand": "#6EA3F2", "ok": "#3FB950", "hold": "#D29922", "fraud": "#F06A57", "err": "#8B949E",
+             "ok-bg": "#12301B", "hold-bg": "#3A2C0B", "fraud-bg": "#3D1A15", "err-bg": "#262B31"},
 }
 CSS = r"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@700&display=swap');
-.block-container { padding-top: 3.6rem; max-width: 1280px; }
-.lp-num, .lp-kpi-value, .lp-figure, .lp-trail, .lp-amt { font-variant-numeric: tabular-nums; }
+.block-container { padding-top: 3.2rem; max-width: 1240px; }
+.lp-num { font-variant-numeric: tabular-nums; }
+.block-container h5 { font-size: .95rem !important; font-weight: 600 !important; color: var(--ink) !important;
+  margin: 1.2rem 0 .35rem; letter-spacing: 0; }
+.lp-small { color: var(--muted); font-size: .86rem; }
+.lp-label { color: var(--muted); font-size: .86rem; margin: .2rem 0 .4rem; }
 
-/* ---- header */
-.lp-hero { position: relative; overflow: hidden; border-radius: 18px; padding: 1.45rem 1.7rem 1.3rem; color: #F1F5F9;
-  background: radial-gradient(900px 260px at 100% 0%, rgba(45,212,191,.30), transparent 60%),
-              radial-gradient(600px 220px at 0% 120%, rgba(59,130,246,.28), transparent 60%),
-              linear-gradient(135deg, #0B1628 0%, #12305A 58%, #0F4C5C 100%);
-  box-shadow: 0 12px 32px rgba(11,22,40,.22); }
-.lp-hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .07;
-  background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
-  background-size: 28px 28px; mask-image: linear-gradient(90deg, transparent, #000 70%); }
-.lp-brand { display: flex; align-items: center; gap: .85rem; position: relative; z-index: 1; }
-.lp-logo { width: 46px; height: 46px; border-radius: 13px; flex: none; display: grid; place-items: center;
-  background: linear-gradient(135deg, #2DD4BF, #3B82F6); box-shadow: 0 6px 16px rgba(45,212,191,.35); }
-.lp-eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; color: #99F6E4; font-weight: 600; margin: 0; }
-.lp-title { font-size: 1.9rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -.02em; line-height: 1.15; }
-.lp-lede { color: #CBD5E1; font-size: 1rem; margin: .7rem 0 0; max-width: 70ch; position: relative; z-index: 1; }
-.lp-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; position: relative; z-index: 1; }
-.lp-pill { display: inline-flex; align-items: center; gap: .45rem; padding: .3rem .75rem; border-radius: 999px;
-  font-size: .8rem; font-weight: 500; color: #E2E8F0; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); }
-.lp-dot { width: 8px; height: 8px; border-radius: 50%; background: #94A3B8; flex: none; }
-.lp-dot.on { background: #4ADE80; box-shadow: 0 0 0 0 rgba(74,222,128,.6); animation: lp-pulse 2.4s infinite; }
-.lp-dot.warn { background: #FBBF24; } .lp-dot.off { background: #F87171; }
-@keyframes lp-pulse { 0% { box-shadow: 0 0 0 0 rgba(74,222,128,.55); } 70% { box-shadow: 0 0 0 7px rgba(74,222,128,0); } 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); } }
-.lp-model { color: #CBD5E1; font-size: .84rem; margin: .85rem 0 0; position: relative; z-index: 1; overflow-wrap: anywhere; }
-.lp-model b { color: #FFFFFF; }
+/* page header */
+.lp-head { padding-bottom: .9rem; border-bottom: 1px solid var(--rule); margin-bottom: 1rem; }
+.lp-name { font-size: 1.55rem; font-weight: 600; color: var(--ink); margin: 0; letter-spacing: -.01em; }
+.lp-desc { color: var(--muted); margin: .25rem 0 0; max-width: 72ch; }
+.lp-status { display: flex; flex-wrap: wrap; gap: .35rem 1.4rem; margin-top: .65rem; font-size: .84rem; color: var(--muted); }
+.lp-status > span { display: block; overflow-wrap: break-word; }
+.lp-status b { color: var(--ink); font-weight: 600; }
+.lp-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--err); margin-right: .45rem; vertical-align: 1px; }
+.lp-dot.on { background: var(--ok); } .lp-dot.warn { background: var(--hold); } .lp-dot.off { background: var(--fraud); }
 
-/* ---- metric cards */
-.lp-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; margin: 1rem 0 .35rem; }
-.lp-kpi { position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 14px;
-  padding: .8rem 1rem .85rem 1.15rem; box-shadow: var(--shadow); transition: transform .15s ease, box-shadow .15s ease; }
-.lp-kpi:hover { transform: translateY(-2px); }
-.lp-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--k, var(--accent)); }
-.lp-kpi-label { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
-.lp-kpi-value { display: block; font-size: 1.55rem; font-weight: 700; color: var(--ink); margin-top: .15rem; line-height: 1.2; }
-.lp-kpi-sub { color: var(--muted); font-size: .78rem; }
-@media (max-width: 1000px) { .lp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* summary figures: one strip divided by hairlines */
+.lp-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--rule);
+  border-radius: 8px; background: var(--surface); margin: 0 0 .9rem; }
+.lp-kpi { padding: .75rem 1rem .8rem; border-left: 1px solid var(--rule); min-width: 0; }
+.lp-kpi:first-child { border-left: 0; }
+.lp-kpi-label { display: block; color: var(--muted); font-size: .82rem; }
+.lp-kpi-value { display: block; font-size: 1.45rem; font-weight: 600; color: var(--ink); margin-top: .1rem;
+  font-variant-numeric: tabular-nums; line-height: 1.25; }
+.lp-kpi-sub { display: block; color: var(--muted); font-size: .78rem; }
+@media (max-width: 900px) { .lp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-kpi { border-left: 0; border-top: 1px solid var(--rule); } .lp-kpi:nth-child(-n+2) { border-top: 0; }
+  .lp-kpi:nth-child(even) { border-left: 1px solid var(--rule); } }
 
-/* ---- section headings inside the main area */
-.block-container h5 { font-size: .78rem !important; text-transform: uppercase; letter-spacing: .09em; color: var(--muted) !important;
-  font-weight: 700 !important; margin-top: 1.1rem; padding-bottom: .1rem; }
-.lp-small { color: var(--muted); font-size: .85rem; }
-.lp-label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin: .4rem 0 .35rem; }
+/* status badges */
+.lp-stamp, .lp-chip { display: inline-block; font-weight: 600; border-radius: 4px; line-height: 1.3; white-space: nowrap; }
+.lp-stamp { font-size: 1rem; padding: .25rem .65rem; }
+.lp-chip { font-size: .76rem; padding: .08rem .45rem; }
+.lp-ok { color: var(--ok); background: var(--ok-bg); } .lp-hold { color: var(--hold); background: var(--hold-bg); }
+.lp-fraud { color: var(--fraud); background: var(--fraud-bg); } .lp-err { color: var(--err); background: var(--err-bg); }
 
-/* ---- decision card */
-.lp-decision { --tone: var(--accent); position: relative; border-radius: 16px; border: 1px solid var(--rule); background: var(--card);
-  border-left: 6px solid var(--tone); padding: 1.15rem 1.4rem 1.1rem; box-shadow: var(--shadow); margin-top: .4rem;
-  background-image: linear-gradient(90deg, color-mix(in srgb, var(--tone) 10%, transparent), transparent 60%);
-  display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 1rem 1.5rem; animation: lp-rise .3s ease-out 1; }
-@keyframes lp-rise { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
-.lp-decision.ok { --tone: var(--ok); } .lp-decision.hold { --tone: var(--hold); }
-.lp-decision.fraud { --tone: var(--fraud); } .lp-decision.err { --tone: var(--err); }
-.lp-decision .lp-side { text-align: right; }
-.lp-stamp { display: inline-block; font-family: 'Archivo Narrow', 'Arial Narrow', sans-serif; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .06em; font-size: 1.7rem; line-height: 1;
-  padding: .45rem .8rem .4rem; border: 3px solid currentColor; border-radius: 6px; transform: rotate(-3deg);
-  box-shadow: inset 0 0 0 2px var(--card), inset 0 0 0 4px currentColor; animation: lp-stamp .24s ease-out 1; }
-@keyframes lp-stamp { from { transform: rotate(-3deg) scale(1.35); opacity: 0; } to { transform: rotate(-3deg) scale(1); opacity: 1; } }
-.lp-ok { color: var(--ok); } .lp-hold { color: var(--hold); } .lp-fraud { color: var(--fraud); } .lp-err { color: var(--err); }
-.lp-verdict { margin: .8rem 0 0; color: var(--ink); max-width: 62ch; overflow-wrap: anywhere; }
-.lp-conf { margin: .45rem 0 0; font-size: .9rem; color: var(--muted); max-width: 62ch; }
+/* decision summary */
+.lp-decision { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem 2rem; border: 1px solid var(--rule);
+  border-radius: 8px; background: var(--surface); padding: 1rem 1.2rem; margin-top: .4rem; }
+.lp-verdict { margin: .55rem 0 0; color: var(--ink); max-width: 64ch; overflow-wrap: anywhere; }
+.lp-conf { margin: .3rem 0 0; font-size: .88rem; color: var(--muted); max-width: 64ch; }
 .lp-conf-low { color: var(--hold); font-weight: 600; }
-.lp-figure { font-size: 2rem; font-weight: 700; color: var(--tone); line-height: 1.1; }
-.lp-figlabel { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
-.lp-steps { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .8rem; border-top: 1px dashed var(--rule); }
-.lp-step { display: inline-flex; align-items: center; gap: .35rem; font-size: .76rem; padding: .22rem .62rem; border-radius: 999px;
-  background: var(--soft); color: var(--ink); border: 1px solid var(--rule); }
-.lp-step .ic { color: var(--ok); font-weight: 700; } .lp-step.bad .ic, .lp-step.bad { color: var(--fraud); }
-.lp-step .s { color: var(--muted); }
-.lp-doc { color: var(--muted); font-size: .95rem; margin: .9rem 0 .4rem; overflow-wrap: anywhere; }
-.lp-doc b { color: var(--ink); }
+.lp-side { text-align: right; }
+.lp-figlabel { color: var(--muted); font-size: .82rem; }
+.lp-figure { font-size: 1.7rem; font-weight: 600; color: var(--ink); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.lp-steps { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .25rem 1.1rem; padding-top: .7rem;
+  border-top: 1px solid var(--rule); font-size: .8rem; color: var(--muted); }
+.lp-step .ic { color: var(--ok); margin-right: .25rem; } .lp-step.bad, .lp-step.bad .ic { color: var(--fraud); }
+.lp-doc { color: var(--muted); font-size: .93rem; margin: .8rem 0 .2rem; overflow-wrap: anywhere; }
+.lp-doc b { color: var(--ink); font-weight: 600; }
 
-/* ---- findings, agent note, trail */
-.lp-finding { --tone: var(--hold); padding: .7rem .95rem; margin: .5rem 0; border: 1px solid var(--rule); border-left: 4px solid var(--tone);
-  border-radius: 10px; background: var(--card); }
-.lp-finding.fraud { --tone: var(--fraud); } .lp-finding.err { --tone: var(--err); } .lp-finding.ok { --tone: var(--ok); }
-.lp-finding b { color: var(--ink); }
-.lp-finding .lp-amt { float: right; font-weight: 700; color: var(--tone); }
-.lp-finding p { margin: .2rem 0 0; color: var(--muted); font-size: .9rem; }
-.lp-code { font-size: .74rem; color: var(--muted); background: var(--soft); border: 1px solid var(--rule); padding: .05rem .35rem; border-radius: 5px; }
-.lp-rule { color: var(--muted); font-size: .82rem; margin-top: .15rem; }
-.lp-clear { display: flex; gap: .7rem; align-items: flex-start; padding: .8rem 1rem; border-radius: 10px; border: 1px solid var(--rule);
-  background: color-mix(in srgb, var(--ok) 8%, var(--card)); }
+/* findings as a list with hairlines */
+.lp-findings { border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+.lp-finding { padding: .65rem .9rem; border-top: 1px solid var(--rule); }
+.lp-finding:first-child { border-top: 0; }
+.lp-finding b { color: var(--ink); font-weight: 600; }
+.lp-finding .lp-amt { float: right; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.lp-finding p { margin: .15rem 0 0; color: var(--muted); font-size: .88rem; }
+.lp-code { font-size: .74rem; color: var(--muted); background: var(--subtle); border: 1px solid var(--rule);
+  padding: 0 .3rem; border-radius: 4px; }
+.lp-rule { color: var(--muted); font-size: .82rem; margin-top: .1rem; }
+.lp-clear { padding: .7rem .9rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
 .lp-clear p { margin: 0; }
-.lp-note { position: relative; border: 1px solid var(--rule); border-radius: 12px; background: var(--card); padding: .9rem 1rem .8rem 1rem;
-  margin: .3rem 0 .6rem; box-shadow: var(--shadow); }
-.lp-note .who { display: inline-flex; align-items: center; gap: .4rem; font-size: .72rem; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--accent); margin-bottom: .4rem; }
-.lp-note p { margin: 0 0 .4rem; color: var(--ink); }
-.lp-note ul { margin: .2rem 0 0 1rem; color: var(--muted); font-size: .9rem; }
-.lp-trail { width: 100%; border-collapse: collapse; font-size: .86rem; }
-.lp-trail td { padding: .4rem .45rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.lp-clear .ok { color: var(--ok); font-weight: 600; }
+
+/* agent note and run trail */
+.lp-note { border: 1px solid var(--rule); border-radius: 8px; background: var(--subtle); padding: .8rem .95rem; margin: .2rem 0 .5rem; }
+.lp-note p { margin: 0 0 .35rem; color: var(--ink); }
+.lp-note ul { margin: .2rem 0 0 1rem; color: var(--muted); font-size: .88rem; }
+.lp-trail { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.lp-trail td { padding: .38rem .4rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
 .lp-trail td.t { text-align: right; white-space: nowrap; color: var(--muted); }
-.lp-trail .okm { color: var(--ok); font-weight: 700; } .lp-trail .bad { color: var(--fraud); font-weight: 700; }
-.lp-chip { display: inline-block; font-size: .76rem; font-weight: 700; padding: .12rem .55rem; border-radius: 999px;
-  color: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent); border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent); }
-.lp-chip.lp-ok { --tone: var(--ok); } .lp-chip.lp-hold { --tone: var(--hold); } .lp-chip.lp-fraud { --tone: var(--fraud); } .lp-chip.lp-err { --tone: var(--err); }
-.lp-banner { border: 1.5px dashed var(--hold); color: var(--ink); border-radius: 12px; padding: .6rem .9rem; margin: .7rem 0;
-  font-size: .9rem; overflow-wrap: anywhere; background: color-mix(in srgb, var(--hold) 8%, transparent); }
-.lp-banner b { color: var(--hold); text-transform: uppercase; letter-spacing: .05em; }
+.lp-trail .okm { color: var(--ok); } .lp-trail .bad { color: var(--fraud); font-weight: 600; }
 
-/* ---- demo case buttons and the main action */
-[class*="st-key-rehearse-"] button { min-height: 3.4rem; border-radius: 12px; border-left-width: 4px; font-weight: 600;
-  transition: transform .12s ease, box-shadow .12s ease; }
-[class*="st-key-rehearse-"] button:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-.st-key-rehearse-case_01 button { border-left-color: var(--ok); }
-.st-key-rehearse-case_07 button { border-left-color: var(--hold); }
-.st-key-rehearse-case_15 button { border-left-color: var(--fraud); }
-.st-key-check-btn button { min-height: 2.9rem; padding-left: 1.6rem; padding-right: 1.6rem; font-weight: 600;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
+.lp-banner { border: 1px solid var(--hold); border-radius: 6px; padding: .55rem .85rem; margin: .2rem 0 .8rem;
+  font-size: .9rem; color: var(--ink); background: var(--hold-bg); overflow-wrap: anywhere; }
+.lp-banner b { color: var(--hold); }
 
-/* ---- review queue cards, tinted by decision */
-[class*="st-key-q-"] { border-left: 5px solid var(--err) !important; border-radius: 14px !important; background: var(--card); box-shadow: var(--shadow); }
-[class*="st-key-q-hold_for_review"] { border-left-color: var(--hold) !important; }
-[class*="st-key-q-escalate_fraud"] { border-left-color: var(--fraud) !important; }
-[class*="st-key-q-approve_for_payment"] { border-left-color: var(--ok) !important; }
-.lp-qhead { font-size: 1rem; color: var(--ink); } .lp-qmeta { color: var(--muted); font-size: .86rem; margin-top: .15rem; }
+/* review queue */
+.lp-qhead { color: var(--ink); } .lp-qmeta { color: var(--muted); font-size: .85rem; margin-top: .1rem; }
 
-/* ---- audit mix bar */
-.lp-mix { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--soft); margin: .4rem 0 .5rem; }
+/* audit decision mix */
+.lp-mix { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--subtle); margin: .3rem 0 .45rem; }
 .lp-mix span { display: block; height: 100%; }
-.lp-legend { display: flex; flex-wrap: wrap; gap: .9rem; font-size: .82rem; color: var(--muted); margin-bottom: .6rem; }
-.lp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: .35rem; vertical-align: -1px; }
+.lp-legend { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; font-size: .82rem; color: var(--muted); margin-bottom: .6rem; }
+.lp-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: .35rem; }
 
-/* ---- empty states */
-.lp-empty { text-align: center; padding: 2rem 1rem; border: 1.5px dashed var(--rule); border-radius: 14px; color: var(--muted); }
-.lp-empty b { color: var(--ink); display: block; font-size: 1.02rem; margin-bottom: .25rem; }
+.lp-empty { padding: 1.6rem 1rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--subtle);
+  color: var(--muted); text-align: center; }
+.lp-empty b { display: block; color: var(--ink); font-weight: 600; margin-bottom: .2rem; }
 
-/* ---- sidebar brand */
-.lp-side-brand { display: flex; align-items: center; gap: .6rem; margin: -.4rem 0 .4rem; }
-.lp-side-brand .lp-logo { width: 34px; height: 34px; border-radius: 10px; box-shadow: none; }
-.lp-side-brand b { font-size: 1.05rem; } .lp-side-brand span { display: block; font-size: .74rem; opacity: .7; }
+.lp-side-name { font-size: 1.05rem; font-weight: 600; margin: -.3rem 0 .2rem; }
 
-@media (prefers-reduced-motion: reduce) { .lp-stamp, .lp-decision, .lp-dot.on { animation: none; } .lp-kpi:hover { transform: none; } }
 @media (max-width: 640px) {
   .block-container { padding-left: 1rem; padding-right: 1rem; }
-  .lp-hero { padding: 1.1rem 1.1rem 1rem; } .lp-title { font-size: 1.5rem; }
-  .lp-decision { grid-template-columns: 1fr; } .lp-decision .lp-side { text-align: left; }
-  .lp-stamp { font-size: 1.35rem; } .lp-finding .lp-amt { float: none; display: block; }
+  .lp-decision { grid-template-columns: 1fr; } .lp-side { text-align: left; }
+  .lp-finding .lp-amt { float: none; display: block; }
 }
 </style>"""
 st.markdown("<style>:root { " + "; ".join(f"--{k}: {v}" for k, v in PALETTE[THEME].items()) + " }</style>" + CSS,
             unsafe_allow_html=True)
-
-# The ledger-and-tick mark used in the header and sidebar
-LOGO = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
-        '<rect x="4" y="3" width="13" height="18" rx="2.2" stroke="#fff" stroke-width="1.8"/>'
-        '<path d="M7.5 8h6M7.5 11.5h4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>'
-        '<circle cx="17" cy="17" r="4.6" fill="#0B1628" stroke="#fff" stroke-width="1.6"/>'
-        '<path d="m15 17 1.4 1.4L19 15.8" stroke="#5EEAD4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>')
 
 
 # ------------------------------------------------------------------ setup
@@ -300,8 +250,7 @@ model_problem = settings.model_problem()
 health = cached_health(settings.amd_base_url, settings.amd_model) if not model_problem else None
 
 with st.sidebar:
-    st.markdown(f'<div class="lp-side-brand"><div class="lp-logo">{LOGO}</div>'
-                '<div><b>LedgerPilot</b><span>Accounts-payable agent</span></div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="lp-side-name">LedgerPilot</div>', unsafe_allow_html=True)
     st.markdown("#### Connections")
     if model_problem:
         st.warning(f"AMD model endpoint isn't set up. {model_problem}")
@@ -362,8 +311,6 @@ with st.sidebar:
         st.session_state.pop("result", None)
         st.session_state["toast"] = ("Demo history cleared. Sample invoices can be checked again.", ":material/restart_alt:")
         st.rerun()
-    st.divider()
-    st.caption(f"{'Dark' if THEME == 'dark' else 'Light'} theme. Switch in the ⋮ menu › Settings › Theme.")
 
 # A toast queued by the previous run (a finished check, a review, a cleared history)
 if toast := st.session_state.pop("toast", None):
@@ -383,51 +330,22 @@ if health and health["ok"]:
     speed = st.session_state.get("speed") or {}
     rate = f' · {speed["tokens_per_s"]} tokens/s' if speed.get("ok") else ""
     where = "AMD Token Factory" if settings.token_factory else "AMD Developer Cloud"
-    model_line = (f'<b>Model:</b> {E(str(health["weights"]))} served on {where}'
-                  f' · endpoint answered in {health["latency_ms"]} ms{rate}')
-    model_pill = ("on", f"Model online · {E(settings.model_where)}")
+    model_status = ("on", f'<b>Model:</b> {E(str(health["weights"]))} served on {where}'
+                          f' · endpoint answered in {health["latency_ms"]} ms{rate}')
 elif health:
-    model_line = f'<b>Model:</b> {E(settings.model_where)} endpoint not reachable'
-    model_pill = ("off", "Model unreachable")
+    model_status = ("off", f'<b>Model:</b> {E(settings.model_where)} endpoint not reachable')
 else:
-    model_line = "<b>Model:</b> AMD model endpoint not set up (see the sidebar)"
-    model_pill = ("warn", "Model not set up")
-evolus_pill = ("warn", "Evolus not connected") if settings.missing() else ("on", "Evolus connected")
-pills = [model_pill, evolus_pill, ("on", "Checks: Python, Decimal maths")]
-if demo_mode:
-    pills.append(("warn", "Demo mode: recorded runs"))
-st.markdown(
-    f'<div class="lp-hero"><div class="lp-brand"><div class="lp-logo">{LOGO}</div><div>'
-    '<div class="lp-eyebrow">Accounts-payable agent · Evolus on AMD</div><div class="lp-title">LedgerPilot</div></div></div>'
-    '<p class="lp-lede">Checks every supplier invoice against the purchase order and the delivery note, '
-    'and stops wrong or fraudulent payments before they go out.</p>'
-    '<div class="lp-pills">' + "".join(f'<span class="lp-pill"><span class="lp-dot {s}"></span>{t}</span>' for s, t in pills)
-    + f'</div><p class="lp-model">{model_line}</p></div>', unsafe_allow_html=True)
+    model_status = ("warn", "<b>Model:</b> AMD model endpoint not set up (see the sidebar)")
+evolus_status = ("warn", "<b>Evolus:</b> not connected") if settings.missing() else ("on", "<b>Evolus:</b> connected")
 
-
-def kpi(key: str, label: str, value: str, sub: str, tone: str) -> str:
-    return (f'<div class="lp-kpi" style="--k: var(--{tone})"><span class="lp-kpi-label">{label}</span>'
-            f'<span class="lp-kpi-value" data-kpi="{key}">{value}</span><span class="lp-kpi-sub">{sub}</span></div>')
-
-
-st.markdown('<div class="lp-kpis">'
-            + kpi("checked", "Invoices checked", str(checked), "since history was cleared", "accent")
-            + kpi("ready", "Ready to pay", str(ready), "awaiting a person's yes", "ok")
-            + kpi("held", "Held for review", money(held),
-                  f"{len(held_rows)} invoice{'s' if len(held_rows) != 1 else ''} on hold", "hold")
-            + kpi("blocked", "Payments blocked", str(blocked), "possible fraud", "fraud")
-            + kpi("pending", "Awaiting review", str(pending_count), "in the review queue", "err")
-            + "</div>", unsafe_allow_html=True)
-
-intro, how = st.columns([4, 1.1], vertical_alignment="center")
-if demo_mode:
-    intro.markdown('<div class="lp-banner"><b>Demo mode</b> · Results below are replays of recorded live runs, '
-                   'not live calls to Evolus or the AMD model. Turn it off in the sidebar to check invoices live.</div>',
-                   unsafe_allow_html=True)
-else:
-    intro.markdown('<p class="lp-small">The model reads and explains; code does every number. '
-                   'Nothing is paid until a person releases it from the review queue.</p>', unsafe_allow_html=True)
-with how.popover("How it works", icon=":material/account_tree:", width="stretch"):
+title, how = st.columns([3, 1], vertical_alignment="bottom")
+title.markdown(
+    '<div class="lp-name">LedgerPilot</div>'
+    '<p class="lp-desc">Matches each supplier invoice to its purchase order and delivery note, and holds '
+    'anything that doesn\'t add up before it is paid.</p>'
+    '<div class="lp-status">' + "".join(f'<span><span class="lp-dot {s}"></span>{t}</span>'
+                                        for s, t in (model_status, evolus_status)) + "</div>", unsafe_allow_html=True)
+with how.popover("How it works", icon=":material/info:", width="stretch"):
     st.markdown("**From three documents to a decision**")
     for n, (step, where_) in enumerate((
             ("Read the PO, delivery note and invoice", "Evolus document extractors"),
@@ -438,6 +356,26 @@ with how.popover("How it works", icon=":material/account_tree:", width="stretch"
             ("A person approves or rejects", "Review queue and audit log")), start=1):
         st.markdown(f"{n}. **{step}**  \n<span class='lp-small'>{E(where_)}</span>", unsafe_allow_html=True)
     st.caption("The agent can make a decision stricter than the checks, never looser.")
+st.markdown('<div class="lp-head" aria-hidden="true"></div>', unsafe_allow_html=True)
+
+if demo_mode:
+    st.markdown('<div class="lp-banner"><b>Demo mode.</b> Results below are replays of recorded live runs, '
+                'not live calls to Evolus or the AMD model. Turn it off in the sidebar to check invoices live.</div>',
+                unsafe_allow_html=True)
+
+
+def kpi(key: str, label: str, value: str, sub: str) -> str:
+    return (f'<div class="lp-kpi"><span class="lp-kpi-label">{label}</span>'
+            f'<span class="lp-kpi-value" data-kpi="{key}">{value}</span><span class="lp-kpi-sub">{sub}</span></div>')
+
+
+st.markdown('<div class="lp-kpis">'
+            + kpi("checked", "Invoices checked", str(checked), "since history was cleared")
+            + kpi("ready", "Ready to pay", str(ready), "awaiting approval")
+            + kpi("held", "Held for review", money(held), f"{len(held_rows)} invoice{'s' if len(held_rows) != 1 else ''}")
+            + kpi("blocked", "Payments blocked", str(blocked), "possible fraud")
+            + kpi("pending", "Awaiting review", str(pending_count), "in the review queue")
+            + "</div>", unsafe_allow_html=True)
 
 tab_check, tab_queue, tab_audit, tab_results = st.tabs(
     ["Check an invoice", f"Review queue ({pending_count})", "Audit log", "Results"])
@@ -558,21 +496,23 @@ def show_result(res: CaseResult, recorded: dict | None = None) -> None:
                 f'total <b class="lp-num">{money(inv.get("total"))} {E(str(inv.get("currency") or ""))}</b></p>',
                 unsafe_allow_html=True)
 
-    left, right = st.columns([1.45, 1], gap="large")
+    st.markdown("##### Order, delivery and invoice side by side")
+    df = match_table(res)
+    if df.empty:
+        st.info("No invoice lines could be read.")
+    else:
+        st.dataframe(style_match(df), hide_index=True, width="stretch")
+        st.caption("Highlighted cells differ from the purchase order or the delivery note.")
+
+    left, right = st.columns([1.3, 1], gap="large")
     with left:
-        st.markdown("##### Order, delivery and invoice side by side")
-        df = match_table(res)
-        if df.empty:
-            st.info("No invoice lines could be read.")
-        else:
-            st.dataframe(style_match(df), hide_index=True, width="stretch")
-            st.caption("Highlighted cells differ from the purchase order or the delivery note.")
         st.markdown("##### What the checks found")
         if res.discrepancies:
-            st.markdown("".join(finding_html(d) for d in res.discrepancies), unsafe_allow_html=True)
+            st.markdown('<div class="lp-findings">' + "".join(finding_html(d) for d in res.discrepancies) + "</div>",
+                        unsafe_allow_html=True)
             st.caption("Every figure here is calculated by code, not by the language model.")
         else:
-            st.markdown('<div class="lp-clear"><span class="lp-ok" style="font-weight:700">✓</span><div>'
+            st.markdown('<div class="lp-clear"><div><span class="ok">✓</span> '
                         '<p>Nothing to flag. Quantities, prices, totals, supplier and bank account all check out.</p>'
                         f'<p class="lp-small">Checks that ran and passed: {E(", ".join(CHECKS_RUN))}.</p></div></div>',
                         unsafe_allow_html=True)
@@ -583,7 +523,7 @@ def show_result(res: CaseResult, recorded: dict | None = None) -> None:
         st.markdown("##### The agent's note")
         if res.agent:
             evidence = "".join(f"<li>{E(e)}</li>" for e in res.agent.evidence)
-            st.markdown(f'<div class="lp-note"><div class="who">✦ LedgerPilot Clerk</div><p>{E(res.agent.explanation)}</p>'
+            st.markdown(f'<div class="lp-note"><p>{E(res.agent.explanation)}</p>'
                         f'{"<ul>" + evidence + "</ul>" if evidence else ""}</div>', unsafe_allow_html=True)
             if not res.agent.parsed:
                 st.warning("The agent's reply couldn't be read as a decision, so the checks decided on their own.")
@@ -655,10 +595,10 @@ with tab_check:
         queue_case(by_case[st.query_params["case"]])
     rehearsal = [(case, text) for case, text in REHEARSAL if case in by_case]
     if rehearsal:
-        st.markdown('<p class="lp-label">Try a demo case: one click checks it</p>', unsafe_allow_html=True)
+        st.markdown('<p class="lp-label">Demo cases</p>', unsafe_allow_html=True)
         for col, (case, text) in zip(st.columns(len(rehearsal)), rehearsal, strict=True):
-            col.button(f"{text} ({case.replace('_', ' ')})", key=f"rehearse-{case}", on_click=queue_case,
-                       args=(by_case[case],), width="stretch", icon=DEMO_ICON.get(case), help=DEMO_HELP.get(case))
+            col.button(text, key=f"rehearse-{case}", on_click=queue_case, args=(by_case[case],), width="stretch",
+                       icon=DEMO_ICON.get(case), help=f"{case.replace('_', ' ').capitalize()}. {DEMO_HELP.get(case, '')}")
     with st.container(border=True):
         mode = st.radio("Documents", ["Use a sample case", "Upload my own"], horizontal=True, key="doc_mode")
         docs, label = None, ""

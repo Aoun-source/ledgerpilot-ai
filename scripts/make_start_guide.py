@@ -127,7 +127,7 @@ def story() -> list:
           P("Do the parts in order. Each grey box is a command: copy **one line at a time** into PowerShell and "
             "press Enter."),
           P("Text in angle brackets, like `<YOUR_RC_KEY>`, means **put your own value there**, without the brackets."),
-          P("If a command prints red error text, copy all of it and paste it to Claude."),
+          P("If a command prints red error text, copy all of it and look it up in \"If something goes wrong\" at the end."),
           gap(10), P("The parts", "h2"),
           table([["Part", "What you do", "Rough time"],
                  ["1", "Open the project folder and PowerShell", "5 min"],
@@ -283,12 +283,12 @@ def story() -> list:
           gap(14),
           # ---------------------------------------------------------------- part 6
           P("Part 6 · Live checks and results", "h1"),
-          P("Run these one at a time, in this order, in the project folder. Keep each window's output: you will "
-            "paste all four to Claude."),
+          P("Run these one at a time, in this order, in the project folder. Save each window's output in a text "
+            "file: you need the numbers for the submission."),
           step("1", "Upload the vendor master to your Evolus library:", code(rf"{PY} scripts\upload_library.py")),
           step("2", "The go/no-go check:", code(rf"{PY} scripts\smoke_test.py")),
-          box("ok", "five lines starting with `PASS`, then `ALL GOOD`. If any line says `FAIL`, stop and paste it "
-                    "to Claude."),
+          box("ok", "five lines starting with `PASS`, then `ALL GOOD`. If any line says `FAIL`, stop and fix it "
+                    "first (see \"If something goes wrong\")."),
           gap(),
           step("3", "The full evaluation on all 24 sample invoices (several minutes, uses Evolus credits):",
                code(rf'{PY} eval\run_eval.py --label "{TOKEN_FACTORY_MODEL}"')),
@@ -299,8 +299,8 @@ def story() -> list:
                     "takes about 3 minutes:",
                code(rf'{PY} scripts\benchmark_amd.py --label "{TOKEN_FACTORY_MODEL}"')),
           box("ok", r"`wrote docs/benchmark.md` at the end."),
-          gap(), step("5", "Paste all four outputs to Claude. Claude fills the real numbers into the README, "
-                           "slides, video script and descriptions."),
+          gap(), step("5", r"Copy the real numbers from `docs\evaluation.md` and `docs\benchmark.md` into the README, "
+                           "slides, video script and descriptions. Never round them up."),
           gap(14)]
 
     # ------------------------------------------------------------------ part 7
@@ -344,8 +344,8 @@ def story() -> list:
           table([["Asset", "Where", "What to do"],
                  ["Video (about 3 min)", r"docs\submission\video_script.md",
                   "Record the app with the Windows Clipchamp app or OBS, following the script"],
-                 ["Slides", "https://claude.ai/artifact/2vxKrSchwmdFbRVzyaytPH",
-                  "Fill the [__] numbers, then Share › Export as PDF"],
+                 ["Slides", "Your team's slide deck",
+                  "Fill the [__] numbers, then export as PDF"],
                  ["Cover image", r"docs\submission\cover.png", "Upload as the project image"],
                  ["Descriptions and tags", r"docs\submission\descriptions.md", "Copy into the form"]],
                 [36, 66, 72]),
@@ -399,7 +399,8 @@ def story() -> list:
                   "sidebar first."],
                  ["The app page is blank or stuck", "Press Ctrl+C in PowerShell, start the app again, refresh "
                   "the browser."],
-                 ["Anything else", "Copy the whole error text and paste it to Claude."]], [62, 112]),
+                 ["Anything else", "Copy the whole error text, search for it online, or ask a teammate to look."]],
+                [62, 112]),
           gap(16), P("Every command in one place", "h2"),
           code(r"cd 'C:\Users\madinapc\Pictures\New folder\ledgerpilot001-ai\ledgerpilot-ai'",
                f"{PY} -m pytest -q",

@@ -5,7 +5,6 @@
 *.db
 .git
 .github
-.claude
 .venv
 venv
 *.egg-info

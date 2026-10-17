@@ -3,7 +3,6 @@
 !.env.example
 *.pem
 *.egg-info/
-.claude/
 *.db
 __pycache__/
 *.pyc

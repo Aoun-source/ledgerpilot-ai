@@ -1,55 +1,52 @@
-# Light and dark themes: viewers switch in the app menu (⋮ › Settings › Theme); the default follows
-# their system setting. app.py reads the active theme to colour its own cards to match.
+# Light and dark themes. Viewers switch in the app menu (⋮ › Settings › Theme); the default follows
+# their system setting. app.py reads the active theme so its own panels match.
 [theme]
-font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap, sans-serif"
-codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap, monospace"
-headingFontWeights = [700, 700, 650, 600, 600, 600]
-baseRadius = "0.6rem"
-buttonRadius = "0.55rem"
+font = "Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, Arial, sans-serif"
+codeFont = "Cascadia Mono, SFMono-Regular, Consolas, Menlo, monospace"
+baseFontSize = 15
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+baseRadius = "6px"
+buttonRadius = "6px"
 showWidgetBorder = true
-showSidebarBorder = false
+showSidebarBorder = true
 
 [theme.light]
-primaryColor = "#0F766E"
-backgroundColor = "#F4F6F9"
-secondaryBackgroundColor = "#E9EEF4"
-textColor = "#0F1B2D"
-borderColor = "#D6DEE8"
-linkColor = "#0F766E"
-greenColor = "#15803D"
-orangeColor = "#B45309"
-redColor = "#B91C1C"
-dataframeHeaderBackgroundColor = "#EEF2F7"
-chartCategoricalColors = ["#15803D", "#B45309", "#B91C1C", "#64748B", "#0F766E", "#2563EB", "#7C3AED", "#DB2777", "#0891B2", "#65A30D"]
+primaryColor = "#1F3A5F"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F5F7"
+textColor = "#1B1F24"
+borderColor = "#E1E4E8"
+linkColor = "#1F5FBF"
+greenColor = "#1A7F37"
+orangeColor = "#9A6700"
+redColor = "#C4321C"
+dataframeHeaderBackgroundColor = "#F6F7F9"
+chartCategoricalColors = ["#1A7F37", "#9A6700", "#C4321C", "#6E7781", "#1F3A5F", "#1F5FBF", "#8250DF", "#BF3989", "#1B7C83", "#57606A"]
 
 [theme.light.sidebar]
-backgroundColor = "#0F1B2D"
-secondaryBackgroundColor = "#1A2A42"
-textColor = "#E6ECF3"
-borderColor = "#2A3B56"
-primaryColor = "#2DD4BF"
-linkColor = "#5EEAD4"
+backgroundColor = "#F6F7F9"
+secondaryBackgroundColor = "#ECEEF1"
+textColor = "#1B1F24"
+borderColor = "#E1E4E8"
 
 [theme.dark]
-primaryColor = "#14B8A6"
-backgroundColor = "#0B1220"
-secondaryBackgroundColor = "#152033"
-textColor = "#E6ECF3"
-borderColor = "#26344B"
-linkColor = "#5EEAD4"
-greenColor = "#4ADE80"
-orangeColor = "#FBBF24"
-redColor = "#F87171"
-dataframeHeaderBackgroundColor = "#17233A"
-chartCategoricalColors = ["#4ADE80", "#FBBF24", "#F87171", "#94A3B8", "#2DD4BF", "#60A5FA", "#A78BFA", "#F472B6", "#22D3EE", "#A3E635"]
+primaryColor = "#4C7DC9"
+backgroundColor = "#111316"
+secondaryBackgroundColor = "#1A1D21"
+textColor = "#E6E8EB"
+borderColor = "#2B3036"
+linkColor = "#6EA3F2"
+greenColor = "#3FB950"
+orangeColor = "#D29922"
+redColor = "#F06A57"
+dataframeHeaderBackgroundColor = "#181B1F"
+chartCategoricalColors = ["#3FB950", "#D29922", "#F06A57", "#8B949E", "#4C7DC9", "#6EA3F2", "#A371F7", "#DB61A2", "#39C5CF", "#8C959F"]
 
 [theme.dark.sidebar]
-backgroundColor = "#080E1A"
-secondaryBackgroundColor = "#131E31"
-textColor = "#E6ECF3"
-borderColor = "#22304A"
-primaryColor = "#2DD4BF"
-linkColor = "#5EEAD4"
+backgroundColor = "#16191C"
+secondaryBackgroundColor = "#1E2226"
+textColor = "#E6E8EB"
+borderColor = "#2B3036"
 
 [client]
 # Tracebacks go to the server log, never to the page
