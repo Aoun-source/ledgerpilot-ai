@@ -154,15 +154,23 @@ def test_audit_log_filter_and_clear_history(configured):
     at = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_01")
     serve(configured, "case_07")
     at = check_case(at, "case_07")
-    assert "So far: 2 invoices checked, 200.00 held for review, 0 payments blocked" in all_markdown(at)
+    md = all_markdown(at)
+    for key, value in (("checked", "2"), ("ready", "1"), ("held", "200.00"), ("blocked", "0"), ("pending", "2")):
+        assert f'data-kpi="{key}">{value}<' in md
     audit_df = at.dataframe[-1].value
     assert len(audit_df) == 2 and set(audit_df["Decision"]) == {"Ready to pay", "On hold"}
     at.multiselect[0].set_value(["On hold"])
     at.run()
     assert list(at.dataframe[-1].value["Decision"]) == ["On hold"]
+    search = next(t for t in at.text_input if t.label == "Search invoice or supplier")
+    search.input("no-such-invoice").run()
+    assert at.dataframe[-1].value.empty
+    next(t for t in at.text_input if t.label == "Search invoice or supplier").input("").run()
+    assert list(at.dataframe[-1].value["Decision"]) == ["On hold"]
+    assert "Decision mix" in all_markdown(at)
     next(b for b in at.sidebar.button if b.label == "Clear demo history").click()
     at.run()
-    assert "So far" not in all_markdown(at) and at.tabs[1].label == "Review queue (0)"
+    assert 'data-kpi="checked">0<' in all_markdown(at) and at.tabs[1].label == "Review queue (0)"
 
 
 def test_rechecking_same_invoice_is_blocked_as_duplicate(configured):
@@ -297,6 +305,5 @@ def test_failed_live_check_offers_the_recording(configured, monkeypatch, tmp_pat
 
 def test_results_tab_without_measurements(configured, monkeypatch):
     at = AppTest.from_file(APP, default_timeout=60).run()
-    infos = " ".join(i.value for i in at.info)
     if not (ROOT / "docs" / "evaluation.md").exists():
-        assert "No measured results yet" in infos
+        assert "No measured results yet" in all_markdown(at)

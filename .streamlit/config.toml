@@ -1,10 +1,55 @@
+# Light and dark themes: viewers switch in the app menu (⋮ › Settings › Theme); the default follows
+# their system setting. app.py reads the active theme to colour its own cards to match.
 [theme]
-base = "light"
-primaryColor = "#1D2A36"
-backgroundColor = "#F7F8F6"
-secondaryBackgroundColor = "#EDF0EE"
-textColor = "#1D2A36"
-font = "sans serif"
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap, sans-serif"
+codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap, monospace"
+headingFontWeights = [700, 700, 650, 600, 600, 600]
+baseRadius = "0.6rem"
+buttonRadius = "0.55rem"
+showWidgetBorder = true
+showSidebarBorder = false
+
+[theme.light]
+primaryColor = "#0F766E"
+backgroundColor = "#F4F6F9"
+secondaryBackgroundColor = "#E9EEF4"
+textColor = "#0F1B2D"
+borderColor = "#D6DEE8"
+linkColor = "#0F766E"
+greenColor = "#15803D"
+orangeColor = "#B45309"
+redColor = "#B91C1C"
+dataframeHeaderBackgroundColor = "#EEF2F7"
+chartCategoricalColors = ["#15803D", "#B45309", "#B91C1C", "#64748B", "#0F766E", "#2563EB", "#7C3AED", "#DB2777", "#0891B2", "#65A30D"]
+
+[theme.light.sidebar]
+backgroundColor = "#0F1B2D"
+secondaryBackgroundColor = "#1A2A42"
+textColor = "#E6ECF3"
+borderColor = "#2A3B56"
+primaryColor = "#2DD4BF"
+linkColor = "#5EEAD4"
+
+[theme.dark]
+primaryColor = "#14B8A6"
+backgroundColor = "#0B1220"
+secondaryBackgroundColor = "#152033"
+textColor = "#E6ECF3"
+borderColor = "#26344B"
+linkColor = "#5EEAD4"
+greenColor = "#4ADE80"
+orangeColor = "#FBBF24"
+redColor = "#F87171"
+dataframeHeaderBackgroundColor = "#17233A"
+chartCategoricalColors = ["#4ADE80", "#FBBF24", "#F87171", "#94A3B8", "#2DD4BF", "#60A5FA", "#A78BFA", "#F472B6", "#22D3EE", "#A3E635"]
+
+[theme.dark.sidebar]
+backgroundColor = "#080E1A"
+secondaryBackgroundColor = "#131E31"
+textColor = "#E6ECF3"
+borderColor = "#22304A"
+primaryColor = "#2DD4BF"
+linkColor = "#5EEAD4"
 
 [client]
 # Tracebacks go to the server log, never to the page
