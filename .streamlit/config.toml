@@ -1,52 +1,39 @@
-# Light and dark themes. Viewers switch in the app menu (⋮ › Settings › Theme); the default follows
-# their system setting. app.py reads the active theme so its own panels match.
+# LedgerPilot's theme: deep charcoal, warm white text, one restrained emerald accent.
+# app.py adds the finer details (display type, hairlines, spacing) on top of these.
 [theme]
-font = "Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, Arial, sans-serif"
-codeFont = "Cascadia Mono, SFMono-Regular, Consolas, Menlo, monospace"
+base = "dark"
+primaryColor = "#34B27D"
+backgroundColor = "#0E0F10"
+secondaryBackgroundColor = "#17181A"
+textColor = "#EDE9E3"
+borderColor = "#25272A"
+linkColor = "#6FD3A6"
+linkUnderline = false
+greenColor = "#4FBF8B"
+orangeColor = "#D9A24A"
+redColor = "#E2674F"
+blueColor = "#7FA7D9"
+grayColor = "#8A867F"
+codeTextColor = "#C9C4BC"
+codeBackgroundColor = "#1A1B1E"
+font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap, -apple-system, Segoe UI, sans-serif"
+codeFont = "Geist Mono:https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap, Consolas, monospace"
 baseFontSize = 15
 headingFontWeights = [600, 600, 600, 600, 600, 600]
-baseRadius = "6px"
-buttonRadius = "6px"
+baseRadius = "8px"
+buttonRadius = "7px"
 showWidgetBorder = true
 showSidebarBorder = true
+dataframeBorderColor = "#232528"
+dataframeHeaderBackgroundColor = "#141517"
+dataframeHeaderTextColor = "#8A867F"
+chartCategoricalColors = ["#4FBF8B", "#D9A24A", "#E2674F", "#8A867F", "#34B27D", "#7FA7D9", "#B39DDB", "#D98BA7", "#6FC3C9", "#A3A08F"]
 
-[theme.light]
-primaryColor = "#1F3A5F"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F4F5F7"
-textColor = "#1B1F24"
-borderColor = "#E1E4E8"
-linkColor = "#1F5FBF"
-greenColor = "#1A7F37"
-orangeColor = "#9A6700"
-redColor = "#C4321C"
-dataframeHeaderBackgroundColor = "#F6F7F9"
-chartCategoricalColors = ["#1A7F37", "#9A6700", "#C4321C", "#6E7781", "#1F3A5F", "#1F5FBF", "#8250DF", "#BF3989", "#1B7C83", "#57606A"]
-
-[theme.light.sidebar]
-backgroundColor = "#F6F7F9"
-secondaryBackgroundColor = "#ECEEF1"
-textColor = "#1B1F24"
-borderColor = "#E1E4E8"
-
-[theme.dark]
-primaryColor = "#4C7DC9"
-backgroundColor = "#111316"
-secondaryBackgroundColor = "#1A1D21"
-textColor = "#E6E8EB"
-borderColor = "#2B3036"
-linkColor = "#6EA3F2"
-greenColor = "#3FB950"
-orangeColor = "#D29922"
-redColor = "#F06A57"
-dataframeHeaderBackgroundColor = "#181B1F"
-chartCategoricalColors = ["#3FB950", "#D29922", "#F06A57", "#8B949E", "#4C7DC9", "#6EA3F2", "#A371F7", "#DB61A2", "#39C5CF", "#8C959F"]
-
-[theme.dark.sidebar]
-backgroundColor = "#16191C"
-secondaryBackgroundColor = "#1E2226"
-textColor = "#E6E8EB"
-borderColor = "#2B3036"
+[theme.sidebar]
+backgroundColor = "#0A0B0C"
+secondaryBackgroundColor = "#141517"
+textColor = "#EDE9E3"
+borderColor = "#1D1F22"
 
 [client]
 # Tracebacks go to the server log, never to the page
