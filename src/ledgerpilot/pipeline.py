@@ -118,7 +118,7 @@ class Pipeline:
             res.step("Three-way match + fraud checks", "Python (Decimal)", res.timings["rules_s"],
                      note=f"{len(decision.discrepancies)} finding(s)")
 
-            progress("Asking the LedgerPilot agent (open model on AMD MI300X via Evolus)")
+            progress(f"Asking the LedgerPilot agent (open model on {self.s.model_where} via Evolus)")
             res.agent = self._ask_agent(po, grn, inv, decision, res)
             agent_route = res.agent.route if res.agent else None
             res.route = final_route(decision.route, agent_route)
@@ -191,10 +191,10 @@ class Pipeline:
             verdict = self.agent.review(case)
         except Exception as exc:  # noqa: BLE001
             res.trace["agent_error"] = f"{type(exc).__name__}: {exc}"[:300]
-            res.step("Agent review", "Evolus agent on AMD MI300X", 0, ok=False, note="unreachable: rule route used")
+            res.step("Agent review", f"Evolus agent on {self.s.model_where}", 0, ok=False, note="unreachable: rule route used")
             return None
         res.timings["agent_s"] = verdict.latency_s
-        res.step("Agent review", "Evolus agent on AMD MI300X", verdict.latency_s, ok=verdict.parsed,
+        res.step("Agent review", f"Evolus agent on {self.s.model_where}", verdict.latency_s, ok=verdict.parsed,
                  note=f"route {verdict.route.value}" if verdict.route else "reply not understood: rule route used")
         res.trace["agent"] = {"conversation_id": verdict.conversation_id, "parsed": verdict.parsed}
         return verdict

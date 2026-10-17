@@ -1,4 +1,4 @@
-"""Real HTTP tests: the actual clients talk to a local fake of Evolus and vLLM."""
+"""Real HTTP tests: the actual clients talk to a local fake of Evolus and the AMD model endpoint."""
 from __future__ import annotations
 
 import json
@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fake_services import FakeServices
 
-from ledgerpilot.agent_client import ClerkAgent, vllm_health, vllm_speed
+from ledgerpilot.agent_client import ClerkAgent, model_health, model_speed, model_usage
 from ledgerpilot.audit import AuditLog
 from ledgerpilot.config import Settings
 from ledgerpilot.evolus_client import EvolusClient, EvolusError
@@ -29,7 +29,7 @@ def svc():
 @pytest.fixture
 def settings(svc, monkeypatch, tmp_path):
     env = {"EVOLUS_API_BASE": f"{svc.base}/api/v1", "EVOLUS_CHAT_BASE": f"{svc.base}/v1",
-           "VLLM_BASE_URL": f"{svc.base}/v1", "VLLM_API_KEY": "vk",
+           "AMD_BASE_URL": f"{svc.base}/v1", "AMD_API_KEY": "vk",
            "EVOLUS_API_KEY": "secret-key", "EVOLUS_APP_ID": "app", "EVOLUS_AGENT_ID": "agent",
            "EVOLUS_EXTRACTOR_INVOICE_ID": "x-inv", "EVOLUS_EXTRACTOR_PO_ID": "x-po", "EVOLUS_EXTRACTOR_GRN_ID": "x-grn",
            "EVOLUS_WORKFLOW_ID": "wf", "EVOLUS_LIBRARY_ID": "lib"}
@@ -119,7 +119,7 @@ def test_library_upload_uses_english(svc, settings):
     assert "language=en" in svc.calls[-1]["path"] and "/memories/lib/documents" in svc.calls[-1]["path"]
 
 
-# ------------------------------------------------------------- agent + vLLM
+# ------------------------------------------------------- agent + AMD model
 def test_agent_uses_app_agent_model_and_bearer(svc, settings):
     v = ClerkAgent(settings).review({"rule_route": "hold_for_review", "discrepancies": []})
     call = svc.calls[-1]
@@ -134,21 +134,75 @@ def test_agent_reply_in_code_fence_with_prose(svc, settings):
     assert v.route is Route.FRAUD and v.evidence == ["VM"]
 
 
-def test_vllm_health_ok_and_down(svc, settings):
-    h = vllm_health(settings)
+def test_model_health_ok_and_down(svc, settings):
+    h = model_health(settings)
     assert h["ok"] and "ledgerpilot-model" in h["models"]
     assert h["weights"] == "Qwen/Qwen2.5-32B-Instruct"  # vLLM's `root`, not the served alias
-    settings.vllm_base_url = "http://127.0.0.1:9/v1"
-    assert vllm_health(settings, timeout=1)["ok"] is False
+    assert svc.calls[-1]["headers"]["authorization"] == "Bearer vk"
+    settings.amd_base_url = "http://127.0.0.1:9/v1"
+    assert model_health(settings, timeout=1)["ok"] is False
 
 
-def test_vllm_speed_measures_tokens_per_second(svc, settings):
-    s = vllm_speed(settings)
+def test_model_speed_measures_tokens_per_second(svc, settings):
+    s = model_speed(settings)
     call = svc.calls[-1]
     assert call["path"] == "/v1/chat/completions" and call["json"]["model"] == "ledgerpilot-model"
+    assert "reasoning_effort" not in call["json"]
     assert s["ok"] and s["tokens"] == 5 and s["tokens_per_s"] > 0
-    settings.vllm_base_url = "http://127.0.0.1:9/v1"
-    assert vllm_speed(settings, timeout=1)["ok"] is False
+    assert s["limits"] == {"x-ratelimit-remaining-requests": "29"}
+    settings.amd_base_url = "http://127.0.0.1:9/v1"
+    assert model_speed(settings, timeout=1)["ok"] is False
+
+
+@pytest.fixture
+def token_factory(svc, settings, monkeypatch):
+    # The fake stands in for Token Factory: the client decides by host name
+    monkeypatch.setattr("ledgerpilot.config.TOKEN_FACTORY_HOST", "127.0.0.1")
+    settings.amd_model = "DeepSeek-V4-Flash"
+    assert settings.token_factory
+    return settings
+
+
+def test_token_factory_health_uses_model_name_and_checks_catalog(svc, token_factory):
+    h = model_health(token_factory)
+    assert h["ok"] and h["weights"] == "DeepSeek-V4-Flash"
+    token_factory.amd_model = "Retired-Model"
+    h = model_health(token_factory)
+    assert not h["ok"] and "isn't in the Token Factory catalog" in h["detail"] and "DeepSeek-V4-Flash" in h["detail"]
+
+
+def test_token_factory_needs_a_key(svc, token_factory):
+    token_factory.amd_api_key = None
+    before = len(svc.calls)
+    for check in (model_health, model_speed, model_usage):
+        r = check(token_factory)
+        assert not r["ok"] and "AMD_API_KEY" in r["detail"]
+    assert len(svc.calls) == before  # nothing sent without a key
+
+
+def test_reasoning_effort_is_sent_when_set(svc, token_factory):
+    token_factory.amd_reasoning_effort = "low"
+    assert model_speed(token_factory)["ok"]
+    assert svc.calls[-1]["json"]["reasoning_effort"] == "low"
+
+
+def test_token_factory_usage(svc, token_factory):
+    u = model_usage(token_factory)
+    call = svc.calls[-1]
+    assert u["ok"] and u["usage"]["remaining"] == 4.75
+    assert call["path"] == "/v1/usage?include_recent=true" and call["headers"]["authorization"] == "Bearer vk"
+
+
+def test_usage_only_on_token_factory(svc, settings):
+    assert not model_usage(settings)["ok"] and svc.count(r"/v1/usage") == 0
+
+
+def test_rate_limit_gets_a_plain_message(svc, settings):
+    svc.fail[r"/v1/chat/completions"] = [429]
+    s = model_speed(settings)
+    assert not s["ok"] and "Rate limited (429)" in s["detail"] and "shares one key" in s["detail"]
+    svc.fail[r"/v1/models"] = [401]
+    assert "Key rejected (401)" in model_health(settings)["detail"]
 
 
 # --------------------------------------------- full pipeline over real HTTP

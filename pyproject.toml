@@ -1,7 +1,7 @@
 [project]
 name = "ledgerpilot"
 version = "0.1.0"
-description = "LedgerPilot AI: accounts-payable agent on Evolus, powered by an open model on AMD MI300X"
+description = "LedgerPilot AI: accounts-payable agent on Evolus, powered by an open model on AMD (Token Factory or MI300X)"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 

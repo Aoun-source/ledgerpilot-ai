@@ -2,7 +2,8 @@
 
 About 360 spoken words: roughly 2 minutes 40 at a calm pace, leaving room for the clicks. Brackets `[__]` are numbers to copy from `docs/evaluation.md` and
 `docs/benchmark.md` after the live run. Never round them up, and cut a line rather than guess.
-The tag after each scene names the judging criterion it serves.
+The tag after each scene names the judging criterion it serves. Written for the agent's model on AMD
+Token Factory; if you used your own vLLM droplet, say Qwen2.5 with vLLM on an AMD Instinct MI300X instead.
 
 **Before recording:** run `python scripts/smoke_test.py` (all PASS), click **Clear demo history** in the
 sidebar, and open the app at 1280×720 or larger. If the live services are slow, record with
@@ -20,11 +21,11 @@ sidebar, and open the app at 1280×720 or larger. If the live services are slow,
 
 ### 0:20–0:40 · What LedgerPilot is · *Presentation*
 
-**Screen:** the app header. Hover over the model line ("Model: … served on AMD Developer Cloud").
+**Screen:** the app header. Hover over the model line ("Model: … served on AMD Token Factory").
 
 > LedgerPilot is an accounts-payable agent. It reads the purchase order, the delivery note and the
 > invoice, checks them against each other, and tells the clerk: pay, hold, or block. It runs on Evolus,
-> and its model is an open model, Qwen2.5, that we serve with vLLM on an AMD Instinct MI300X.
+> and its model is an open model, DeepSeek-V4-Flash, running on AMD GPUs through AMD Token Factory.
 
 ### 0:40–1:05 · Case 01, clean · *Application of technology*
 
@@ -57,16 +58,16 @@ and the alert draft. Then open **What ran, where** and show the extractor, agent
 **Screen:** deck slide 5 (architecture).
 
 > Under the hood: the app drives Evolus through its REST API: extractors, an AI Tool, a workflow and a
-> knowledge library holding the vendor master. The agent's model is our own vLLM endpoint on AMD
-> Developer Cloud. When the agent is unsure, the invoice goes to a person.
+> knowledge library holding the vendor master. The agent's model runs on AMD Token Factory, AMD's
+> OpenAI-compatible model API. When the agent is unsure, the invoice goes to a person.
 
 ### 2:20–2:45 · Results · *Business value*
 
 **Screen:** deck slide 8 (results), or the app's **Results** tab.
 
 > We measured it live on twenty-four cases. [__] false approvals out of seventeen problem invoices.
-> [__] of five fraud attempts blocked. [__] percent routed correctly. On one MI300X the agent step runs
-> at [__] tokens a second, about [$__] per thousand invoices.
+> [__] of five fraud attempts blocked. [__] percent routed correctly. On AMD Token Factory the agent
+> answers in about [__] seconds per invoice.
 
 ### 2:45–3:00 · Close · *Presentation*
 

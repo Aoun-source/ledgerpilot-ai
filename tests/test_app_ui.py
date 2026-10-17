@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = str(ROOT / "app.py")
 SAMPLES = ROOT / "data" / "samples"
 KIND = {"x-inv": "invoice", "x-po": "po", "x-grn": "grn"}
-ENV_KEYS = ["EVOLUS_API_BASE", "EVOLUS_CHAT_BASE", "VLLM_BASE_URL", "VLLM_API_KEY", "EVOLUS_API_KEY", "EVOLUS_APP_ID",
+ENV_KEYS = ["EVOLUS_API_BASE", "EVOLUS_CHAT_BASE", "EVOLUS_API_KEY", "EVOLUS_APP_ID",
             "EVOLUS_AGENT_ID", "EVOLUS_EXTRACTOR_INVOICE_ID", "EVOLUS_EXTRACTOR_PO_ID", "EVOLUS_EXTRACTOR_GRN_ID",
             "EVOLUS_WORKFLOW_ID", "EVOLUS_LIBRARY_ID", "AUDIT_DB"]
 
@@ -37,7 +37,7 @@ def svc():
 @pytest.fixture
 def configured(svc, monkeypatch, tmp_path):
     env = {"EVOLUS_API_BASE": f"{svc.base}/api/v1", "EVOLUS_CHAT_BASE": f"{svc.base}/v1",
-           "VLLM_BASE_URL": f"{svc.base}/v1", "VLLM_API_KEY": "vk", "EVOLUS_API_KEY": "k", "EVOLUS_APP_ID": "app",
+           "AMD_BASE_URL": f"{svc.base}/v1", "AMD_API_KEY": "vk", "EVOLUS_API_KEY": "k", "EVOLUS_APP_ID": "app",
            "EVOLUS_AGENT_ID": "agent", "EVOLUS_EXTRACTOR_INVOICE_ID": "x-inv", "EVOLUS_EXTRACTOR_PO_ID": "x-po",
            "EVOLUS_EXTRACTOR_GRN_ID": "x-grn", "EVOLUS_WORKFLOW_ID": "wf", "EVOLUS_LIBRARY_ID": "lib",
            "AUDIT_DB": str(tmp_path / "ui.db")}
@@ -72,7 +72,8 @@ def test_unconfigured_app_renders_with_clear_guidance(monkeypatch, tmp_path):
     at = AppTest.from_file(APP, default_timeout=60).run()
     assert not at.exception
     warnings = " ".join(w.value for w in at.sidebar.warning)
-    assert "VLLM_BASE_URL" in warnings and "EVOLUS_API_KEY" in warnings
+    assert "AMD_API_KEY" in warnings and "notebooks.amd.com/tokenfactory" in warnings and "EVOLUS_API_KEY" in warnings
+    assert "not set up" in all_markdown(at)
     assert [t.label for t in at.tabs] == ["Check an invoice", "Review queue (0)", "Audit log", "Results"]
     assert len(at.selectbox[0].options) == 24
     next(b for b in at.button if b.label == "Check invoice").click()
@@ -93,7 +94,7 @@ def test_check_each_outcome(configured, case, stamp):
     if case == "case_07":
         assert "200.00" in md and "Price above the agreed PO price" in md
         assert at.text_area[0].value.startswith("Dear supplier")
-        assert "Start routing workflow" in md and "Evolus agent on AMD MI300X" in md
+        assert "Start routing workflow" in md and "Evolus agent on AMD MI300X (vLLM)" in md
     if case == "case_15":
         assert "Bank account differs from vendor records" in md
         assert "Draft alert to the finance manager" in md
@@ -106,6 +107,25 @@ def test_model_indicator_and_speed_probe(configured):
     at.run()
     assert not at.exception and "tokens/s" in all_markdown(at)
     assert any("tokens/s" in c.value for c in at.sidebar.caption)
+    # the Token Factory-only usage button stays hidden on a vLLM endpoint
+    assert not any(b.label == "Check team usage" for b in at.sidebar.button)
+
+
+def test_token_factory_sidebar_shows_usage(configured, svc, monkeypatch):
+    # A stand-in for Token Factory: the app decides by host name, so point that host at the fake
+    monkeypatch.setattr("ledgerpilot.config.TOKEN_FACTORY_HOST", "127.0.0.1")
+    monkeypatch.setenv("AMD_MODEL", "DeepSeek-V4-Flash")
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    assert not at.exception
+    assert "served on AMD Token Factory" in all_markdown(at)
+    assert any("AMD Token Factory" in c.value and "synthetic" in c.value for c in at.sidebar.caption)
+    next(b for b in at.sidebar.button if b.label == "Check team usage").click()
+    at.run()
+    assert not at.exception and at.sidebar.expander and at.sidebar.json
+    assert svc.count(r"^/v1/usage") == 1
+    next(b for b in at.sidebar.button if b.label == "Measure model speed").click()
+    at.run()
+    assert any("Rate limits left" in c.value for c in at.sidebar.caption)
 
 
 def test_review_queue_requires_note_to_release_blocked_payment(configured):

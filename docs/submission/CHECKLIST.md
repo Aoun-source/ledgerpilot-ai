@@ -4,7 +4,8 @@ Deadline: **Saturday 17 October 2026, 17:00 UTC** (22:00 in Pakistan, UTC+5). Ai
 
 ## 1. Live run (Phase 3), in the `ledgerpilot-ai` folder
 
-First time? Set up the AMD droplet and Evolus from Windows with [../setup_windows.md](../setup_windows.md).
+First time? Get your team's AMD Token Factory key (https://notebooks.amd.com/tokenfactory; every
+teammate must click **Redeem API Key**) and set up Evolus from Windows with [../setup_windows.md](../setup_windows.md).
 
 1. Save the filled-in settings as `ledgerpilot-ai\.env` (exactly that name: in Notepad choose
    "All files", or it saves as `.env.txt`). Never commit it; `git status` must not list it.
@@ -21,16 +22,17 @@ First time? Set up the AMD droplet and Evolus from Windows with [../setup_window
    Go on only when it ends with `ALL GOOD`.
 
    ```bash
-   .venv\Scripts\python.exe eval\run_eval.py --label "Qwen2.5-32B"
+   .venv\Scripts\python.exe eval\run_eval.py --label "DeepSeek-V4-Flash"
    ```
 
    ```bash
-   .venv\Scripts\python.exe scripts\benchmark_amd.py --label "Qwen2.5-32B" --gpu-price <your $/GPU-hour>
+   .venv\Scripts\python.exe scripts\benchmark_amd.py --label "DeepSeek-V4-Flash"
    ```
 
    The eval makes up to 6 Evolus calls per case (about 130 in all; clean invoices skip the email) and writes `docs/evaluation.md`,
    `docs/evaluation.json` and one demo recording per case in `data/recordings/`. The benchmark writes
-   `docs/benchmark.md` and `docs/benchmark.json`.
+   `docs/benchmark.md` and `docs/benchmark.json`. On Token Factory your team shares one key (about
+   20 requests a minute): let one person run these while the others stay off the app.
 3. Paste the four outputs to Claude. It will check them, link the two result files from the README,
    write the README's Business value section and fill every `[__]` in the deck, script and descriptions
    from these files only.
@@ -41,11 +43,12 @@ First time? Set up the AMD droplet and Evolus from Windows with [../setup_window
 
 - [ ] The manual time per invoice to compare against, **with a source** (a published survey or your own
       measurement). Without one, the Business value section reports measured time and fraud caught only.
-- [ ] The GPU price you actually pay per hour on AMD Developer Cloud (for `--gpu-price`).
+- [ ] Only if you use your own vLLM droplet: the GPU price you pay per hour on AMD Developer Cloud (for `--gpu-price`).
 - [ ] Team name, for the deck cover.
 - [ ] In the Evolus workspace, check which model the three extractors and the email AI Tool use. The
-      rules require the main agent to run on your AMD endpoint (it does by design, via the agent's model
-      setting). Note in the README if the extractors use a different model.
+      main agent must run on your AMD model (Token Factory or your droplet; it does by design, via the
+      agent's model setting). Check the track rules accept Token Factory; if they require your own vLLM
+      endpoint, use the droplet (Option B in the README). Note in the README if the extractors use a different model.
 
 ## 3. Repository
 
@@ -53,7 +56,7 @@ First time? Set up the AMD droplet and Evolus from Windows with [../setup_window
 - [ ] On GitHub, confirm both workflows pass: **tests** and **docker** (the Docker build has only been
       checked by reading it until this runs).
 - [ ] Replace `<your-account>` in the README's clone command with the real URL.
-- [ ] Confirm `.env` is absent from the repo page and `.env.example` holds no real values.
+- [ ] Confirm `.env` is absent from the repo page and `.env.example` holds no real values (no `rc-` key).
 - [ ] Commit `docs/evaluation.md`, `docs/benchmark.md` and `data/recordings/` from the live run.
 
 ## 4. Assets

@@ -1,6 +1,6 @@
 """Run every sample case through the REAL pipeline and score it against ground truth.
 
-    python eval/run_eval.py --label "Qwen2.5-32B"
+    python eval/run_eval.py --label "DeepSeek-V4-Flash"
 
 Uses a separate audit database so earlier runs don't trigger duplicate alerts.
 Writes docs/evaluation.md and docs/evaluation.json, and saves each case's live
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from ledgerpilot import recording  # noqa: E402
-from ledgerpilot.agent_client import vllm_health  # noqa: E402
+from ledgerpilot.agent_client import model_health  # noqa: E402
 from ledgerpilot.audit import AuditLog  # noqa: E402
 from ledgerpilot.config import load_settings  # noqa: E402
 from ledgerpilot.pipeline import Pipeline, load_case_folder  # noqa: E402
@@ -81,9 +81,9 @@ def main(argv: list[str] | None = None) -> dict:
     audit = AuditLog(s.audit_db)
     audit.reset()
     pipe = Pipeline(s, audit)
-    health = vllm_health(s)
+    health = model_health(s)
     model = health.get("weights") if health["ok"] else None
-    print(f"AMD endpoint: {'online, ' + str(model) if health['ok'] else 'NOT reachable: ' + health['detail']}")
+    print(f"AMD endpoint ({s.model_where}): {'online, ' + str(model) if health['ok'] else 'NOT reachable: ' + health['detail']}")
 
     folders = sorted((ROOT / "data" / "samples").glob("case_*"))
     if a.cases:
@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> dict:
         truth = json.loads((f / "truth.json").read_text())
         res = pipe.run(load_case_folder(f), label=f.name, start_workflow=True)
         if not a.no_record:
-            recording.save(s.recordings_dir, res, f.name, model or s.vllm_model, source=f"eval/run_eval.py {a.label}".strip())
+            recording.save(s.recordings_dir, res, f.name, model or s.amd_model, source=f"eval/run_eval.py {a.label}".strip())
         g, t = field_scores(truth, res.extracted)
         expected = truth["expected_route"]
         rows.append({
@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> dict:
     for r in rows:
         by_type[r["type"]].append(r)
     md = [f"# Evaluation{(' - ' + a.label) if a.label else ''}", "",
-          f"{len(rows)} synthetic cases (data/samples), full pipeline: Evolus extractors -> Python rules -> agent on AMD MI300X.",
+          f"{len(rows)} synthetic cases (data/samples), full pipeline: Evolus extractors -> Python rules -> agent on {s.model_where}.",
           f"Model reported by the AMD endpoint: {model or 'unknown (endpoint not reachable during the run)'}.", "",
           "| Metric | Result | Definition |", "| --- | --- | --- |",
           f"| False approvals | {summary['false_approvals']} of {len(problems) + sum(r['expected'] == 'processing_error' for r in rows)} "
@@ -146,7 +146,7 @@ def main(argv: list[str] | None = None) -> dict:
           f"| Agent agreement | {pct(summary['agent_agreement'])} | agent's own route = expected route |",
           f"| Median end-to-end latency | {summary['median_latency_s']} s | upload to decision |",
           f"| p95 end-to-end latency | {summary['p95_latency_s']} s | upload to decision |",
-          f"| Median agent latency | {summary['median_agent_s']} s | AMD-hosted model via Evolus |", "",
+          f"| Median agent latency | {summary['median_agent_s']} s | {s.model_where} model via Evolus |", "",
           "## Accuracy by case type", "",
           "| Case type | Cases | Routed correctly |", "| --- | --- | --- |"]
     md += [f"| {t} | {len(rs)} | {sum(r['correct'] for r in rs)} of {len(rs)} |" for t, rs in sorted(by_type.items())]

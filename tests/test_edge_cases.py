@@ -275,9 +275,28 @@ def test_failed_and_rejected_cases_are_not_payment_history(tmp_path):
 
 def test_empty_env_values_use_defaults(monkeypatch):
     monkeypatch.setenv("PRICE_TOLERANCE", "")
-    monkeypatch.setenv("VLLM_MODEL", "  ")
+    monkeypatch.setenv("AMD_MODEL", "  ")
     s = Settings()
-    assert s.price_tolerance == D("0.00") and s.vllm_model == "ledgerpilot-model"
+    assert s.price_tolerance == D("0.00") and s.amd_model == "DeepSeek-V4-Flash"
+
+
+def test_token_factory_is_the_default_endpoint():
+    s = Settings()
+    assert s.token_factory and s.amd_base_url == "https://developer.amd.com.cn/radeon/api/v1"
+    assert s.model_where == "AMD Token Factory"
+    assert "AMD_API_KEY" in s.model_problem() and "notebooks.amd.com/tokenfactory" in s.model_problem()
+    s.amd_api_key = "rc-" + "0" * 48
+    assert s.model_problem() is None
+
+
+def test_old_vllm_names_still_work(monkeypatch):
+    monkeypatch.setenv("VLLM_BASE_URL", "http://10.0.0.5:8000/v1")
+    monkeypatch.setenv("VLLM_API_KEY", "vk")
+    s = Settings()
+    assert not s.token_factory and s.amd_api_key == "vk" and s.amd_model == "ledgerpilot-model"
+    assert s.model_where == "AMD MI300X (vLLM)" and s.model_problem() is None
+    monkeypatch.setenv("AMD_BASE_URL", "https://developer.amd.com.cn/radeon/api/v1")
+    assert Settings().token_factory  # the new name wins
 
 
 def test_bad_tolerance_is_a_clear_config_error(monkeypatch):
@@ -287,5 +306,6 @@ def test_bad_tolerance_is_a_clear_config_error(monkeypatch):
 
 
 def test_placeholder_endpoint_detected(monkeypatch):
-    monkeypatch.setenv("VLLM_BASE_URL", "http://<DROPLET_IP>:8000/v1")
-    assert Settings().placeholder_vllm()
+    monkeypatch.setenv("AMD_BASE_URL", "http://<DROPLET_IP>:8000/v1")
+    s = Settings()
+    assert s.placeholder_model() and "placeholder" in s.model_problem()

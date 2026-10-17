@@ -1,5 +1,6 @@
 """A local HTTP server that mimics the Evolus REST API, the Evolus OpenAI-compatible
-agent endpoint and a vLLM server, for tests only.
+agent endpoint and the AMD model endpoint (a vLLM server, or AMD Token Factory with its
+usage endpoint and rate-limit headers), for tests only.
 
 It lets the real clients (requests + openai SDK) run end to end: real URLs,
 headers, multipart uploads, status codes, retries and timeouts.
@@ -106,7 +107,11 @@ class FakeServices:
                 if path == "/v1/models":
                     return self._send(200, {"object": "list", "data": [{"id": "app:agent", "object": "model", "created": 0, "owned_by": "x"},
                                                                        {"id": "ledgerpilot-model", "object": "model", "created": 0, "owned_by": "vllm",
-                                                                        "root": "Qwen/Qwen2.5-32B-Instruct"}]})
+                                                                        "root": "Qwen/Qwen2.5-32B-Instruct"},
+                                                                       {"id": "DeepSeek-V4-Flash", "object": "model", "created": 0, "owned_by": "DeepSeek"}]})
+                if path == "/v1/usage":
+                    return self._send(200, {"total_quota": 5.0, "used": 0.25, "remaining": 4.75, "rpm_limit": 30,
+                                            "recent": []})
                 if path == "/v1/chat/completions":
                     payload = json.loads(body)
                     call["json"] = payload
@@ -117,7 +122,7 @@ class FakeServices:
                         "id": "c1", "object": "chat.completion", "created": 0, "model": payload["model"],
                         "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": content}}],
                         "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}},
-                        {"X-Conversation-Id": "conv-42"})
+                        {"X-Conversation-Id": "conv-42", "X-RateLimit-Remaining-Requests": "29"})
                 return self._send(404, {"error": "not found", "path": path})
 
             def do_GET(self):

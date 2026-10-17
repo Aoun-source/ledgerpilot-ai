@@ -1,9 +1,10 @@
 """The LedgerPilot Clerk agent.
 
-The agent lives in the Evolus workspace, runs on your open model served by vLLM
-on an AMD MI300X, and is reached through Evolus's OpenAI-compatible endpoint.
-It explains the evidence, cites the vendor library and proposes a route. It
-never computes money and can never loosen the rule-based route.
+The agent lives in the Evolus workspace, runs on an open model on AMD (AMD Token
+Factory, or your own vLLM server on an AMD MI300X), and is reached through
+Evolus's OpenAI-compatible endpoint. It explains the evidence, cites the vendor
+library and proposes a route. It never computes money and can never loosen the
+rule-based route.
 """
 from __future__ import annotations
 
@@ -13,7 +14,8 @@ import time
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from openai import OpenAI
+import requests
+from openai import AuthenticationError, OpenAI, PermissionDeniedError, RateLimitError
 
 from .config import Settings
 from .schemas import Route
@@ -106,41 +108,86 @@ def parse_verdict(text: str, conversation_id: Optional[str] = None, latency: flo
     )
 
 
-def vllm_health(settings: Settings, timeout: float = 10.0) -> dict[str, Any]:
-    """Ping your AMD-hosted vLLM endpoint directly (shown in the app sidebar).
+def model_client(settings: Settings, timeout: float, max_retries: int = 0) -> OpenAI:
+    """OpenAI client for the AMD endpoint (Token Factory or your own vLLM)."""
+    return OpenAI(base_url=settings.amd_base_url, api_key=settings.amd_api_key or "none",
+                  timeout=timeout, max_retries=max_retries)
+
+
+def model_extra_body(settings: Settings) -> dict[str, Any] | None:
+    """Request fields the OpenAI SDK has no argument for. Token Factory rejects `thinking`;
+    reasoning_effort is the supported way to turn thinking down."""
+    return {"reasoning_effort": settings.amd_reasoning_effort} if settings.amd_reasoning_effort else None
+
+
+def _model_error(exc: Exception) -> str:
+    if isinstance(exc, RateLimitError):
+        return ("Rate limited (429). Your team shares one key and its limits (about 20 requests a minute). "
+                "Wait a minute and try again.")
+    if isinstance(exc, AuthenticationError):
+        return "Key rejected (401). Check AMD_API_KEY in .env."
+    if isinstance(exc, PermissionDeniedError):
+        return "Forbidden (403). Your AMD account may still be in review (account_not_verified)."
+    return f"{type(exc).__name__}: {exc}"[:300]
+
+
+def model_health(settings: Settings, timeout: float = 10.0) -> dict[str, Any]:
+    """Ping the AMD model endpoint directly (shown in the app sidebar).
 
     vLLM reports the served name (--served-model-name) as `id` and the weights it
-    loaded (e.g. Qwen/Qwen2.5-32B-Instruct) as `root`; the UI shows the weights."""
-    if not settings.vllm_base_url:
-        return {"ok": False, "detail": "VLLM_BASE_URL not set"}
+    loaded (e.g. Qwen/Qwen2.5-32B-Instruct) as `root`; the UI shows the weights.
+    Token Factory lists its catalog with the model names as `id`."""
+    if problem := settings.model_problem():
+        return {"ok": False, "detail": problem}
     try:
-        client = OpenAI(base_url=settings.vllm_base_url, api_key=settings.vllm_api_key or "none",
-                        timeout=timeout, max_retries=0)
         start = time.perf_counter()
-        data = client.models.list().data
+        data = model_client(settings, timeout).models.list().data
         latency_ms = round((time.perf_counter() - start) * 1000)
         models = [m.id for m in data]
-        served = next((m for m in data if m.id == settings.vllm_model), data[0] if data else None)
+        served = next((m for m in data if m.id == settings.amd_model), None)
+        if served is None and settings.token_factory:
+            return {"ok": False, "detail": f"{settings.amd_model} isn't in the Token Factory catalog. "
+                                           f"Set AMD_MODEL to one of: {', '.join(models)}"[:300], "models": models}
+        served = served or (data[0] if data else None)
         weights = (getattr(served, "root", None) or served.id) if served else None
         return {"ok": True, "models": models, "weights": weights, "latency_ms": latency_ms}
     except Exception as exc:  # noqa: BLE001 - surface any connection problem to the UI
-        return {"ok": False, "detail": f"{type(exc).__name__}: {exc}"[:300]}
+        return {"ok": False, "detail": _model_error(exc)}
 
 
-def vllm_speed(settings: Settings, max_tokens: int = 64, timeout: float = 30.0) -> dict[str, Any]:
-    """One short generation on the AMD endpoint, timed end to end (includes time to first token)."""
-    if not settings.vllm_base_url:
-        return {"ok": False, "detail": "VLLM_BASE_URL not set"}
+def model_speed(settings: Settings, max_tokens: int = 64, timeout: float = 30.0) -> dict[str, Any]:
+    """One short generation on the AMD endpoint, timed end to end (includes time to first token).
+
+    Also returns the X-RateLimit-* headers Token Factory sends, so the team can see what is left."""
+    if problem := settings.model_problem():
+        return {"ok": False, "detail": problem}
     try:
-        client = OpenAI(base_url=settings.vllm_base_url, api_key=settings.vllm_api_key or "none",
-                        timeout=timeout, max_retries=0)
         start = time.perf_counter()
-        r = client.chat.completions.create(
-            model=settings.vllm_model, max_tokens=max_tokens, temperature=0,
+        raw = model_client(settings, timeout).chat.completions.with_raw_response.create(
+            model=settings.amd_model, max_tokens=max_tokens, temperature=0, extra_body=model_extra_body(settings),
             messages=[{"role": "user", "content": "In three sentences, explain a three-way invoice match."}])
         seconds = time.perf_counter() - start
+        r = raw.parse()
         tokens = r.usage.completion_tokens if r.usage else 0
-        return {"ok": True, "tokens": tokens, "seconds": round(seconds, 2),
+        limits = {k.lower(): v for k, v in raw.headers.items() if k.lower().startswith("x-ratelimit-")}
+        return {"ok": True, "tokens": tokens, "seconds": round(seconds, 2), "limits": limits,
                 "tokens_per_s": round(tokens / seconds, 1) if seconds > 0 else 0.0}
     except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "detail": _model_error(exc)}
+
+
+def model_usage(settings: Settings, timeout: float = 10.0) -> dict[str, Any]:
+    """Token Factory's GET /v1/usage: quota, used, remaining, reset time and RPM limit for the
+    team's shared key. Returned as the service sends it, since its fields may change."""
+    if not settings.token_factory:
+        return {"ok": False, "detail": "Usage is only reported by AMD Token Factory."}
+    if problem := settings.model_problem():
+        return {"ok": False, "detail": problem}
+    try:
+        resp = requests.get(settings.amd_base_url.rstrip("/") + "/usage", params={"include_recent": "true"},
+                            headers={"Authorization": f"Bearer {settings.amd_api_key}"}, timeout=timeout)
+        if resp.status_code != 200:
+            return {"ok": False, "detail": f"HTTP {resp.status_code}: {resp.text[:200]}"}
+        return {"ok": True, "usage": resp.json()}
+    except (requests.RequestException, ValueError) as exc:
         return {"ok": False, "detail": f"{type(exc).__name__}: {exc}"[:300]}

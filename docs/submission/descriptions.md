@@ -3,6 +3,10 @@
 Brackets `[__]` are numbers to copy from `docs/evaluation.md` and `docs/benchmark.md`. If a field on
 the submission form has a character limit, use the short description there.
 
+Written for the default setup, the agent's model on **AMD Token Factory**. If you ran the agent on your
+own vLLM droplet instead, describe Qwen2.5 served with vLLM on an AMD Instinct MI300X, use the
+throughput and cost row of `docs/benchmark.md`, and put MI300X, ROCm and vLLM back in the tags.
+
 ## Name
 
 LedgerPilot AI
@@ -23,7 +27,7 @@ LedgerPilot does the matching and stops those payments before they go out. Three
 extractors read the PO, the goods-received note and the invoice. Plain Python validates every field
 and runs the checks with Decimal maths: a three-way match on price and quantity, arithmetic and tax,
 the vendor master, bank details, PO balance, and exact and look-alike duplicates. An Evolus agent,
-whose model is Qwen2.5 served with vLLM on an AMD Instinct MI300X on AMD Developer Cloud, explains the
+whose model is the open-weight DeepSeek-V4-Flash served on AMD GPUs through AMD Token Factory, explains the
 evidence, cites the vendor master from an Evolus knowledge library and proposes a route. An Evolus AI
 Tool drafts the supplier query or fraud alert, and an Evolus workflow routes the case. A clerk approves
 or rejects in a review queue, and every step is logged.
@@ -36,15 +40,15 @@ it in seconds.
 
 We measured it live on 24 synthetic cases (7 clean, 11 billing errors, 5 fraud attempts, 1 unreadable
 PDF): [__] false approvals out of 17 problem invoices, [__] of 5 fraud attempts blocked, and [__%]
-routed correctly, with a median of [__] s from upload to decision. On one MI300X the agent step reaches
-[__] output tokens per second, about [$__] per 1,000 invoices at [$__] per GPU-hour.
+routed correctly, with a median of [__] s from upload to decision. On AMD Token Factory the agent step
+answers in a median of [__] s, using about [__] tokens per invoice.
 
 The repo includes 208 offline tests, a Docker image built in CI, the evaluation and benchmark
 scripts, and a demo mode that replays recorded live runs, clearly labelled, if the services are down.
 
 ## Technology tags
 
-AMD Instinct MI300X · AMD Developer Cloud · ROCm · vLLM · Qwen2.5 · open-weight LLM · Evolus · Evolus
+AMD Token Factory · AMD Radeon Cloud · AMD GPUs · DeepSeek-V4-Flash · open-weight LLM · Evolus · Evolus
 agents · document extraction · knowledge library · AI Tools · workflows · Python · Pydantic · Streamlit ·
 SQLite · Docker · GitHub Actions · accounts payable · invoice processing · fraud detection · fintech ·
 human in the loop

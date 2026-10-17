@@ -4,9 +4,13 @@
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from xml.sax.saxutils import escape
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from ledgerpilot.config import TOKEN_FACTORY_MODEL, TOKEN_FACTORY_SIGN_IN, TOKEN_FACTORY_URL  # noqa: E402
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -122,13 +126,13 @@ def story() -> list:
           gap(14), P("How to use this guide", "h2"),
           P("Do the parts in order. Each grey box is a command: copy **one line at a time** into PowerShell and "
             "press Enter."),
-          P("Text in angle brackets, like `<DROPLET_IP>`, means **put your own value there**, without the brackets."),
+          P("Text in angle brackets, like `<YOUR_RC_KEY>`, means **put your own value there**, without the brackets."),
           P("If a command prints red error text, copy all of it and paste it to Claude."),
           gap(10), P("The parts", "h2"),
           table([["Part", "What you do", "Rough time"],
                  ["1", "Open the project folder and PowerShell", "5 min"],
                  ["2", "Try the app on your PC without any keys", "10 min"],
-                 ["3", "Start the AI model on AMD Developer Cloud", "30-45 min"],
+                 ["3", "Get your team's AMD Token Factory key", "10 min + teammates"],
                  ["4", "Set up the Evolus workspace", "30 min"],
                  ["5", "Write your settings file (.env)", "10 min"],
                  ["6", "Live checks and results", "30-60 min"],
@@ -138,15 +142,15 @@ def story() -> list:
 
     # ------------------------------------------------------------------ big picture
     s += [P("The big picture", "h1"),
-          P("Three pieces work together. Your PC only runs the app; the AI model runs on a rented AMD GPU in the "
-            "cloud, which you control from PowerShell."),
-          code("Your Windows PC                    AMD Developer Cloud (Linux, MI300X GPU)",
-               "  LedgerPilot app  ---------->     vLLM serving Qwen2.5-32B on port 8000",
+          P("Three pieces work together. Your PC only runs the app; the AI model runs on AMD GPUs in the cloud "
+            "through **AMD Token Factory**, a free model service run by AMD. There is nothing to rent or start."),
+          code("Your Windows PC                    AMD Token Factory (cloud, AMD GPUs)",
+               "  LedgerPilot app  ---------->     DeepSeek-V4-Flash, OpenAI-compatible API",
                "        |                                   ^",
                "        v                                   |",
-               "  Evolus workspace (website) -------------+  the Evolus agent calls your model"),
-          gap(), box("tip", "Your RX 9060 XT is not needed. The hackathon rules ask for the model on AMD "
-                            "Developer Cloud, and the 32B model needs about 64 GB of GPU memory."),
+               "  Evolus workspace (website) -------------+  the Evolus agent calls the model"),
+          gap(), box("tip", "Your RX 9060 XT is not needed: the model runs in AMD's cloud. If your track rules "
+                            "require your own vLLM server instead, follow Option B in `docs\\setup_windows.md`."),
           gap(10), P("Files you will open", "h2"),
           table([["File (inside the project folder)", "What it is", "Open with"],
                  [".env.example", "Template for your settings. You copy it to .env.", "(copied in Part 5)"],
@@ -155,7 +159,7 @@ def story() -> list:
                  [r"src\ledgerpilot\agent_client.py", "Lines 21-36: the agent instructions to paste into Evolus",
                   "Notepad"],
                  [r"docs\evaluation.md", "Your measured results (created in Part 6)", "Notepad"],
-                 [r"docs\benchmark.md", "AMD speed and cost results (created in Part 6)", "Notepad"],
+                 [r"docs\benchmark.md", "AMD model speed results (created in Part 6)", "Notepad"],
                  [r"docs\submission\CHECKLIST.md", "Final submission checklist", "Notepad"],
                  [r"docs\submission\video_script.md", "What to say and show in the video", "Notepad"],
                  [r"docs\submission\descriptions.md", "Text to paste into the submission form", "Notepad"],
@@ -176,6 +180,13 @@ def story() -> list:
           step("3", "Check you are in the right place:", code("dir")),
           box("ok", "a list that includes `app.py`, `README.md`, `requirements.txt` and the folders `docs`, "
                     "`scripts` and `src`."),
+          gap(),
+          box("warn", r"Run every command from the inner `ledgerpilot-ai` folder. If the prompt shows "
+                      r"`C:\WINDOWS\system32>` (a PowerShell opened as Administrator) or ends in "
+                      r"`ledgerpilot001-ai>` (one folder too high), go to the right folder first with the "
+                      "command below. Keep the quotes: the path has a space in `New folder`."),
+          gap(4),
+          code(r'cd "C:\Users\madinapc\Pictures\New folder\ledgerpilot001-ai\ledgerpilot-ai"'),
           gap(12),
           # ---------------------------------------------------------------- part 2
           P("Part 2 · Try it on your PC (no keys needed)", "h1"),
@@ -195,43 +206,31 @@ def story() -> list:
           PageBreak()]
 
     # ------------------------------------------------------------------ part 3
-    s += [P("Part 3 · Start the AI model on AMD Developer Cloud", "h1"),
-          P("You rent one AMD Instinct MI300X GPU machine (a \"droplet\") and start the model on it. Menu names "
-            "on the website may differ slightly from the ones below."),
-          P("3.1 Make an SSH key (once)", "h2"),
-          step("1", "In PowerShell, run this and press Enter at every question:", code("ssh-keygen -t ed25519")),
-          step("2", "Show your public key, then select and copy the whole line that starts with `ssh-ed25519`:",
-               code(r"type $env:USERPROFILE\.ssh\id_ed25519.pub")),
-          P("3.2 Create the droplet (in your browser)", "h2"),
-          step("1", "Sign in to **AMD Developer Cloud** with your hackathon account."),
-          step("2", "Create a **GPU droplet**: choose **1x MI300X** and the **vLLM** (Quick Start) image."),
-          step("3", "Add the SSH key you copied, then create the droplet."),
-          step("4", "Copy its **public IP address**. This guide calls it `<DROPLET_IP>`."),
-          box("warn", "The droplet costs money every hour it exists, even when powered off. Delete it after judging."),
-          P("3.3 Start the model", "h2"),
-          step("1", "Connect from PowerShell (type `yes` the first time it asks):", code("ssh root@<DROPLET_IP>")),
-          step("2", "You are now on the cloud machine. Run these lines one at a time:",
-               code("docker exec -it rocm /bin/bash",
-                    "export VLLM_API_KEY=$(openssl rand -hex 32); echo $VLLM_API_KEY")),
-          box("warn", "The long code printed by `echo` is your **VLLM_API_KEY**. Copy it into Notepad now; you "
-                      "need it in Parts 3, 4 and 5. Keep it secret."),
+    s += [P("Part 3 · Get your team's AMD Token Factory key", "h1"),
+          P("AMD Token Factory gives your team one free API key for its AI models. Menu names on the website may "
+            "differ slightly from the ones below."),
+          P("3.1 Redeem the key (in your browser)", "h2"),
+          step("1", "Open this page and sign in with your **AMD AI Developer Program** account (the email your "
+                    "team registered with):", code(TOKEN_FACTORY_SIGN_IN)),
+          step("2", "Your team dashboard shows every member and whether they have redeemed. Click "
+                    "**Redeem API Key**."),
+          step("3", "The key is hidden until **every teammate** has signed in and clicked **Redeem API Key**. "
+                    "Message them, then click **Check Status** to refresh."),
+          step("4", "When the key appears, click **Copy to clipboard** and paste it into Notepad. It looks like "
+                    "`rc-` followed by 48 letters and numbers. This guide calls it `<YOUR_RC_KEY>`."),
+          box("warn", "Keep the key secret: it goes only in `.env` (Part 5) and in Evolus (Part 4). Never post it "
+                      "in chat, screenshots or GitHub. If no key appears at all, your account may still be in review."),
           gap(),
-          step("3", "Start the model server. Paste the whole block at once (it is one command):",
-               code("nohup python -m vllm.entrypoints.openai.api_server \\",
-                    "  --model Qwen/Qwen2.5-32B-Instruct --served-model-name ledgerpilot-model \\",
-                    "  --host 0.0.0.0 --port 8000 --dtype float16 --max-model-len 32768 \\",
-                    "  --api-key $VLLM_API_KEY --enable-auto-tool-choice --tool-call-parser hermes \\",
-                    "  > /tmp/vllm.log 2>&1 &")),
-          step("4", "Watch it load. The first start downloads the model and can take 10-20 minutes:",
-               code("tail -f /tmp/vllm.log")),
-          box("ok", "a line with `Application startup complete`. Then press **Ctrl+C** (the server keeps running), "
-                    "and type `exit` and Enter twice to return to Windows."),
           KeepTogether([
-              P("3.4 Check it from Windows", "h2"),
+              P("3.2 Check it from Windows", "h2"),
               step("1", "In PowerShell on your PC (one line):",
-                   code('curl.exe http://<DROPLET_IP>:8000/v1/models -H "Authorization: Bearer <VLLM_API_KEY>"')),
-              box("ok", "text that contains `ledgerpilot-model`. If it hangs or times out, allow inbound **TCP port "
-                        "8000** in the droplet's firewall or networking settings and try again.")]),
+                   code(f'curl.exe {TOKEN_FACTORY_URL}/models -H "Authorization: Bearer <YOUR_RC_KEY>"')),
+              box("ok", "text that contains `DeepSeek-V4-Flash`. An error with 401 means the key was copied "
+                        "wrongly; copy it again.")]),
+          gap(),
+          box("tip", "Your whole team shares this one key and its limits: about **20 requests a minute** and a "
+                     "daily cap. Don't run the Part 6 checks at the same time as a teammate. Send only the "
+                     "sample invoices that come with the project, never real company invoices."),
           gap(14)]
 
     # ------------------------------------------------------------------ part 4
@@ -242,8 +241,8 @@ def story() -> list:
           P("Keep a Notepad page open and write down every ID as you go. You need them all in Part 5."),
           table([["#", "In Evolus", "What to enter", "Write down"],
                  ["1", "Your models › add an OpenAI-compatible model",
-                  "Base URL `http://<DROPLET_IP>:8000/v1` · Model name `ledgerpilot-model` · API key = your "
-                  "VLLM_API_KEY. Click **Test connection**.", "-"],
+                  f"Base URL `{TOKEN_FACTORY_URL}` · Model name `{TOKEN_FACTORY_MODEL}` · API key = "
+                  "`<YOUR_RC_KEY>` from Part 3. Click **Test connection**.", "-"],
                  ["2", "Create an agent named LedgerPilot Clerk",
                   "Model: the one from row 1. Instructions: the text of lines 21-36 of "
                   r"`src\ledgerpilot\agent_client.py` (between the triple quotes). Temperature 0 to 0.2.",
@@ -267,9 +266,9 @@ def story() -> list:
                code("copy .env.example .env", "notepad .env")),
           step("2", "Fill in each value after the `=` sign, with no spaces or quotes:",
                table([["Setting", "Where it comes from"],
-                      ["VLLM_BASE_URL", "`http://<DROPLET_IP>:8000/v1` (your droplet's IP)"],
-                      ["VLLM_API_KEY", "The code printed by `echo $VLLM_API_KEY` in Part 3"],
-                      ["VLLM_MODEL", "Leave as `ledgerpilot-model`"],
+                      ["AMD_API_KEY", "`<YOUR_RC_KEY>` from Part 3"],
+                      ["AMD_BASE_URL, AMD_MODEL", "Leave as they are"],
+                      ["AMD_REASONING_EFFORT", "Leave empty"],
                       ["EVOLUS_API_KEY", "Part 4, row 6"],
                       ["EVOLUS_APP_ID", "Part 4, row 6 (the space ID)"],
                       ["EVOLUS_AGENT_ID", "Part 4, row 2"],
@@ -292,12 +291,13 @@ def story() -> list:
                     "to Claude."),
           gap(),
           step("3", "The full evaluation on all 24 sample invoices (several minutes, uses Evolus credits):",
-               code(rf'{PY} eval\run_eval.py --label "Qwen2.5-32B"')),
+               code(rf'{PY} eval\run_eval.py --label "{TOKEN_FACTORY_MODEL}"')),
           box("ok", "one line per case ending in `OK` or `MISS`, then a summary. It creates "
                     r"`docs\evaluation.md` and the demo recordings in `data\recordings`."),
           gap(),
-          step("4", "The AMD speed and cost benchmark (put your real price per GPU-hour):",
-               code(rf'{PY} scripts\benchmark_amd.py --label "Qwen2.5-32B" --gpu-price <PRICE>')),
+          step("4", "The AMD model speed benchmark. It paces itself to stay under your team's shared limit and "
+                    "takes about 3 minutes:",
+               code(rf'{PY} scripts\benchmark_amd.py --label "{TOKEN_FACTORY_MODEL}"')),
           box("ok", r"`wrote docs/benchmark.md` at the end."),
           gap(), step("5", "Paste all four outputs to Claude. Claude fills the real numbers into the README, "
                            "slides, video script and descriptions."),
@@ -307,7 +307,7 @@ def story() -> list:
     s += [P("Part 7 · Run the app and rehearse the demo", "h1"),
           step("1", "Start the app:", code(f"{PY} -m streamlit run app.py")),
           box("ok", "green boxes in the sidebar (AMD model online, Evolus connected) and, under the title, "
-                    "**Model: Qwen/Qwen2.5-32B-Instruct served on AMD Developer Cloud**."),
+                    f"**Model: {TOKEN_FACTORY_MODEL} served on AMD Token Factory**."),
           gap(),
           step("2", "In the sidebar, click **Clear demo history**. Do this before every rehearsal, or re-checked "
                     "invoices are flagged as duplicates."),
@@ -317,7 +317,8 @@ def story() -> list:
                       ["Overcharged by $200 (case 07)", "ON HOLD", "PRICE_VARIANCE, $200 at risk, draft email"],
                       ["Bank account changed (case 15)", "PAYMENT BLOCKED", "BANK_MISMATCH, masked account, alert"]],
                      [62, 40, 72])),
-          step("4", "Click **Measure model speed** in the sidebar to show tokens per second from the AMD GPU."),
+          step("4", "Click **Measure model speed** in the sidebar to show tokens per second from the AMD model, "
+                    "and **Check team usage** to see how much of today's quota is left."),
           step("5", "If the live services are slow on demo day, use demo mode (it replays your recorded live runs "
                     "and says so on screen). Turn on the sidebar switch, or open:",
                code("http://localhost:8501/?demo=1")),
@@ -354,7 +355,7 @@ def story() -> list:
           step("2", "Add: GitHub link, video, slides PDF, cover image, short and long description, tags."),
           step("3", r"Go through docs\submission\CHECKLIST.md once more, then open your submission and test "
                     "every link."),
-          step("4", "After judging, **delete the droplet** in AMD Developer Cloud so it stops costing money."),
+          step("4", "Check the GitHub page once more: no `.env` file and no `rc-` key anywhere."),
           PageBreak()]
 
     # ------------------------------------------------------------------ troubleshooting
@@ -362,16 +363,35 @@ def story() -> list:
           table([["What you see", "What to do"],
                  ["`python` or `py` is not recognized", "Close PowerShell and open it again in the project folder. "
                   f"Always start commands with `{PY}`."],
+                 [r"`Access is denied: 'C:\WINDOWS\system32\.venv'`",
+                  r"PowerShell is in `C:\WINDOWS\system32`, where Windows blocks new folders. Run the `cd` "
+                  "command from Part 1 (use a normal, not Administrator, PowerShell), then run "
+                  "`py -3.11 -m venv .venv` again."],
+                 [r"`.\.venv\Scripts\python.exe` is not recognized",
+                  "You are not in the project folder, or the environment was never created. Run the `cd` "
+                  "command from Part 1, then Part 2 steps 2 and 3."],
+                 ["`Could not open requirements file` or `No module named pytest`",
+                  r"You are one folder too high (`ledgerpilot001-ai`). The project is in the inner "
+                  r"`ledgerpilot-ai` folder: run the `cd` command from Part 1, create the `.venv` there and "
+                  "install the libraries (Part 2 step 2)."],
                  ["`git` is not recognized", "Close PowerShell and open it again (Git was installed recently)."],
                  ["Git says Please tell me who you are",
                   'Run `git config --global user.name "Your Name"` and `git config --global user.email '
                   '"you@example.com"`, then commit again.'],
                  ["The app says settings are missing", "Check `dir .env` shows `.env` (not .env.txt) and that every "
                   "value in Part 5 is filled in. Restart the app after editing .env."],
-                 ["The curl check in Part 3 hangs", "Open TCP port 8000 in the droplet firewall. Check the log on "
-                  "the droplet: `ssh root@<DROPLET_IP>`, then `docker exec -it rocm tail -n 50 /tmp/vllm.log`."],
-                 ["Smoke test: FAIL on the AMD endpoint", "The droplet may be off, or VLLM_BASE_URL / VLLM_API_KEY "
-                  "are wrong. Redo the Part 3.4 check."],
+                 ["Token Factory shows no key yet", "A teammate hasn't clicked Redeem API Key. Click Check Status "
+                  "to see who is pending."],
+                 ["401 from the AMD model", "AMD_API_KEY is wrong or has a space. Copy the key again (Part 3) and "
+                  "restart the app."],
+                 ["403 or account_not_verified", "Your AMD account is still in review. Check its status on the "
+                  "Token Factory page."],
+                 ["429 or Rate limited", "Your team used up the per-minute limit. Wait a minute; make sure only one "
+                  "person runs the checks at a time."],
+                 ["400 model not supported", "The Token Factory catalog changed. Run the Part 3.2 check, pick a "
+                  "name from the list and put it in AMD_MODEL (and in the Evolus model)."],
+                 ["Smoke test: FAIL on the AMD endpoint", "Redo the Part 3.2 check. If that works, AMD_API_KEY in "
+                  ".env is wrong."],
                  ["Evolus rejected the API key (401/403)", "Check EVOLUS_API_KEY and EVOLUS_APP_ID."],
                  ["Evolus credits are used up (402)", "Ask the hackathon organisers for more credits."],
                  ["Workflow is switched off (409)", "Switch the workflow on in Evolus."],
@@ -387,8 +407,8 @@ def story() -> list:
                "notepad .env",
                rf"{PY} scripts\upload_library.py",
                rf"{PY} scripts\smoke_test.py",
-               rf'{PY} eval\run_eval.py --label "Qwen2.5-32B"',
-               rf'{PY} scripts\benchmark_amd.py --label "Qwen2.5-32B" --gpu-price <PRICE>',
+               rf'{PY} eval\run_eval.py --label "{TOKEN_FACTORY_MODEL}"',
+               rf'{PY} scripts\benchmark_amd.py --label "{TOKEN_FACTORY_MODEL}"',
                f"{PY} -m streamlit run app.py",
                "git add -A",
                'git commit -m "Add live evaluation and benchmark results"',

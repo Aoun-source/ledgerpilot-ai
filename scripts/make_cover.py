@@ -52,7 +52,7 @@ def main() -> None:
         s = stamp(text, color, 64, angle)
         img.paste(s, (x, y), s)
     d.line([(128, 960), (W - 128, 960)], fill="#3A4856", width=2)
-    d.text((128, 985), "Evolus agents  ·  open model on AMD Instinct MI300X  ·  AMD Developer Hackathon: ACT III",
+    d.text((128, 985), "Evolus agents  ·  open model on AMD Token Factory  ·  AMD Developer Hackathon: ACT III",
            font=font(REGULAR, 30), fill=MUTED)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     img.save(OUT, optimize=True)

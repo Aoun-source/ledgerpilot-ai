@@ -17,9 +17,9 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from ledgerpilot import recording  # noqa: E402
-from ledgerpilot.agent_client import vllm_health, vllm_speed  # noqa: E402
+from ledgerpilot.agent_client import model_health, model_speed, model_usage  # noqa: E402
 from ledgerpilot.audit import AuditLog  # noqa: E402
-from ledgerpilot.config import ConfigError, load_settings  # noqa: E402
+from ledgerpilot.config import TOKEN_FACTORY_SIGN_IN, ConfigError, load_settings  # noqa: E402
 from ledgerpilot.fraud import mask  # noqa: E402
 from ledgerpilot.pipeline import CaseResult, Pipeline, load_case_folder  # noqa: E402
 from ledgerpilot.schemas import Route  # noqa: E402
@@ -160,10 +160,11 @@ def get_pipeline():
     return Pipeline(settings, audit)
 
 
-@st.cache_data(ttl=30, show_spinner=False)
-def cached_health(base_url: str | None, model: str) -> dict:
-    # keyed on URL/model so a changed endpoint is re-checked; cached so a dead endpoint never slows every click
-    return vllm_health(settings, timeout=4)
+@st.cache_data(ttl=120, show_spinner=False)
+def cached_health(base_url: str, model: str) -> dict:
+    # keyed on URL/model so a changed endpoint is re-checked; cached so a dead endpoint never slows every
+    # click, and so the check doesn't eat into Token Factory's shared per-minute limit
+    return model_health(settings, timeout=6)
 
 
 def money(value) -> str:
@@ -184,25 +185,41 @@ def chip(route: str) -> str:
 
 
 # ------------------------------------------------------------------ sidebar
-vllm_set = bool(settings.vllm_base_url) and not settings.placeholder_vllm()
-health = cached_health(settings.vllm_base_url, settings.vllm_model) if vllm_set else None
+model_problem = settings.model_problem()
+health = cached_health(settings.amd_base_url, settings.amd_model) if not model_problem else None
 
 with st.sidebar:
     st.markdown("#### Connections")
-    if not vllm_set:
-        st.warning("AMD model endpoint isn't set. Add VLLM_BASE_URL to .env.")
+    if model_problem:
+        st.warning(f"AMD model endpoint isn't set up. {model_problem}")
     elif health["ok"]:
-        st.success(f"AMD MI300X model online ({health['latency_ms']} ms)  \n`{', '.join(health['models'])}`")
-        if st.button("Measure model speed", help="Sends one short request straight to the vLLM endpoint and times it."):
-            st.session_state["speed"] = vllm_speed(settings)
+        st.success(f"AMD model online on {settings.model_where} ({health['latency_ms']} ms)  \n`{settings.amd_model}`")
+        if st.button("Measure model speed", help="Sends one short request straight to the AMD model endpoint and times it."):
+            st.session_state["speed"] = model_speed(settings)
         speed = st.session_state.get("speed")
         if speed and speed["ok"]:
             st.caption(f"{speed['tokens_per_s']} tokens/s: {speed['tokens']} tokens in {speed['seconds']} s, "
                        "including time to first token.")
+            if speed.get("limits"):
+                st.caption("Rate limits left: " + ", ".join(f"{k.removeprefix('x-ratelimit-')} {v}"
+                                                           for k, v in speed["limits"].items()))
         elif speed:
             st.caption(f"Speed test failed: {speed['detail']}")
+        if settings.token_factory:
+            if st.button("Check team usage", help="Asks Token Factory how much of the daily quota your team's "
+                                                  "shared key has left."):
+                st.session_state["usage"] = model_usage(settings)
+            usage = st.session_state.get("usage")
+            if usage and usage["ok"]:
+                with st.expander("Token Factory usage (shared by your team)"):
+                    st.json(usage["usage"])
+            elif usage:
+                st.caption(f"Usage check failed: {usage['detail']}")
     else:
         st.error(f"AMD model endpoint not reachable.  \n{health['detail']}")
+    if settings.token_factory:
+        st.caption(f"[AMD Token Factory]({TOKEN_FACTORY_SIGN_IN}): one free key per team, shared limits. "
+                   "Send only the synthetic sample invoices.")
     missing = settings.missing()
     if missing:
         st.warning("Evolus isn't connected. Missing in .env: " + ", ".join(missing))
@@ -212,7 +229,8 @@ with st.sidebar:
         if optional:
             st.caption("Optional, not set: " + ", ".join(optional))
     st.caption("Checks run in Python. Reading, reasoning and actions run on Evolus, "
-               "with the agent's model served by vLLM on an AMD Instinct MI300X.")
+               + ("with the agent's model on AMD Token Factory." if settings.token_factory else
+                  "with the agent's model served by vLLM on an AMD Instinct MI300X."))
     st.divider()
     recorded_cases = recording.available(settings.recordings_dir)
     # ?demo=1 opens the app in demo mode (a link to hand judges if the live services are down)
@@ -242,13 +260,14 @@ st.markdown('<p class="lp-title">LedgerPilot</p>'
 if health and health["ok"]:
     speed = st.session_state.get("speed") or {}
     rate = f' · {speed["tokens_per_s"]} tokens/s' if speed.get("ok") else ""
-    st.markdown(f'<p class="lp-model"><b>Model:</b> {E(str(health["weights"]))} served on AMD Developer Cloud'
+    where = "AMD Token Factory" if settings.token_factory else "AMD Developer Cloud"
+    st.markdown(f'<p class="lp-model"><b>Model:</b> {E(str(health["weights"]))} served on {where}'
                 f' · endpoint answered in {health["latency_ms"]} ms{rate}</p>', unsafe_allow_html=True)
 elif health:
-    st.markdown('<p class="lp-model"><b>Model:</b> AMD Developer Cloud endpoint not reachable</p>',
+    st.markdown(f'<p class="lp-model"><b>Model:</b> {E(settings.model_where)} endpoint not reachable</p>',
                 unsafe_allow_html=True)
 else:
-    st.markdown('<p class="lp-model"><b>Model:</b> not connected (set VLLM_BASE_URL)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="lp-model"><b>Model:</b> AMD model endpoint not set up (see the sidebar)</p>', unsafe_allow_html=True)
 if demo_mode:
     st.markdown('<div class="lp-banner"><b>Demo mode</b> · Results below are replays of recorded live runs, '
                 'not live calls to Evolus or the AMD model. Turn it off in the sidebar to check invoices live.</div>',
@@ -398,7 +417,7 @@ def show_result(res: CaseResult, recorded: dict | None = None) -> None:
             elif res.agent.route and res.rule_route and res.agent.route.rank < res.rule_route.rank:
                 st.warning(f"The agent suggested a softer decision ({STAMP[res.agent.route.value][0].lower()}). "
                            "The checks require the stricter one, so it was kept.")
-            st.caption(f"{'Recorded: o' if recorded else 'O'}pen model on AMD MI300X via Evolus, "
+            st.caption(f"{'Recorded: o' if recorded else 'O'}pen model on {settings.model_where} via Evolus, "
                        f"answered in {res.agent.latency_s:.1f} s")
         else:
             st.warning("The agent didn't answer, so the checks decided on their own. "
@@ -531,7 +550,7 @@ with tab_check:
                          help="Stores this live result so demo mode can replay it, labelled as recorded."):
                 try:
                     recording.save(settings.recordings_dir, res, case,
-                                   model=(health or {}).get("weights") or settings.vllm_model, source="app, live check")
+                                   model=(health or {}).get("weights") or settings.amd_model, source="app, live check")
                     st.success(f"Saved. Demo mode will replay this run of {case}.")
                 except OSError as exc:
                     st.error(f"Couldn't save the recording ({type(exc).__name__}). Check RECORDINGS_DIR is writable.")

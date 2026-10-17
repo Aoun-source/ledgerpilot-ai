@@ -2,7 +2,7 @@
 
 **Stops wrong and fraudulent supplier payments before they happen, with evidence a finance clerk can check in ten seconds.**
 
-LedgerPilot is an accounts-payable agent built on **Evolus** and powered by an **open model served with vLLM on an AMD Instinct MI300X** (AMD Developer Cloud, ROCm). It reads the purchase order, the goods-received note and the supplier invoice. It runs a three-way match and fraud checks in plain Python, then lets the agent explain the evidence and route the case: approve, hold, or escalate as possible fraud. Every payment still needs a human yes.
+LedgerPilot is an accounts-payable agent built on **Evolus** and powered by an **open model on AMD GPUs**: by default through **[AMD Token Factory](https://notebooks.amd.com/tokenfactory)** (AMD Radeon Cloud's free model API), or served with vLLM on your own AMD Instinct MI300X (AMD Developer Cloud, ROCm). It reads the purchase order, the goods-received note and the supplier invoice. It runs a three-way match and fraud checks in plain Python, then lets the agent explain the evidence and route the case: approve, hold, or escalate as possible fraud. Every payment still needs a human yes.
 
 Built for the AMD Developer Hackathon: ACT III, track **Evolus Business Agents on AMD**.
 
@@ -20,7 +20,7 @@ Accounts-payable teams match invoices by hand. Two things slip through:
 | 1. Read documents | Evolus **document extractors** (x3) | PO, goods-received note and invoice → JSON with a fixed schema |
 | 2. Validate | Python (Pydantic) | Unreadable or missing values become a hold, never a guess |
 | 3. Check | Python, `Decimal` maths | Three-way match, arithmetic, vendor master, bank details, duplicates |
-| 4. Decide | Evolus **agent** on **Qwen2.5 via vLLM on AMD MI300X** + **knowledge library** | Explains findings, cites the vendor master, proposes a route |
+| 4. Decide | Evolus **agent** on an **open model on AMD** (Token Factory, or vLLM on MI300X) + **knowledge library** | Explains findings, cites the vendor master, proposes a route |
 | 5. Act | Evolus **AI Tool** (`email`) + **workflow** | Drafts the supplier query or fraud alert; starts the routing workflow |
 | 6. Review | Streamlit review queue + SQLite audit log | A person approves or rejects; every step and execution ID is logged |
 
@@ -30,8 +30,39 @@ Evolus building blocks used: document extractors, agent, knowledge library, AI T
 
 ## Run it
 
-### 1. Model on AMD Developer Cloud
+### 1. Model on AMD
 
+**Option A: AMD Token Factory (default, free, nothing to host).**
+
+| What | Value |
+| --- | --- |
+| Sign in and get the team key | <https://notebooks.amd.com/tokenfactory> (AMD AI Developer Program account) |
+| API base URL | `https://developer.amd.com.cn/radeon/api/v1` |
+| Key | `rc-` + 48 hex characters, one per team |
+| Default model | `DeepSeek-V4-Flash` (free, supports tool calls, doesn't think unless asked) |
+
+1. Every teammate signs in and clicks **Redeem API Key**. The key appears only after **all** of you have redeemed.
+2. Click **Copy to clipboard** and put the key in `.env` as `AMD_API_KEY`. That is all the app needs.
+3. Check it (PowerShell: use `curl.exe`):
+
+```bash
+curl https://developer.amd.com.cn/radeon/api/v1/models -H "Authorization: Bearer rc-..."
+```
+
+Things to know:
+
+- **Shared limits.** The whole team shares one key: about 30 requests a minute per key, 20 per account,
+  8 at once, and a daily spend cap. Evolus, the app, the smoke test and the benchmark all count. Don't
+  run evaluations at the same time as a teammate. Check what's left with the app's **Check team usage** button.
+- **Synthetic data only.** Token Factory's terms say not to send sensitive personal or financial data, and
+  prompts are kept for about 2 days. Use the fictional cases in `data/samples`, never real invoices.
+- **The catalog changes.** If a model starts returning 400 "not supported", list `/v1/models` and set `AMD_MODEL`.
+- **Thinking models** (MiMo, GLM, Qwen3.8-27B) spend part of `max_tokens` thinking and can return empty
+  replies. Stay with DeepSeek-V4-Flash, or set `AMD_REASONING_EFFORT=low`.
+- **Track rules.** If your hackathon track requires the model on *your own* vLLM endpoint on AMD Developer
+  Cloud, use Option B for the submission.
+
+**Option B: your own vLLM server on AMD Developer Cloud.**
 Create a 1x MI300X GPU droplet with the **vLLM** Quick Start image, then:
 
 ```bash
@@ -47,6 +78,8 @@ nohup python -m vllm.entrypoints.openai.api_server \
 
 `nohup` keeps the server running after you close the SSH window. Working from Windows with no Linux
 machine? Everything above runs on the droplet; see [docs/setup_windows.md](docs/setup_windows.md).
+Then set `AMD_BASE_URL=http://<DROPLET_IP>:8000/v1`, `AMD_API_KEY` (your `--api-key`) and
+`AMD_MODEL=ledgerpilot-model` in `.env`.
 
 ### 2. Evolus workspace
 
@@ -83,9 +116,10 @@ docker compose up --build -d       # http://localhost:8501
 
 | Variable | Required | What it is |
 | --- | --- | --- |
-| `VLLM_BASE_URL` | for the model badge, speed test and benchmark | `http://<DROPLET_IP>:8000/v1` |
-| `VLLM_API_KEY` | yes, with the above | the `--api-key` you gave vLLM |
-| `VLLM_MODEL` | no (default `ledgerpilot-model`) | vLLM `--served-model-name` |
+| `AMD_API_KEY` | for the model badge, speed test, usage check and benchmark | your team's Token Factory key (`rc-...`), or your vLLM `--api-key` |
+| `AMD_BASE_URL` | no (default Token Factory) | `https://developer.amd.com.cn/radeon/api/v1`, or `http://<DROPLET_IP>:8000/v1` for your own vLLM |
+| `AMD_MODEL` | no (default `DeepSeek-V4-Flash` on Token Factory, `ledgerpilot-model` on vLLM) | model name; must match the model your Evolus agent uses |
+| `AMD_REASONING_EFFORT` | no | `none`, `low`, `medium`, `high`: turns thinking down on models that think by default |
 | `EVOLUS_API_KEY`, `EVOLUS_APP_ID` | yes | Evolus API key and space (application) ID |
 | `EVOLUS_AGENT_ID` | yes | the LedgerPilot Clerk agent |
 | `EVOLUS_EXTRACTOR_INVOICE_ID`, `EVOLUS_EXTRACTOR_PO_ID`, `EVOLUS_EXTRACTOR_GRN_ID` | yes | the three document extractors |
@@ -95,6 +129,8 @@ docker compose up --build -d       # http://localhost:8501
 | `PRICE_TOLERANCE`, `MAX_TAX_RATE` | no | business rules, defaults `0.00` and `0.30` |
 | `EVOLUS_TIMEOUT`, `AGENT_TIMEOUT` | no | seconds before a slow call hands the case to a person, default `90` |
 | `RECORDINGS_DIR` | no | where demo-mode recordings live, default `data/recordings` |
+
+The older names `VLLM_BASE_URL`, `VLLM_API_KEY` and `VLLM_MODEL` still work; the `AMD_*` names win when both are set.
 
 ### Demo mode
 
@@ -116,9 +152,13 @@ case 01 (ready to pay), case 07 (on hold, $200 over the PO price) and case 15 (p
 
 ```bash
 python -m pytest -q                                     # offline, about a minute
-python eval/run_eval.py --label "Qwen2.5-32B"           # live pipeline on all cases -> docs/evaluation.md
-python scripts/benchmark_amd.py --label "Qwen2.5-32B"   # speed and cost on MI300X -> docs/benchmark.md
+python eval/run_eval.py --label "DeepSeek-V4-Flash"           # live pipeline on all cases -> docs/evaluation.md
+python scripts/benchmark_amd.py --label "DeepSeek-V4-Flash"   # latency and tokens per invoice -> docs/benchmark.md
 ```
+
+On Token Factory the benchmark paces itself to 10 requests a minute (half the shared limit, so teammates
+aren't throttled) and at most 8 at once; 12 requests at two concurrency levels take about 2.5 minutes.
+On your own vLLM droplet it measures throughput and cost instead: add `--requests 40 --concurrency 1 4 16 --gpu-price <USD per GPU-hour>`.
 
 The 24 synthetic cases cover clean invoices, price variance, short delivery, over-billing, arithmetic errors, items not on the PO, currency mismatch, changed bank account, duplicate and near-duplicate invoices, a look-alike invoice number, padded tax, a credit note sent as an invoice, a PO billed twice, an unknown look-alike supplier and a corrupt PDF. All data is fictional.
 
@@ -134,14 +174,14 @@ src/ledgerpilot/
   fraud.py                  vendor master, bank-detail and duplicate checks
   rules.py                  combines checks; agent can only raise the route
   evolus_client.py          Evolus REST: extractors, workflow, AI Tools, libraries
-  agent_client.py           agent via Evolus OpenAI-compatible endpoint; vLLM health check
+  agent_client.py           agent via Evolus OpenAI-compatible endpoint; AMD model health, speed and usage checks
   pipeline.py               one case end to end, timed and logged
   audit.py                  SQLite audit log
   recording.py              save and replay live runs for demo mode
 scripts/                    make_samples, smoke_test, upload_library, benchmark_amd
 eval/run_eval.py            live evaluation against ground truth
 tests/                      offline tests: rules, edge cases, real HTTP against a local
-                            fake of Evolus and vLLM, and a click-through of every app screen
+                            fake of Evolus and the AMD model endpoint, and a click-through of every app screen
 ```
 
 ## Submission assets

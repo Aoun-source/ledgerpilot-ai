@@ -6,7 +6,25 @@ Do this after kickoff, in the **event** workspace created from the event link on
 
 ## 1. Connect your AMD model
 
-Workspace → **Your models** → add an OpenAI-compatible model:
+Workspace → **Your models** → add an OpenAI-compatible model.
+
+**AMD Token Factory** (default). Get the team key first at
+[notebooks.amd.com/tokenfactory](https://notebooks.amd.com/tokenfactory): every teammate signs in and
+clicks **Redeem API Key**, then the key appears.
+
+| Field | Value |
+| --- | --- |
+| Base URL | `https://developer.amd.com.cn/radeon/api/v1` |
+| Model name | `DeepSeek-V4-Flash` (the same as `AMD_MODEL` in `.env`) |
+| API key | your team's Token Factory key (`rc-...`) |
+
+Evolus then calls Token Factory with your team's key, so every agent answer and workflow step counts
+toward the limits your team shares (about 20 requests a minute, 8 at once, a daily cap).
+DeepSeek-V4-Flash supports tool calling and doesn't think unless asked. If you pick a model that
+thinks by default (MiMo, GLM, Qwen3.8-27B), give the agent a generous max-tokens setting or replies can
+come back empty.
+
+**Your own vLLM droplet** (if your track requires your own endpoint):
 
 | Field | Value |
 | --- | --- |
@@ -14,7 +32,9 @@ Workspace → **Your models** → add an OpenAI-compatible model:
 | Model name | `ledgerpilot-model` (your `--served-model-name`) |
 | API key | the value you passed to vLLM `--api-key` |
 
-Click **Test connection**. vLLM must run with `--enable-auto-tool-choice --tool-call-parser hermes`.
+vLLM must run with `--enable-auto-tool-choice --tool-call-parser hermes`.
+
+Click **Test connection**.
 
 ## 2. Create the agent "LedgerPilot Clerk"
 
@@ -108,4 +128,4 @@ queries and fraud alerts.
 python scripts/smoke_test.py
 ```
 
-All five lines should say PASS.
+All five lines should say PASS. On Token Factory it also prints your team's remaining usage.

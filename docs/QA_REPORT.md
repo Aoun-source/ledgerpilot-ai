@@ -1,5 +1,22 @@
 # QA report
 
+## 18 October 2026: AMD Token Factory
+
+Result: **217 passed, 1 skipped by design, 0 failures** on Windows, Python 3.11.
+
+| Change | How it was checked |
+| --- | --- |
+| AMD Token Factory is the default model endpoint (`AMD_BASE_URL`, `AMD_API_KEY`, `AMD_MODEL`); the older `VLLM_*` names still work and a vLLM droplet is still supported | config tests: default endpoint, missing key message, old names, new names win, placeholder URL |
+| Model health check names the model and catches a model that left the Token Factory catalog; nothing is sent without a key | HTTP tests against a local Token Factory stand-in |
+| Plain messages for 429 (shared team limit), 401 and 403 (account in review) | HTTP tests with injected status codes |
+| Speed test shows the `X-RateLimit-*` headers; optional `AMD_REASONING_EFFORT` is sent as `reasoning_effort` | HTTP tests |
+| Sidebar **Check team usage** button (Token Factory `/v1/usage`), Token Factory link and a synthetic-data reminder; hidden on a vLLM endpoint | UI tests |
+| Benchmark paces itself on Token Factory (default 10 requests a minute, at most 8 at once, refuses more than 20 a minute) and reports latency and tokens per invoice | dry run against the local stand-in: 5 requests at 20 a minute took 12 s, concurrency 16 capped to 8 |
+| Tests can no longer pick up a real key from `.env` (`tests/conftest.py` clears the model settings) | whole suite |
+| Docs, start guide PDF, cover image and submission texts describe Token Factory, with the droplet as Option B | read through; PDF and cover regenerated |
+
+Not checked here: calls to the real Token Factory (no key yet), and Evolus calling Token Factory as the agent's model.
+
 ## 16 October 2026: submission hardening
 
 Result: **208 passed, 1 skipped by design, 0 failures** on Windows, Python 3.11.9, and the same on a fresh
