@@ -56,6 +56,13 @@ def test_extract_sends_auth_headers_and_correct_mime(svc, settings):
     assert r.data == {"data": {"invoice_number": "INV-1"}} and r.execution_id == "ex-x-inv"
 
 
+def test_extractor_id_can_carry_its_own_agent(svc, settings):
+    # Each extractor made in the Evolus UI is its own agent: "agentId/formatId" targets it directly.
+    svc.extract_data = lambda eid, fn: {"invoice_number": "INV-1"}
+    fast_client(settings).extract("ext-agent/x-inv", "a.pdf", b"%PDF")
+    assert svc.calls[-1]["path"].startswith("/api/v1/agents/ext-agent/json/x-inv/ask-file")
+
+
 def test_rate_limit_is_retried(svc, settings):
     svc.fail[r"ask-file"] = [429, 429]
     fast_client(settings).extract("x-inv", "a.pdf", b"%PDF")

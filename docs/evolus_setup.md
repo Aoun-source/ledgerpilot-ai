@@ -46,10 +46,16 @@ Click **Test connection**.
 
 ## 3. Create three document extractors (JSON output)
 
-Define each schema with exactly these field names. LedgerPilot validates them with Pydantic.
-Copy each extractor's ID into `.env`. The extractor endpoint path includes an agent ID
-(`/agents/{agentId}/json/{extractorId}/ask-file`); if the extractors belong to a different
-agent than the Clerk, set `EVOLUS_EXTRACTOR_AGENT_ID`.
+Define each schema with exactly these field names. LedgerPilot validates them with Pydantic, and
+also accepts the camelCase names Evo suggests (`invoiceNumber`). In the extractor choose **Start from
+scratch**, then **Advanced settings → Edit the JSON by hand** and paste the structure below: the field
+editor has no list type, so `lines` only comes out as a real list from the hand-written JSON.
+
+In the Evolus UI each extractor is its own agent holding one format, and the endpoint path needs both
+(`/agents/{agentId}/json/{formatId}/ask-file`). The agent ID is in the extractor's page address; the
+format ID appears in the API calls the page makes (`.../json/{formatId}/executions`). Write each one in
+`.env` as `agentId/formatId`, for example `EVOLUS_EXTRACTOR_INVOICE_ID=9a4f.../edc2...`. A plain
+format ID still works and uses `EVOLUS_EXTRACTOR_AGENT_ID` (or the Clerk's agent).
 
 **Invoice** (`EVOLUS_EXTRACTOR_INVOICE_ID`)
 

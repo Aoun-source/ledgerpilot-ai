@@ -15,6 +15,7 @@ from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic.alias_generators import to_camel
 
 _NUM_CHARS = re.compile(r"[^0-9,.\-]")
 
@@ -90,7 +91,9 @@ def _decimal_validator(*fields: str):
 
 class _Base(BaseModel):
     # Extractors sometimes return IDs as numbers (PO 12345): accept them as text.
-    model_config = ConfigDict(extra="ignore", str_strip_whitespace=True, coerce_numbers_to_str=True)
+    # Evolus extractor formats name fields in camelCase (invoiceNumber): accept both spellings.
+    model_config = ConfigDict(extra="ignore", str_strip_whitespace=True, coerce_numbers_to_str=True,
+                              alias_generator=to_camel, populate_by_name=True)
 
 
 def _lines_or_empty(v: Any) -> Any:

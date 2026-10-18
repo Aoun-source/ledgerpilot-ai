@@ -309,3 +309,14 @@ def test_placeholder_endpoint_detected(monkeypatch):
     monkeypatch.setenv("AMD_BASE_URL", "http://<DROPLET_IP>:8000/v1")
     s = Settings()
     assert s.placeholder_model() and "placeholder" in s.model_problem()
+
+
+def test_extractor_output_in_camel_case_is_read():
+    # Evolus suggests camelCase field names (invoiceNumber); snake_case keeps working too.
+    inv = Invoice.model_validate({"invoiceNumber": "INV-7", "invoiceDate": "2026-10-01", "bankIban": "GB12 3456",
+                                  "lines": [{"sku": "A", "unitPrice": "2.50", "lineTotal": "5.00", "qty": 2}]})
+    assert inv.invoice_number == "INV-7" and inv.invoice_date == date(2026, 10, 1) and inv.bank_iban == "GB123456"
+    assert inv.lines[0].unit_price == Decimal("2.50") and inv.lines[0].line_total == Decimal("5.00")
+    grn = GoodsReceipt.model_validate({"grnNumber": "G-1", "lines": [{"qtyReceived": 4}]})
+    assert grn.grn_number == "G-1" and grn.lines[0].qty_received == Decimal("4")
+    assert Invoice(invoice_number="X").invoice_number == "X"

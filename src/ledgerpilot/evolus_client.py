@@ -85,7 +85,11 @@ class EvolusClient:
 
     # ------------------------------------------------------------ extractors
     def extract(self, extractor_id: str, filename: str, content: bytes) -> ExtractionResult:
+        # Each Evolus extractor is its own agent with one format: an ID written as
+        # "agentId/formatId" carries its own agent, otherwise EVOLUS_EXTRACTOR_AGENT_ID applies.
         agent = self.s.evolus_extractor_agent_id
+        if "/" in extractor_id:
+            agent, extractor_id = extractor_id.split("/", 1)
         resp = self._request(
             "POST", f"agents/{agent}/json/{extractor_id}/ask-file",
             params={"useWebhook": "false"},
