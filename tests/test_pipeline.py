@@ -154,3 +154,14 @@ def test_unwrap_handles_common_shapes():
 def test_parse_verdict_rejects_unknown_route():
     v = parse_verdict('{"route": "pay_immediately", "explanation": "x"}')
     assert v.route is None and not v.parsed
+
+
+def test_extractor_field_names_are_normalized():
+    # Seen live: an extractor answered "quantity" instead of "qty"; camelCase names are common too.
+    inv = pl.normalize("invoice", {"invoiceNumber": "A-1", "lines": [{"sku": "X", "quantity": 2, "unitPrice": 5, "lineTotal": 10}]})
+    assert inv["invoice_number"] == "A-1"
+    assert inv["lines"][0] == {"sku": "X", "qty": 2, "unit_price": 5, "line_total": 10}
+    grn = pl.normalize("grn", {"grnNumber": "G-1", "lines": [{"sku": "X", "quantity": 2}]})
+    assert grn["grn_number"] == "G-1" and grn["lines"][0]["qty_received"] == 2
+    # a correct key is never overwritten by a synonym
+    assert pl.normalize("invoice", {"lines": [{"qty": 3, "quantity": 9}]})["lines"][0]["qty"] == 3

@@ -7,6 +7,7 @@ the reason is shown; it is never silently approved.
 from __future__ import annotations
 
 import json
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -79,6 +80,39 @@ def unwrap(data: Any) -> dict[str, Any]:
         else:
             break
     return data if isinstance(data, dict) else {}
+
+
+# Names extractors use for our fields: camelCase (invoiceNumber) and plain-English synonyms (quantity).
+_SYNONYMS = {"quantity": "qty", "quantity_billed": "qty", "quantity_ordered": "qty", "price": "unit_price",
+             "amount": "line_total", "total_due": "total", "iban": "bank_iban"}
+_GRN_SYNONYMS = {"qty": "qty_received", "quantity": "qty_received", "quantity_received": "qty_received"}
+
+
+def _snake(name: str) -> str:
+    return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+
+
+def normalize(kind: str, data: dict[str, Any]) -> dict[str, Any]:
+    """Give extractor output our field names, so the checks and the screen read the same keys.
+    A key that is already right is never overwritten by a synonym."""
+    def fix(d: dict[str, Any], extra: dict[str, str]) -> dict[str, Any]:
+        synonyms = {**_SYNONYMS, **extra}
+        out: dict[str, Any] = {}
+        renamed: list[tuple[str, Any]] = []
+        for k, v in d.items():
+            name = _snake(k)
+            if name in synonyms:
+                renamed.append((synonyms[name], v))
+            else:
+                out[name] = v
+        for name, v in renamed:
+            out.setdefault(name, v)
+        return out
+    data = fix(data, {})
+    if isinstance(data.get("lines"), list):
+        data["lines"] = [fix(ln, _GRN_SYNONYMS if kind == "grn" else {}) if isinstance(ln, dict) else ln
+                         for ln in data["lines"]]
+    return data
 
 
 def load_history(settings: Settings) -> list[PastInvoice]:
@@ -166,7 +200,7 @@ class Pipeline:
             res.timings[f"extract_{kind}_s"] = time.perf_counter() - t
             res.step(f"Extract {kind.upper()}", "Evolus extractor", res.timings[f"extract_{kind}_s"])
             res.trace[f"extract_{kind}"] = {"execution_id": result.execution_id, "audit_id": result.audit_id}
-            data = unwrap(result.data)
+            data = normalize(kind, unwrap(result.data))
             res.extracted[kind] = data
             if not data:
                 raise _CaseError(f"The {kind} document produced no readable data. A person must process it.")
