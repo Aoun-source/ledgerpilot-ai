@@ -1,43 +1,44 @@
-# LedgerPilot's theme: deep charcoal, warm white text, one restrained emerald accent.
-# app.py adds the finer details (display type, hairlines, spacing) on top of these.
+# LedgerPilot's theme: a calm, light fintech palette with one emerald action colour.
+# app.py adds the component styles (cards, navigation, status pills) on top of these.
 [theme]
-base = "dark"
-primaryColor = "#34B27D"
-backgroundColor = "#0E0F10"
-secondaryBackgroundColor = "#17181A"
-textColor = "#EDE9E3"
-borderColor = "#25272A"
-linkColor = "#6FD3A6"
+base = "light"
+primaryColor = "#07966F"
+backgroundColor = "#F4F7FB"
+secondaryBackgroundColor = "#F4F7FB"
+textColor = "#183153"
+borderColor = "#DFE7F0"
+linkColor = "#3478F6"
 linkUnderline = false
-greenColor = "#4FBF8B"
-orangeColor = "#D9A24A"
-redColor = "#E2674F"
-blueColor = "#7FA7D9"
-grayColor = "#8A867F"
-codeTextColor = "#C9C4BC"
-codeBackgroundColor = "#1A1B1E"
-font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap, -apple-system, Segoe UI, sans-serif"
-codeFont = "Geist Mono:https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap, Consolas, monospace"
+greenColor = "#07966F"
+orangeColor = "#F5B942"
+redColor = "#E5485D"
+blueColor = "#3478F6"
+grayColor = "#63748B"
+codeTextColor = "#183153"
+codeBackgroundColor = "#EEF3F8"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, -apple-system, Segoe UI, sans-serif"
+codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap, Consolas, monospace"
 baseFontSize = 15
-headingFontWeights = [600, 600, 600, 600, 600, 600]
-baseRadius = "8px"
-buttonRadius = "7px"
+headingFontWeights = [700, 650, 600, 600, 600, 600]
+baseRadius = "10px"
+buttonRadius = "8px"
 showWidgetBorder = true
 showSidebarBorder = true
-dataframeBorderColor = "#232528"
-dataframeHeaderBackgroundColor = "#141517"
-dataframeHeaderTextColor = "#8A867F"
-chartCategoricalColors = ["#4FBF8B", "#D9A24A", "#E2674F", "#8A867F", "#34B27D", "#7FA7D9", "#B39DDB", "#D98BA7", "#6FC3C9", "#A3A08F"]
+dataframeBorderColor = "#DFE7F0"
+dataframeHeaderBackgroundColor = "#F7F9FC"
+dataframeHeaderTextColor = "#63748B"
+chartCategoricalColors = ["#07966F", "#F5B942", "#E5485D", "#63748B", "#3478F6", "#8B5CF6", "#0EA5E9", "#F97316", "#14B8A6", "#94A3B8"]
 
 [theme.sidebar]
-backgroundColor = "#0A0B0C"
-secondaryBackgroundColor = "#141517"
-textColor = "#EDE9E3"
-borderColor = "#1D1F22"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F7FB"
+textColor = "#183153"
+borderColor = "#DFE7F0"
 
 [client]
 # Tracebacks go to the server log, never to the page
 showErrorDetails = "none"
+toolbarMode = "minimal"
 
 [server]
 headless = true
