@@ -15,7 +15,9 @@ Result: **217 passed, 1 skipped by design, 0 failures** on Windows, Python 3.11.
 | Tests can no longer pick up a real key from `.env` (`tests/conftest.py` clears the model settings) | whole suite |
 | Docs, start guide PDF, cover image and submission texts describe Token Factory, with the droplet as Option B | read through; PDF and cover regenerated |
 
-Not checked here: calls to the real Token Factory (no key yet), and Evolus calling Token Factory as the agent's model.
+Checked live with the team key: one chat request to the real Token Factory (`DeepSeek-V4-Flash`) answered in 1.7 s.
+
+Not checked here: Evolus calling Token Factory as the agent's model.
 
 ## 16 October 2026: submission hardening
 

@@ -90,7 +90,7 @@ Follow [docs/evolus_setup.md](docs/evolus_setup.md): connect the model, then cre
 Needs Python 3.10 or newer (the Docker image uses 3.11).
 
 ```bash
-git clone https://github.com/<your-account>/ledgerpilot-ai.git
+git clone https://github.com/Aoun-source/ledgerpilot-ai.git
 cd ledgerpilot-ai
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate

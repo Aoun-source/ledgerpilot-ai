@@ -120,24 +120,27 @@ def story() -> list:
           P("Start-up guide for Windows: from the project folder to a live demo and a submitted entry. "
             "No Linux needed on your PC.", "sub"),
           table([["Hackathon", "AMD Developer Hackathon: ACT III · track: Evolus Business Agents on AMD"],
-                 ["Deadline", "Saturday 17 October 2026, 17:00 UTC (22:00 in Pakistan)"],
+                 ["Deadline", "Sunday 18 October 2026, 15:00 Pacific (22:00 UTC; Monday 19 October, 03:00 in "
+                              "Pakistan)"],
                  ["Project folder", r"C:\Users\madinapc\Pictures\New folder\ledgerpilot001-ai\ledgerpilot-ai"]],
                 [32, 142], header=False),
           gap(14), P("How to use this guide", "h2"),
           P("Do the parts in order. Each grey box is a command: copy **one line at a time** into PowerShell and "
             "press Enter."),
-          P("Text in angle brackets, like `<YOUR_RC_KEY>`, means **put your own value there**, without the brackets."),
+          P("Text in angle brackets, like `<YOUR_USERNAME>`, means **put your own value there**, without the brackets."),
           P("If a command prints red error text, copy all of it and look it up in \"If something goes wrong\" at the end."),
+          gap(10), P("Already done on this PC", "h2"),
+          P("The Python environment (`.venv`) is installed, the tests pass, the team's AMD Token Factory key is "
+            "redeemed and checked, and `.env` exists with the AMD settings filled in. The parts below start from "
+            "there."),
           gap(10), P("The parts", "h2"),
           table([["Part", "What you do", "Rough time"],
                  ["1", "Open the project folder and PowerShell", "5 min"],
-                 ["2", "Try the app on your PC without any keys", "10 min"],
-                 ["3", "Get your team's AMD Token Factory key", "10 min + teammates"],
-                 ["4", "Set up the Evolus workspace", "30 min"],
-                 ["5", "Write your settings file (.env)", "10 min"],
-                 ["6", "Live checks and results", "30-60 min"],
-                 ["7", "Run the app and rehearse the demo", "15 min"],
-                 ["8", "Publish on GitHub and submit", "45 min"]], [14, 125, 35]),
+                 ["2", "Set up the Evolus workspace", "30 min"],
+                 ["3", "Add the Evolus IDs to your settings file (.env)", "10 min"],
+                 ["4", "Live checks and results", "30-60 min"],
+                 ["5", "Run the app and rehearse the demo", "15 min"],
+                 ["6", "Publish on GitHub and submit", "45 min"]], [14, 125, 35]),
           PageBreak()]
 
     # ------------------------------------------------------------------ big picture
@@ -153,13 +156,13 @@ def story() -> list:
                             "require your own vLLM server instead, follow Option B in `docs\\setup_windows.md`."),
           gap(10), P("Files you will open", "h2"),
           table([["File (inside the project folder)", "What it is", "Open with"],
-                 [".env.example", "Template for your settings. You copy it to .env.", "(copied in Part 5)"],
-                 [".env", "Your keys and IDs. Never share or upload it.", "Notepad"],
+                 [".env", "Your keys and IDs (the AMD key is already in it). Never share or upload it.",
+                  "Notepad"],
                  [r"docs\evolus_setup.md", "Exact Evolus setup, with the extractor fields to copy", "Notepad"],
                  [r"src\ledgerpilot\agent_client.py", "Lines 21-36: the agent instructions to paste into Evolus",
                   "Notepad"],
-                 [r"docs\evaluation.md", "Your measured results (created in Part 6)", "Notepad"],
-                 [r"docs\benchmark.md", "AMD model speed results (created in Part 6)", "Notepad"],
+                 [r"docs\evaluation.md", "Your measured results (created in Part 4)", "Notepad"],
+                 [r"docs\benchmark.md", "AMD model speed results (created in Part 4)", "Notepad"],
                  [r"docs\submission\CHECKLIST.md", "Final submission checklist", "Notepad"],
                  [r"docs\submission\video_script.md", "What to say and show in the video", "Notepad"],
                  [r"docs\submission\descriptions.md", "Text to paste into the submission form", "Notepad"],
@@ -187,62 +190,19 @@ def story() -> list:
                       "command below. Keep the quotes: the path has a space in `New folder`."),
           gap(4),
           code(r'cd "C:\Users\madinapc\Pictures\New folder\ledgerpilot001-ai\ledgerpilot-ai"'),
-          gap(12),
-          # ---------------------------------------------------------------- part 2
-          P("Part 2 · Try it on your PC (no keys needed)", "h1"),
-          P("On **this** PC the Python environment (the `.venv` folder) already exists: skip to step 3. "
-            "On a new PC, do steps 1 and 2 once."),
-          step("1", "Install Python 3.11, then **close PowerShell and open it again** in the project folder (Part 1):",
-               code("winget install Python.Python.3.11")),
-          step("2", "Create the environment and install the libraries (takes a few minutes):",
-               code("py -3.11 -m venv .venv", rf"{PY} -m pip install -r requirements.txt")),
-          step("3", "Run the automatic tests (about one minute):", code(f"{PY} -m pytest -q")),
-          box("ok", "a last line like `208 passed, 1 skipped`."),
-          gap(),
-          step("4", "Start the app:", code(f"{PY} -m streamlit run app.py")),
-          box("ok", "your browser opens http://localhost:8501 with the LedgerPilot page. Yellow warnings in the "
-                    "left sidebar are normal: there are no keys yet."),
-          gap(), step("5", "To stop the app, click the PowerShell window and press **Ctrl+C**."),
           PageBreak()]
 
-    # ------------------------------------------------------------------ part 3
-    s += [P("Part 3 · Get your team's AMD Token Factory key", "h1"),
-          P("AMD Token Factory gives your team one free API key for its AI models. Menu names on the website may "
-            "differ slightly from the ones below."),
-          P("3.1 Redeem the key (in your browser)", "h2"),
-          step("1", "Open this page and sign in with your **AMD AI Developer Program** account (the email your "
-                    "team registered with):", code(TOKEN_FACTORY_SIGN_IN)),
-          step("2", "Your team dashboard shows every member and whether they have redeemed. Click "
-                    "**Redeem API Key**."),
-          step("3", "The key is hidden until **every teammate** has signed in and clicked **Redeem API Key**. "
-                    "Message them, then click **Check Status** to refresh."),
-          step("4", "When the key appears, click **Copy to clipboard** and paste it into Notepad. It looks like "
-                    "`rc-` followed by 48 letters and numbers. This guide calls it `<YOUR_RC_KEY>`."),
-          box("warn", "Keep the key secret: it goes only in `.env` (Part 5) and in Evolus (Part 4). Never post it "
-                      "in chat, screenshots or GitHub. If no key appears at all, your account may still be in review."),
-          gap(),
-          KeepTogether([
-              P("3.2 Check it from Windows", "h2"),
-              step("1", "In PowerShell on your PC (one line):",
-                   code(f'curl.exe {TOKEN_FACTORY_URL}/models -H "Authorization: Bearer <YOUR_RC_KEY>"')),
-              box("ok", "text that contains `DeepSeek-V4-Flash`. An error with 401 means the key was copied "
-                        "wrongly; copy it again.")]),
-          gap(),
-          box("tip", "Your whole team shares this one key and its limits: about **20 requests a minute** and a "
-                     "daily cap. Don't run the Part 6 checks at the same time as a teammate. Send only the "
-                     "sample invoices that come with the project, never real company invoices."),
-          gap(14)]
-
-    # ------------------------------------------------------------------ part 4
-    s += [P("Part 4 · Set up the Evolus workspace", "h1"),
+    # ------------------------------------------------------------------ part 2
+    s += [P("Part 2 · Set up the Evolus workspace", "h1"),
           P("Everything here happens on the Evolus website, in the **event workspace** from the hackathon link. "
             "The full details, including the exact fields for each extractor, are in a file:"),
           code(r"notepad docs\evolus_setup.md"), gap(),
-          P("Keep a Notepad page open and write down every ID as you go. You need them all in Part 5."),
+          P("Keep a Notepad page open and write down every ID as you go. You need them all in Part 3."),
           table([["#", "In Evolus", "What to enter", "Write down"],
                  ["1", "Your models › add an OpenAI-compatible model",
-                  f"Base URL `{TOKEN_FACTORY_URL}` · Model name `{TOKEN_FACTORY_MODEL}` · API key = "
-                  "`<YOUR_RC_KEY>` from Part 3. Click **Test connection**.", "-"],
+                  f"Base URL `{TOKEN_FACTORY_URL}` · Model name `{TOKEN_FACTORY_MODEL}` · API key = the "
+                  "`rc-...` key after `AMD_API_KEY=` in your `.env` (or **Copy to clipboard** on the Token Factory "
+                  "page). Click **Test connection**.", "-"],
                  ["2", "Create an agent named LedgerPilot Clerk",
                   "Model: the one from row 1. Instructions: the text of lines 21-36 of "
                   r"`src\ledgerpilot\agent_client.py` (between the triple quotes). Temperature 0 to 0.2.",
@@ -251,7 +211,7 @@ def story() -> list:
                   "Invoice, Purchase order, Goods-received note. Copy each field list from `evolus_setup.md` "
                   "exactly.", "3 extractor IDs"],
                  ["4", "Create a knowledge library: Vendor master and AP policy",
-                  "Leave it empty for now (Part 6 uploads to it). Attach it to the agent.", "Library ID"],
+                  "Leave it empty for now (Part 4 uploads to it). Attach it to the agent.", "Library ID"],
                  ["5", "Create a workflow: Exception routing",
                   "As in `evolus_setup.md` section 5, with the 5 parameters. **Switch it on.**", "Workflow ID"],
                  ["6", "API keys page", "Create an API key.", "API key and space (app) ID"]],
@@ -260,31 +220,35 @@ def story() -> list:
                             "copy from the line after `AGENT_INSTRUCTIONS = \"\"\"` down to the closing `\"\"\"`."),
           PageBreak()]
 
-    # ------------------------------------------------------------------ part 5
-    s += [P("Part 5 · Write your settings file (.env)", "h1"),
-          step("1", "In PowerShell, in the project folder, copy the template and open it:",
-               code("copy .env.example .env", "notepad .env")),
-          step("2", "Fill in each value after the `=` sign, with no spaces or quotes:",
+    # ------------------------------------------------------------------ part 3
+    s += [P("Part 3 · Add the Evolus IDs to your settings file (.env)", "h1"),
+          step("1", "In PowerShell, in the project folder, open the settings file that is already there:",
+               code("notepad .env")),
+          box("warn", "Don't run `copy .env.example .env`: it overwrites your `.env` without asking and deletes "
+                      "the AMD key."),
+          gap(),
+          step("2", "The AMD lines at the top are already filled in: leave them as they are. Fill in each Evolus "
+                    "value after the `=` sign, with no spaces or quotes:",
                table([["Setting", "Where it comes from"],
-                      ["AMD_API_KEY", "`<YOUR_RC_KEY>` from Part 3"],
-                      ["AMD_BASE_URL, AMD_MODEL", "Leave as they are"],
-                      ["AMD_REASONING_EFFORT", "Leave empty"],
-                      ["EVOLUS_API_KEY", "Part 4, row 6"],
-                      ["EVOLUS_APP_ID", "Part 4, row 6 (the space ID)"],
-                      ["EVOLUS_AGENT_ID", "Part 4, row 2"],
+                      ["EVOLUS_API_KEY", "Part 2, row 6"],
+                      ["EVOLUS_APP_ID", "Part 2, row 6 (the space ID)"],
+                      ["EVOLUS_AGENT_ID", "Part 2, row 2"],
                       ["EVOLUS_EXTRACTOR_AGENT_ID", "Leave empty unless the extractors belong to another agent"],
-                      ["EVOLUS_EXTRACTOR_INVOICE_ID, _PO_ID, _GRN_ID", "Part 4, row 3"],
-                      ["EVOLUS_WORKFLOW_ID", "Part 4, row 5"],
-                      ["EVOLUS_LIBRARY_ID", "Part 4, row 4"],
+                      ["EVOLUS_EXTRACTOR_INVOICE_ID, _PO_ID, _GRN_ID", "Part 2, row 3"],
+                      ["EVOLUS_WORKFLOW_ID", "Part 2, row 5"],
+                      ["EVOLUS_LIBRARY_ID", "Part 2, row 4"],
                       ["PRICE_TOLERANCE, MAX_TAX_RATE, timeouts", "Leave as they are"]], [70, 104])),
-          step("3", "Save (**Ctrl+S**) and close Notepad. Check the file name is exactly `.env`:", code("dir .env")),
-          box("warn", "If you see `.env.txt` instead, rename it: `ren .env.txt .env`. Never email, upload or "
-                      "commit `.env`; the project already tells Git to ignore it."),
+          step("3", "Save (**Ctrl+S**) and close Notepad."),
+          box("warn", "Never email, upload or commit `.env`; the project already tells Git to ignore it."),
           gap(14),
-          # ---------------------------------------------------------------- part 6
-          P("Part 6 · Live checks and results", "h1"),
+          # ---------------------------------------------------------------- part 4
+          P("Part 4 · Live checks and results", "h1"),
           P("Run these one at a time, in this order, in the project folder. Save each window's output in a text "
             "file: you need the numbers for the submission."),
+          box("tip", "Your whole team shares one AMD key and its limits: about **20 requests a minute** and a "
+                     "daily cap. Don't run these checks at the same time as a teammate. Send only the sample "
+                     "invoices that come with the project, never real company invoices."),
+          gap(),
           step("1", "Upload the vendor master to your Evolus library:", code(rf"{PY} scripts\upload_library.py")),
           step("2", "The go/no-go check:", code(rf"{PY} scripts\smoke_test.py")),
           box("ok", "five lines starting with `PASS`, then `ALL GOOD`. If any line says `FAIL`, stop and fix it "
@@ -303,8 +267,8 @@ def story() -> list:
                            "slides, video script and descriptions. Never round them up."),
           gap(14)]
 
-    # ------------------------------------------------------------------ part 7
-    s += [P("Part 7 · Run the app and rehearse the demo", "h1"),
+    # ------------------------------------------------------------------ part 5
+    s += [P("Part 5 · Run the app and rehearse the demo", "h1"),
           step("1", "Start the app:", code(f"{PY} -m streamlit run app.py")),
           box("ok", "green boxes in the sidebar (AMD model online, Evolus connected) and, under the title, "
                     f"**Model: {TOKEN_FACTORY_MODEL} served on AMD Token Factory**."),
@@ -325,14 +289,14 @@ def story() -> list:
           step("6", "Stop the app with **Ctrl+C** in PowerShell."),
           PageBreak()]
 
-    # ------------------------------------------------------------------ part 8
-    s += [P("Part 8 · Publish on GitHub and submit", "h1"),
-          P("8.1 Put the code on GitHub", "h2"),
+    # ------------------------------------------------------------------ part 6
+    s += [P("Part 6 · Publish on GitHub and submit", "h1"),
+          P("6.1 Put the code on GitHub", "h2"),
           step("1", "On github.com: **New repository**, name `ledgerpilot-ai`, choose **Public**, do **not** add a "
                     "README, then **Create repository**."),
           step("2", "In PowerShell, in the project folder. First check that `.env` is **not** listed:",
                code("git status")),
-          step("3", "Save the results from Part 6 and send everything to GitHub (a sign-in window opens the first "
+          step("3", "Save the results from Part 4 and send everything to GitHub (a sign-in window opens the first "
                     "time):",
                code("git add -A",
                     'git commit -m "Add live evaluation and benchmark results"',
@@ -340,7 +304,7 @@ def story() -> list:
                     "git push -u origin main")),
           box("ok", "on the GitHub page, your files. Open the **Actions** tab: the **tests** and **docker** checks "
                     "should turn green within a few minutes."),
-          P("8.2 Finish the assets", "h2"),
+          P("6.2 Finish the assets", "h2"),
           table([["Asset", "Where", "What to do"],
                  ["Video (about 3 min)", r"docs\submission\video_script.md",
                   "Record the app with the Windows Clipchamp app or OBS, following the script"],
@@ -349,7 +313,7 @@ def story() -> list:
                  ["Cover image", r"docs\submission\cover.png", "Upload as the project image"],
                  ["Descriptions and tags", r"docs\submission\descriptions.md", "Copy into the form"]],
                 [36, 66, 72]),
-          P("8.3 Submit", "h2"),
+          P("6.3 Submit", "h2"),
           step("1", "On lablab.ai, open the AMD Developer Hackathon: ACT III page and submit to the track "
                     "**Evolus Business Agents on AMD**."),
           step("2", "Add: GitHub link, video, slides PDF, cover image, short and long description, tags."),
@@ -363,35 +327,25 @@ def story() -> list:
           table([["What you see", "What to do"],
                  ["`python` or `py` is not recognized", "Close PowerShell and open it again in the project folder. "
                   f"Always start commands with `{PY}`."],
-                 [r"`Access is denied: 'C:\WINDOWS\system32\.venv'`",
-                  r"PowerShell is in `C:\WINDOWS\system32`, where Windows blocks new folders. Run the `cd` "
-                  "command from Part 1 (use a normal, not Administrator, PowerShell), then run "
-                  "`py -3.11 -m venv .venv` again."],
                  [r"`.\.venv\Scripts\python.exe` is not recognized",
-                  "You are not in the project folder, or the environment was never created. Run the `cd` "
-                  "command from Part 1, then Part 2 steps 2 and 3."],
-                 ["`Could not open requirements file` or `No module named pytest`",
-                  r"You are one folder too high (`ledgerpilot001-ai`). The project is in the inner "
-                  r"`ledgerpilot-ai` folder: run the `cd` command from Part 1, create the `.venv` there and "
-                  "install the libraries (Part 2 step 2)."],
+                  "You are not in the project folder (often one folder too high, in `ledgerpilot001-ai`, or in "
+                  r"`C:\WINDOWS\system32`). Run the `cd` command from Part 1."],
                  ["`git` is not recognized", "Close PowerShell and open it again (Git was installed recently)."],
                  ["Git says Please tell me who you are",
                   'Run `git config --global user.name "Your Name"` and `git config --global user.email '
                   '"you@example.com"`, then commit again.'],
-                 ["The app says settings are missing", "Check `dir .env` shows `.env` (not .env.txt) and that every "
-                  "value in Part 5 is filled in. Restart the app after editing .env."],
-                 ["Token Factory shows no key yet", "A teammate hasn't clicked Redeem API Key. Click Check Status "
-                  "to see who is pending."],
-                 ["401 from the AMD model", "AMD_API_KEY is wrong or has a space. Copy the key again (Part 3) and "
-                  "restart the app."],
+                 ["The app says settings are missing", "Check that every Evolus value in Part 3 is filled in and "
+                  "saved. Restart the app after editing .env."],
+                 ["401 from the AMD model", f"AMD_API_KEY is wrong or has a space. Copy the key again from "
+                  f"{TOKEN_FACTORY_SIGN_IN} into .env and restart the app."],
                  ["403 or account_not_verified", "Your AMD account is still in review. Check its status on the "
                   "Token Factory page."],
                  ["429 or Rate limited", "Your team used up the per-minute limit. Wait a minute; make sure only one "
                   "person runs the checks at a time."],
-                 ["400 model not supported", "The Token Factory catalog changed. Run the Part 3.2 check, pick a "
-                  "name from the list and put it in AMD_MODEL (and in the Evolus model)."],
-                 ["Smoke test: FAIL on the AMD endpoint", "Redo the Part 3.2 check. If that works, AMD_API_KEY in "
-                  ".env is wrong."],
+                 ["400 model not supported", "The Token Factory catalog changed. Click **Models** on the Token "
+                  "Factory page, pick a name from the list and put it in AMD_MODEL (and in the Evolus model)."],
+                 ["Smoke test: FAIL on the AMD endpoint", "Check that AMD_API_KEY in .env matches the key on the "
+                  "Token Factory page, with no spaces."],
                  ["Evolus rejected the API key (401/403)", "Check EVOLUS_API_KEY and EVOLUS_APP_ID."],
                  ["Evolus credits are used up (402)", "Ask the hackathon organisers for more credits."],
                  ["Workflow is switched off (409)", "Switch the workflow on in Evolus."],
@@ -403,8 +357,6 @@ def story() -> list:
                 [62, 112]),
           gap(16), P("Every command in one place", "h2"),
           code(r"cd 'C:\Users\madinapc\Pictures\New folder\ledgerpilot001-ai\ledgerpilot-ai'",
-               f"{PY} -m pytest -q",
-               "copy .env.example .env",
                "notepad .env",
                rf"{PY} scripts\upload_library.py",
                rf"{PY} scripts\smoke_test.py",
@@ -413,7 +365,8 @@ def story() -> list:
                f"{PY} -m streamlit run app.py",
                "git add -A",
                'git commit -m "Add live evaluation and benchmark results"',
-               "git push")]
+               "git remote add origin https://github.com/<YOUR_USERNAME>/ledgerpilot-ai.git",
+               "git push -u origin main")]
     return s
 
 
