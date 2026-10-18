@@ -1,6 +1,6 @@
 # Project descriptions and tags
 
-Brackets `[__]` are numbers to copy from `docs/evaluation.md` and `docs/benchmark.md`. If a field on
+Numbers come from `docs/evaluation.md` (live run, 18 October 2026). If a field on
 the submission form has a character limit, use the short description there.
 
 Written for the default setup, the agent's model on **AMD Token Factory**. If you ran the agent on your
@@ -39,9 +39,9 @@ account. Each finding shows its code, the rule that fired and the amount at risk
 it in seconds.
 
 We measured it live on 24 synthetic cases (7 clean, 11 billing errors, 5 fraud attempts, 1 unreadable
-PDF): [__] false approvals out of 17 problem invoices, [__] of 5 fraud attempts blocked, and [__%]
-routed correctly, with a median of [__] s from upload to decision. On AMD Token Factory the agent step
-answers in a median of [__] s, using about [__] tokens per invoice.
+PDF): 0 false approvals out of 17 problem invoices, 5 of 5 fraud attempts blocked, and 23 of 24 (96%)
+routed correctly, with a median of 45 s from upload to decision. On AMD Token Factory the agent step
+answers in a median of 20 s. The one miss was a clean invoice held for a person, never paid.
 
 The repo includes over 200 offline tests, a Docker image built in CI, the evaluation and benchmark
 scripts, and a demo mode that replays recorded live runs, clearly labelled, if the services are down.

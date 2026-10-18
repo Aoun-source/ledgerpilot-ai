@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_19",
+    "at": "2026-10-18T11:42:10+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_19",
+    "route": "approve_for_payment",
+    "rule_route": "approve_for_payment",
+    "agent": {
+      "route": "approve_for_payment",
+      "explanation": "The discrepancy list is empty. Supplier V004 Ravi Textiles Pvt Ltd is in the vendor master with matching IBAN ending 4404. Line quantities and unit prices match the purchase order, goods-received note, and agreed price list. No fraud indicators present.",
+      "evidence": [
+        "Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN PK36RAVI0000001122334404",
+        "Invoice RT-8019 matches PO-2026-1019 and GRN-5019 quantities",
+        "Agreed prices for CTN-500 (120.00) and TWL-HT (14.25) match invoice"
+      ],
+      "supplier_question": "",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe supplier V004 Ravi Textiles Pvt Ltd is in the vendor master with IBAN ending 4404, matching the invoice. The discrepancy list is emptyikuha. Prices match the agreed price list. Quantities match PO and GRN. Route is approve_for_payment.\n\n{\"route\": \"approve_for_payment\", \"explanation\": \"The discrepancy list is empty. Supplier V004 Ravi Textiles Pvt Ltd is in the vendor master with matching IBAN ending 4404. Line quantities and unit prices match the purchase order, goods-received note, and agreed price list. No fraud indicators present.\", \"evidence\": [\"Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN PK36RAVI0000001122334404\", \"Invoice RT-8019 matches PO-2026-1019 and GRN-5019 quantities\", \"Agreed prices for CTN-500 (120.00) and TWL-HT (14.25) match invoice\"], \"supplier_question\": \"\"}",
+      "conversation_id": "74cff4db-74e1-4ecb-875e-56f80699256a",
+      "latency_s": 16.57740830000148,
+      "parsed": true
+    },
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1019",
+        "po_date": "2026-09-11",
+        "supplier_id": "V004",
+        "supplier_name": "Ravi Textiles Pvt Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "CTN-500",
+            "description": "Cotton fabric roll, 50 m",
+            "qty": 3,
+            "unit_price": 120.0
+          },
+          {
+            "sku": "TWL-HT",
+            "description": "Hotel towel set",
+            "qty": 40,
+            "unit_price": 14.25
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5019",
+        "po_number": "PO-2026-1019",
+        "received_date": "2026-09-21",
+        "supplier_id": "V004",
+        "lines": [
+          {
+            "sku": "CTN-500",
+            "description": "Cotton fabric roll, 50 m",
+            "qty_received": 3
+          },
+          {
+            "sku": "TWL-HT",
+            "description": "Hotel towel set",
+            "qty_received": 40
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "RT-8019",
+        "invoice_date": "2026-10-08",
+        "po_number": "PO-2026-1019",
+        "supplier_id": "V004",
+        "supplier_name": "Ravi Textiles Pvt Ltd",
+        "currency": "USD",
+        "bank_iban": "PK36RAVI0000001122334404",
+        "lines": [
+          {
+            "sku": "CTN-500",
+            "description": "Cotton fabric roll, 50 m",
+            "qty": 3,
+            "unit_price": 120.0,
+            "line_total": 360.0
+          },
+          {
+            "sku": "TWL-HT",
+            "description": "Hotel towel set",
+            "qty": 40,
+            "unit_price": 14.25,
+            "line_total": 570.0
+          }
+        ],
+        "subtotal": 930.0,
+        "tax": 0.0,
+        "total": 930.0
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": "291f30ee-e8ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 6.289678099999946,
+      "extract_grn_s": 4.498481800001173,
+      "extract_invoice_s": 14.992238099999668,
+      "rules_s": 0.004131800000322983,
+      "agent_s": 16.57740830000148,
+      "workflow_start_s": 0.21209910000106902,
+      "total_s": 42.575144599999476
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "738071d2-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "67c8afd8-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "68c8afd8-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "6ac8afd8-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "6bc8afd8-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "aab68edf-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "74cff4db-74e1-4ecb-875e-56f80699256a",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 6.29,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.5,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 14.99,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "0 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 16.58,
+        "ok": true,
+        "note": "route approve_for_payment"
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.21,
+        "ok": true,
+        "note": "execution 291f30ee-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

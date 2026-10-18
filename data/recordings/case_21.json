@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_21",
+    "at": "2026-10-18T11:43:28+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_21",
+    "route": "escalate_fraud",
+    "rule_route": "escalate_fraud",
+    "agent": {
+      "route": "escalate_fraud",
+      "explanation": "The invoice number AC7710 is a look-alike of a previously processed invoice AC-7710, differing only in punctuation, which the vendor policy treats as a duplicate. The supplier and bank account match the vendor master, but the duplicate-invoice signal requires escalation. The amount at risk is 555.0 USD.",
+      "evidence": [
+        "Vendor master lists V001 Acme Office Supplies Ltd as approved with matching IBAN ending 7801",
+        "Discrepancy LOOKALIKE_INVOICE_NUMBER: AC7710 looks like AC-7710, differing only in punctuation",
+        "Vendor policy: an invoice number differing only in punctuation is treated as a duplicate and escalated as possible fraud"
+      ],
+      "supplier_question": "Please confirm whether invoice AC7710 is a new, separate invoice or a re-issue of previously processed invoice AC-7710.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe discrepancy indicates a look-alike invoice number. The vendor master confirms V001 Acme Office Supplies Ltd is approved, and the bank IBAN matches (GB82ACME...7801). The invoice number AC7710 looks like a previously processed AC-7710, differing only in punctuation. Per the vendor library, an invoice number differing only in punctuation is treated as a duplicate and escalated as possible fraud.\n\n{\"route\": \"escalate_fraud\", \"explanation\": \"The invoice number AC7710 is a look-alike of a previously processed invoice AC-7710, differing only in punctuation, which the vendor policy treats as a duplicate. The supplier and bank account match the vendor master, but the duplicate-invoice signal requires escalation. The amount at risk is 555.0 USD.\", \"evidence\": [\"Vendor master lists V001 Acme Office Supplies Ltd as approved with matching IBAN ending 7801\", \"Discrepancy LOOKALIKE_INVOICE_NUMBER: AC7710 looks like AC-7710, differing only in punctuation\", \"Vendor policy: an invoice number differing only in punctuation is treated as a duplicate and escalated as possible fraud\"], \"supplier_question\": \"Please confirm whether invoice AC7710 is a new, separate invoice or a re-issue of previously processed invoice AC-7710.\"}",
+      "conversation_id": "5f2595a3-e8ff-4447-9ee8-cb57ff179209",
+      "latency_s": 20.288087499999165,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "LOOKALIKE_INVOICE_NUMBER",
+        "route": "escalate_fraud",
+        "field": "invoice_number",
+        "expected": "new invoice number",
+        "actual": "AC7710",
+        "impact": "555.0",
+        "message": "Invoice number AC7710 looks like AC-7710, which was already processed for this supplier. They differ only in punctuation, spacing, leading zeros, look-alike characters or a trailing letter."
+      }
+    ],
+    "money_at_risk": "555.0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1021",
+        "po_date": "2026-09-14",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty": 30,
+            "unit_price": 18.5
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5021",
+        "po_number": "PO-2026-1021",
+        "received_date": "2026-09-24",
+        "supplier_id": "V001",
+        "lines": [
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty_received": 30
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "AC7710",
+        "invoice_date": "2026-10-06",
+        "po_number": "PO-2026-1021",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "bank_iban": "GB82ACME00001234567801",
+        "lines": [
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty": 30,
+            "unit_price": 18.5,
+            "line_total": 555.0
+          }
+        ],
+        "subtotal": 555.0,
+        "tax": 0.0,
+        "total": 555.0
+      }
+    },
+    "email_draft": "Subject: Fraud Review Required: Invoice AC7710 \u2013 Acme Office Supplies Ltd (V001)\n\nDear Finance Manager,\n\nPayment for invoice AC7710 from Acme Office Supplies Ltd (V001), totaling USD 555.00, has been blocked due to a possible fraud concern.\n\nThe invoice number AC7710 appears similar to AC-7710, which has already been processed for this supplier. The two invoice numbers differ only in punctuation, spacing, leading zeros, look-alike characters, or a trailing letter.\n\nPlease verify the invoice directly with the supplier by phone, using the contact details on file. Do not use any contact information printed on the invoice.\n\nKind regards,",
+    "workflow_execution_id": "245bc21a-e9ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 4.473679599999741,
+      "extract_grn_s": 4.121929500000988,
+      "extract_invoice_s": 32.219124600000214,
+      "rules_s": 0.004548900000372669,
+      "agent_s": 20.288087499999165,
+      "email_s": 3.1237845000014204,
+      "workflow_start_s": 0.17008259999965958,
+      "total_s": 64.40238549999958
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "b99143f4-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "bb9143f4-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "bc9143f4-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "139b75fb-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "149b75fb-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "32e9a90e-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "5f2595a3-e8ff-4447-9ee8-cb57ff179209",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 4.47,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.12,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 32.22,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 20.29,
+        "ok": true,
+        "note": "route escalate_fraud"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 3.12,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 245bc21a-e9ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

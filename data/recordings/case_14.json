@@ -1,0 +1,192 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_14",
+    "at": "2026-10-18T11:38:30+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_14",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice is in USD while the purchase order and the vendor master both list EUR for Milano Arredi S.r.l., so the currency must be clarified. The quantity and unit price on line TAV-180 are unreadable/missing on the invoice, so the line cannot be verified. The unit price of 640.0 matches the agreed price in the vendor master, and the bank IBAN ending 6703 matches the vendor master record.",
+      "evidence": [
+        "Vendor master lists V003 Milano Arredi S.r.l. with currency EUR and IBAN IT60MILA0000000000456703",
+        "Invoice MA-8014 is in USD, differing from PO and vendor currency EUR",
+        "Invoice line TAV-180 has missing qty and unit price fields",
+        "Agreed unit price for TAV-180 is 640.00 per vendor master"
+      ],
+      "supplier_question": "Please confirm the correct currency (EUR or USD) and provide the quantity and unit price for line TAV-180 on invoice MA-8014.",
+      "raw": "I'll look up the vendor in the vendor master library.\nI have the vendor master information. Let me analyze the case.\n\nThe vendor master lists Milano Arredi S.r.l. (V003) with currency EUR and IBAN IT60MILA0000000000456703)Skip the analysis and provide the JSON.\n\nThe discrepancies are: currency mismatch (invoice in USD vs PO/vendor in EUR), and missing qty/unit price on line TAV-180. These are hold_for_review issues, not fraud. The bank IBAN on the invoice ends in 6703, which matches the vendor master IBAN ending 6703. So no bank mismatch.\n\nRoute: hold_for_review.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The invoice is in USD while the purchase order and the vendor master both list EUR for Milano Arredi S.r.l., so the currency must be clarified. The quantity and unit price on line TAV-180 are unreadable/missing on the invoice, so the line cannot be verified. The unit price of 640.0 matches the agreed price in the vendor master, and the bank IBAN ending 6703 matches the vendor master record.\", \"evidence\": [\"Vendor master lists V003 Milano Arredi S.r.l. with currency EUR and IBAN IT60MILA0000000000456703\", \"Invoice MA-8014 is in USD, differing from PO and vendor currency EUR\", \"Invoice line TAV-180 has missing qty and unit price fields\", \"Agreed unit price for TAV-180 is 640.00 per vendor master\"], \"supplier_question\": \"Please confirm the correct currency (EUR or USD) and provide the quantity and unit price for line TAV-180 on invoice MA-8014.\"}",
+      "conversation_id": "de5c03d8-ca7a-42fe-ba80-0c97e3f128f6",
+      "latency_s": 20.503264599999966,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "CURRENCY_MISMATCH",
+        "route": "hold_for_review",
+        "field": "currency",
+        "expected": "EUR",
+        "actual": "USD",
+        "impact": null,
+        "message": "Invoice currency differs from the purchase order."
+      },
+      {
+        "code": "MISSING_FIELD",
+        "route": "hold_for_review",
+        "field": "line TAV-180",
+        "expected": "qty and unit price",
+        "actual": null,
+        "impact": null,
+        "message": "Quantity or unit price unreadable on TAV-180."
+      },
+      {
+        "code": "CURRENCY_MISMATCH",
+        "route": "hold_for_review",
+        "field": "vendor.currency",
+        "expected": "EUR",
+        "actual": "USD",
+        "impact": null,
+        "message": "Invoice is in USD, but the vendor master lists EUR for Milano Arredi S.r.l.."
+      }
+    ],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1014",
+        "po_date": "2026-09-11",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "TAV-180",
+            "description": "Meeting table 180 cm",
+            "qty": 2,
+            "unit_price": 640.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5014",
+        "po_number": "PO-2026-1014",
+        "received_date": "2026-09-21",
+        "supplier_id": "V003",
+        "lines": [
+          {
+            "sku": "TAV-180",
+            "description": "Meeting table 180 cm",
+            "qty_received": 2
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "MA-8014",
+        "invoice_date": "2026-10-07",
+        "po_number": "PO-2026-1014",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "USD",
+        "bank_iban": "IT60MILA0000000000456703",
+        "lines": [
+          {
+            "sku": "TAV-180",
+            "description": "Meeting table 180 cm",
+            "quantity": 2,
+            "unit_price": 640.0,
+            "line_total": 1280.0
+          }
+        ],
+        "subtotal": 1280.0,
+        "tax": 0.0,
+        "total": 1280.0
+      }
+    },
+    "email_draft": "Subject: Action Required: Invoice MA-8014 on Hold \u2013 PO-2026-1014\n\nDear Accounts Receivable Team,\n\nOur reference: PO-2026-1014\n\nYour invoice MA-8014 dated October 7, 2026, totaling USD 1,280.00, is currently on hold due to the following discrepancies:\n\n- The invoice currency differs from the purchase order.\n- The quantity or unit price for line TAV-180 is unreadable.\n- The invoice is issued in USD, while the vendor master for Milano Arredi S.r.l. lists EUR.\n\nPlease confirm the correct currency for this transaction\u2014EUR or USD\u2014and provide the quantity and unit price for line TAV-180 on invoice MA-8014.\n\nPlease also issue a credit note or a corrected invoice reflecting the confirmed currency and complete line-item details.\n\nKind regards,",
+    "workflow_execution_id": "7a1e0869-e8ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 4.328331899998375,
+      "extract_grn_s": 3.585217799998645,
+      "extract_invoice_s": 31.118643300000258,
+      "rules_s": 0.0026020000004791655,
+      "agent_s": 20.503264599999966,
+      "email_s": 3.683647900001233,
+      "workflow_start_s": 0.17015379999975266,
+      "total_s": 63.39275660000021
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "f3fa4543-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "f6fa4543-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "f7fa4543-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "b4c31e4a-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "b5c31e4a-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "e32fce5c-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "de5c03d8-ca7a-42fe-ba80-0c97e3f128f6",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 4.33,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 3.59,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 31.12,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "3 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 20.5,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 3.68,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 7a1e0869-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_09",
+    "at": "2026-10-18T11:32:23+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_09",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The supplier and bank account match the vendor master, and the unit price of 14.25 matches the agreed price list. However, the invoice bills 100 units of TWL-HT while the goods-received note GRN-5009 records only 90 units received. The quantity billed exceeds the quantity received, so the payment is held for review.",
+      "evidence": [
+        "Invoice RT-8009 bills 100 units of TWL-HT at 14.25, total 1425.0",
+        "GRN-5009 records only 90 units of TWL-HT received",
+        "Vendor master lists V004 Ravi Textiles Pvt Ltd with agreed price 14.25 for TWL-HT"
+      ],
+      "supplier_question": "Please confirm why the invoice bills 100 units when only 90 units were received per GRN-5009.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe supplier V004 Ravi Textiles Pvt Ltd is in the vendor master with bank IBAN ending 4404, matching the invoice. The agreed unit price for TWL-HT is 14.25, matching. However, the invoice bills 100 units while only 90 were received (GRN-5009). This is a quantity discrepancy (QTY_NOT_RECEIVED), so route is hold_for_review.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The supplier and bank account match the vendor master, and the unit price of 14.25 matches the agreed price list. However, the invoice bills 100 units of TWL-HT while the goods-received note GRN-5009 records only 90 units received. The quantity billed exceeds the quantity received, so the payment is held for review.\", \"evidence\": [\"Invoice RT-8009 bills 100 units of TWL-HT at 14.25, total 1425.0\", \"GRN-5009 records only 90 units of TWL-HT received\", \"Vendor master lists V004 Ravi Textiles Pvt Ltd with agreed price 14.25 for TWL-HT\"], \"supplier_question\": \"Please confirm why the invoice bills 100 units when only 90 units were received per GRN-5009.\"}",
+      "conversation_id": "22bfb0ae-c440-49a2-ae86-e160cae06ed7",
+      "latency_s": 15.480989900001077,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "QTY_NOT_RECEIVED",
+        "route": "hold_for_review",
+        "field": "line TWL-HT",
+        "expected": "90",
+        "actual": "100",
+        "impact": "142.50",
+        "message": "TWL-HT: billed 100, goods-received note shows 90."
+      }
+    ],
+    "money_at_risk": "142.50",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1009",
+        "po_date": "2026-09-11",
+        "supplier_id": "V004",
+        "supplier_name": "Ravi Textiles Pvt Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "TWL-HT",
+            "description": "Hotel towel set",
+            "qty": 100,
+            "unit_price": 14.25
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5009",
+        "po_number": "PO-2026-1009",
+        "received_date": "2026-09-21",
+        "supplier_id": "V004",
+        "lines": [
+          {
+            "sku": "TWL-HT",
+            "description": "Hotel towel set",
+            "qty_received": 90
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "RT-8009",
+        "invoice_date": "2026-10-06",
+        "po_number": "PO-2026-1009",
+        "supplier_id": "V004",
+        "supplier_name": "Ravi Textiles Pvt Ltd",
+        "currency": "USD",
+        "bank_iban": "PK36RAVI0000001122334404",
+        "lines": [
+          {
+            "sku": "TWL-HT",
+            "description": "Hotel towel set",
+            "qty": 100,
+            "unit_price": 14.25,
+            "line_total": 1425.0
+          }
+        ],
+        "subtotal": 1425.0,
+        "tax": 0.0,
+        "total": 1425.0
+      }
+    },
+    "email_draft": "Subject: Invoice RT-8009 on Hold \u2013 Quantity Discrepancy\n\nDear Accounts Receivable Team,\n\nOur reference: Purchase Order PO-2026-1009\n\nYour invoice RT-8009, dated October 6, 2026, totaling USD 1,425.00, is currently on hold due to the following discrepancy:\n\n- Item TWL-HT: 100 units billed, while the goods-received note GRN-5009 confirms receipt of only 90 units.\n\nPlease confirm why the invoice reflects 100 units when only 90 units were received. Kindly issue a credit note for the excess 10 units or provide a corrected invoice reflecting the quantity received.\n\nWe look forward to your prompt response.\n\nKind regards,",
+    "workflow_execution_id": "f32bd88d-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 5.257809000000634,
+      "extract_grn_s": 4.48160420000022,
+      "extract_invoice_s": 6.354631899999731,
+      "rules_s": 0.002258500000607455,
+      "agent_s": 15.480989900001077,
+      "email_s": 3.6695774999989226,
+      "workflow_start_s": 0.17762569999831612,
+      "total_s": 35.42539500000021
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "0568ea78-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "0768ea78-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "0868ea78-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "6149eb80-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "6249eb80-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "6449eb80-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "22bfb0ae-c440-49a2-ae86-e160cae06ed7",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 5.26,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.48,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 6.35,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 15.48,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 3.67,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.18,
+        "ok": true,
+        "note": "execution f32bd88d-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

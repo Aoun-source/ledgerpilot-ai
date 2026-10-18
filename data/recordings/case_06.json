@@ -1,0 +1,155 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_06",
+    "at": "2026-10-18T11:30:09+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_06",
+    "route": "approve_for_payment",
+    "rule_route": "approve_for_payment",
+    "agent": {
+      "route": "approve_for_payment",
+      "explanation": "The purchase order, goods-received note, and invoice all agree on quantity (8), unit price (210.0), and total (1680.0). The supplier V002 Northwind Electronics LLC is in the vendor master with the matching bank account ending 4302. No discrepancies were found.",
+      "evidence": [
+        "PO-2026-1006, GRN-5006, and invoice NW-8006 all match on qty 8 and unit price 210.0",
+        "Vendor master lists V002 Northwind Electronics LLC with IBAN US11NWND00000987654302",
+        "Invoice total 1680.0 equals 8 x 210.0"
+      ],
+      "supplier_question": "",
+      "raw": "I'll look up the supplier in the vendor master library.\n{\"route\": \"approve_for_payment\", \"explanation\": \"The purchase order, goods-received note, and invoice all agree on quantity (8), unit price (210.0), and total (1680.0). The supplier V002 Northwind Electronics LLC is in the vendor master with the matching bank account ending 4302. No discrepancies were found.\", \"evidence\": [\"PO-2026-1006, GRN-5006, and invoice NW-8006 all match on qty 8 and unit price 210.0\", \"Vendor master lists V002 Northwind Electronics LLC with IBAN US11NWND00000987654302\", \"Invoice total 1680.0 equals 8 x 210.0\"], \"supplier_question\": \"\"}",
+      "conversation_id": "619dae83-0e49-4b87-a916-92d6e3842b87",
+      "latency_s": 12.48442729999988,
+      "parsed": true
+    },
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1006",
+        "po_date": "2026-09-14",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "MON-27",
+            "description": "27-inch monitor",
+            "qty": 8,
+            "unit_price": 210.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5006",
+        "po_number": "PO-2026-1006",
+        "received_date": "2026-09-24",
+        "supplier_id": "V002",
+        "lines": [
+          {
+            "sku": "MON-27",
+            "description": "27-inch monitor",
+            "qty_received": 8
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "NW-8006",
+        "invoice_date": "2026-10-07",
+        "po_number": "PO-2026-1006",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "bank_iban": "US11NWND00000987654302",
+        "lines": [
+          {
+            "sku": "MON-27",
+            "description": "27-inch monitor",
+            "qty": 8,
+            "unit_price": 210.0,
+            "line_total": 1680.0
+          }
+        ],
+        "subtotal": 1680.0,
+        "tax": 0.0,
+        "total": 1680.0
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": "a7537f40-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 7.248416700000234,
+      "extract_grn_s": 4.973729499999536,
+      "extract_invoice_s": 7.866983899999468,
+      "rules_s": 0.002439800000502146,
+      "agent_s": 12.48442729999988,
+      "workflow_start_s": 0.1755217999998422,
+      "total_s": 32.752354000000196
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "a0cb5b2b-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "1c646331-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "1d646331-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "22646331-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "23646331-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "74250d39-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "619dae83-0e49-4b87-a916-92d6e3842b87",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 7.25,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.97,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 7.87,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "0 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 12.48,
+        "ok": true,
+        "note": "route approve_for_payment"
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.18,
+        "ok": true,
+        "note": "execution a7537f40-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

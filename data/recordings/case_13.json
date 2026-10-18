@@ -1,0 +1,180 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_13",
+    "at": "2026-10-18T11:37:27+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_13",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice includes an EXT-WTY extended warranty line (2 x 120.00 = 240.00) that is not on the purchase order, creating a 240.00 variance. The LAP-14 line matches the PO and agreed price of 780.00, and quantities received match. The bank IBAN ending 4302 matches the vendor master.",
+      "evidence": [
+        "Invoice NW-8013 bills EXT-WTY extended warranty 2 x 120.00 = 240.00, not present on PO-2026-1013",
+        "Vendor master lists V002 Northwind Electronics LLC with LAP-14 agreed price 780.00",
+        "GRN-5013 confirms 2 units of LAP-14 received"
+      ],
+      "supplier_question": "Please confirm the extended warranty (EXT-WTY) charge of 240.00, as it is not on purchase order PO-2026-1013.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe vendor master confirms Northwind Electronics LLC (V002) with LAP-14 at agreed unit price 780.00. The invoice includes an EXT-WTY line not on the POhol. The bank IBAN ends in 4302, matching the vendor master's US11NWND00000987654302 (ends 4302). The discrepancy is the extra line item not on the PO.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The invoice includes an EXT-WTY extended warranty line (2 x 120.00 = 240.00) that is not on the purchase order, creating a 240.00 variance. The LAP-14 line matches the PO and agreed price of 780.00, and quantities received match. The bank IBAN ending 4302 matches the vendor master.\", \"evidence\": [\"Invoice NW-8013 bills EXT-WTY extended warranty 2 x 120.00 = 240.00, not present on PO-2026-1013\", \"Vendor master lists V002 Northwind Electronics LLC with LAP-14 agreed price 780.00\", \"GRN-5013 confirms 2 units of LAP-14 received\"], \"supplier_question\": \"Please confirm the extended warranty (EXT-WTY) charge of 240.00, as it is not on purchase order PO-2026-1013.\"}",
+      "conversation_id": "74ce293b-f69c-4d19-abd7-5ba3083cfd42",
+      "latency_s": 19.525920300000507,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "ITEM_NOT_ON_PO",
+        "route": "hold_for_review",
+        "field": "line EXT-WTY",
+        "expected": "item on PO",
+        "actual": "EXT-WTY",
+        "impact": "240.00",
+        "message": "EXT-WTY is billed but not on the purchase order."
+      }
+    ],
+    "money_at_risk": "240.00",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1013",
+        "po_date": "2026-09-12",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty": 2,
+            "unit_price": 780.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5013",
+        "po_number": "PO-2026-1013",
+        "received_date": "2026-09-22",
+        "supplier_id": "V002",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty_received": 2
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "NW-8013",
+        "invoice_date": "2026-10-06",
+        "po_number": "PO-2026-1013",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "bank_iban": "US11NWND00000987654302",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty": 2,
+            "unit_price": 780.0,
+            "line_total": 1560.0
+          },
+          {
+            "sku": "EXT-WTY",
+            "description": "Extended warranty 3 years",
+            "qty": 2,
+            "unit_price": 120.0,
+            "line_total": 240.0
+          }
+        ],
+        "subtotal": 1800.0,
+        "tax": 0.0,
+        "total": 1800.0
+      }
+    },
+    "email_draft": "Subject: Invoice NW-8013 on Hold \u2013 PO PO-2026-1013\n\nDear Accounts Receivable Team,\n\nOur reference is purchase order PO-2026-1013. Your invoice NW-8013, dated October 6, 2026, for a total of USD 1,800.00, is currently on hold.\n\nThe invoice includes an EXT-WTY charge of USD 240.00, which is not listed on purchase order PO-2026-1013. Please confirm this extended warranty charge and provide supporting documentation if applicable.\n\nAlternatively, please issue a credit note for the unapproved charge or send a corrected invoice excluding it.\n\nKind regards,",
+    "workflow_execution_id": "f2fa4543-e8ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 17.574872300001516,
+      "extract_grn_s": 39.37462620000042,
+      "extract_invoice_s": 44.33587230000012,
+      "rules_s": 0.002933899999334244,
+      "agent_s": 19.525920300000507,
+      "email_s": 2.447498600000472,
+      "workflow_start_s": 0.17163679999976011,
+      "total_s": 123.43426470000122
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "2d1ed6fb-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "a4330805-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "a5330805-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "5608e01d-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "5708e01d-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "9fe9d533-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "74ce293b-f69c-4d19-abd7-5ba3083cfd42",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 17.57,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 39.37,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 44.34,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 19.53,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.45,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution f2fa4543-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

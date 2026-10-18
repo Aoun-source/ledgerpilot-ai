@@ -1,0 +1,172 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_11",
+    "at": "2026-10-18T11:34:38+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_11",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The supplier, bank account, unit price and quantity all match the vendor master and the PO/GRN. However, the invoice line total is 390.0 while 20 units at 18.5 equals 370.0, an arithmetic discrepancy flagged as LINE_ARITHMETIC. The payment is held for review pending clarification.",
+      "evidence": [
+        "Vendor master lists V001 Acme Office Supplies Ltd with IBAN ending 7801 and agreed PPR-A4 price of 18.50",
+        "Invoice AC-8011 line total 390.0 does not equal 20 x 18.5 = 370.0"
+      ],
+      "supplier_question": "Please confirm the correct line total for 20 boxes of A4 paper at 18.50 each, as the invoice shows 390.0 instead of 370.0.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe vendor master confirms V001 Acme Office Supplies Ltd with IBAN ending 7801, matching the invoice. The agreed unit price for PPR-A4 is 18.50, matching. Quantity 20 matches PO and GRN. However, the line total is 390.0 but 20 \u00d7 18.5 = 370.0. This is an arithmetic discrepancy (LINE_ARITHMETIC), which routes to hold_for_review.\n\nThe bank IBAN on the invoice (ending 7801) matches the vendor master (GB82ACME00001234567801). No fraud signal.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The supplier, bank account, unit price and quantity all match the vendor master and the PO/GRN. However, the invoice line total is 390.0 while 20 units at 18.5 equals 370.0, an arithmetic discrepancy flagged as LINE_ARITHMETIC. The payment is held for review pending clarification.\", \"evidence\": [\"Vendor master lists V001 Acme Office Supplies Ltd with IBAN ending 7801 and agreed PPR-A4 price of 18.50\", \"Invoice AC-8011 line total 390.0 does not equal 20 x 18.5 = 370.0\"], \"supplier_question\": \"Please confirm the correct line total for 20 boxes of A4 paper at 18.50 each, as the invoice shows 390.0 instead of 370.0.\"}",
+      "conversation_id": "98da644e-9ec8-4682-be4b-3b2eb62aecdd",
+      "latency_s": 46.30406690000018,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "LINE_ARITHMETIC",
+        "route": "hold_for_review",
+        "field": "line PPR-A4",
+        "expected": "370.00",
+        "actual": "390.0",
+        "impact": "20.00",
+        "message": "PPR-A4: 20 x 18.5 does not equal the line total."
+      }
+    ],
+    "money_at_risk": "20.00",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1011",
+        "po_date": "2026-09-14",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty": 20,
+            "unit_price": 18.5
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5011",
+        "po_number": "PO-2026-1011",
+        "received_date": "2026-09-24",
+        "supplier_id": "V001",
+        "lines": [
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty_received": 20
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "AC-8011",
+        "invoice_date": "2026-10-08",
+        "po_number": "PO-2026-1011",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "bank_iban": "GB82ACME00001234567801",
+        "lines": [
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty": 20,
+            "unit_price": 18.5,
+            "line_total": 390.0
+          }
+        ],
+        "subtotal": 390.0,
+        "tax": 0.0,
+        "total": 390.0
+      }
+    },
+    "email_draft": "Subject: Invoice AC-8011 on Hold \u2013 Line Total Correction Required\n\nDear Accounts Receivable Team,\n\nOur reference: PO-2026-1011\n\nYour invoice AC-8011 dated October 8, 2026, totaling USD 390.00, is currently on hold due to a discrepancy in the line total for item PPR-A4.\n\nThe invoice lists 20 boxes of A4 paper at USD 18.50 each, which should result in a line total of USD 370.00, rather than USD 390.00.\n\nPlease confirm the correct line total and issue either a credit note for the difference or a corrected invoice.\n\nKind regards,",
+    "workflow_execution_id": "fba40bdf-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 6.290528400000767,
+      "extract_grn_s": 18.223970499999268,
+      "extract_invoice_s": 10.0766081999991,
+      "rules_s": 0.0026139000001421664,
+      "agent_s": 46.30406690000018,
+      "email_s": 2.483340599999792,
+      "workflow_start_s": 0.1775139000001218,
+      "total_s": 83.5594643000004
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "dc1c8aa9-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "8e3903b0-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "8f3903b0-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "35236fbd-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "36236fbd-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "d8f66fc3-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "98da644e-9ec8-4682-be4b-3b2eb62aecdd",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 6.29,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 18.22,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 10.08,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 46.3,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.48,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.18,
+        "ok": true,
+        "note": "execution fba40bdf-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

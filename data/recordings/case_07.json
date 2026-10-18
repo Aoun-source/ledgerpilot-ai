@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_07",
+    "at": "2026-10-18T11:31:09+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_07",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice unit price for CHR-100 is 22.00 USD while the agreed price in the vendor master is 20.00 USD, creating a price variance of 2.00 per unit (200.00 total at risk). Quantity and supplier match the PO and GRN. The bank IBAN matches the vendor master, so no fraud signal.",
+      "evidence": [
+        "Vendor master lists V001 CHR-100 agreed unit price as 20.00",
+        "Invoice AC-8007 bills CHR-100 at 22.00 per unit, line total 2200.00",
+        "GRN-5007 confirms 100 units received"
+      ],
+      "supplier_question": "Please confirm the correct unit price for CHR-100, as the invoice shows 22.00 USD but the agreed price is 20.00 USD.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe vendor master confirms Acme Office Supplies Ltd (V001) is approved, with agreed unit price for CHR-100 of 20.00 USD. The invoice bills 22.00 per unit, a price variance. The bank IBAN on the invoice ends in 7801, matching the vendor master (GB82ACME00001234567801). This is a price variance issue, so route is hold_for_review.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The invoice unit price for CHR-100 is 22.00 USD while the agreed price in the vendor master is 20.00 USD, creating a price variance of 2.00 per unit (200.00 total at risk). Quantity and supplier match the PO and GRN. The bank IBAN matches the vendor master, so no fraud signal.\", \"evidence\": [\"Vendor master lists V001 CHR-100 agreed unit price as 20.00\", \"Invoice AC-8007 bills CHR-100 at 22.00 per unit, line total 2200.00\", \"GRN-5007 confirms 100 units received\"], \"supplier_question\": \"Please confirm the correct unit price for CHR-100, as the invoice shows 22.00 USD but the agreed price is 20.00 USD.\"}",
+      "conversation_id": "534509f2-f4b7-4b43-9a49-caf5500d920e",
+      "latency_s": 31.198603100001492,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "PRICE_VARIANCE",
+        "route": "hold_for_review",
+        "field": "line CHR-100",
+        "expected": "20.0",
+        "actual": "22.0",
+        "impact": "200.00",
+        "message": "CHR-100: billed 22.0 per unit, PO agreed 20.0; difference 200.00 on 100 units."
+      }
+    ],
+    "money_at_risk": "200.00",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1007",
+        "po_date": "2026-09-13",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "CHR-100",
+            "description": "Ergonomic office chair",
+            "qty": 100,
+            "unit_price": 20.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5007",
+        "po_number": "PO-2026-1007",
+        "received_date": "2026-09-23",
+        "supplier_id": "V001",
+        "lines": [
+          {
+            "sku": "CHR-100",
+            "description": "Ergonomic office chair",
+            "qty_received": 100
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "AC-8007",
+        "invoice_date": "2026-10-08",
+        "po_number": "PO-2026-1007",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "bank_iban": "GB82ACME00001234567801",
+        "lines": [
+          {
+            "sku": "CHR-100",
+            "description": "Ergonomic office chair",
+            "qty": 100,
+            "unit_price": 22.0,
+            "line_total": 2200.0
+          }
+        ],
+        "subtotal": 2200.0,
+        "tax": 0.0,
+        "total": 2200.0
+      }
+    },
+    "email_draft": "Subject: Price Discrepancy on Invoice AC-8007 \u2013 PO-2026-1007\n\nDear Accounts Receivable Team,\n\nWith reference to purchase order PO-2026-1007, invoice AC-8007 dated October 8, 2026, totaling USD 2,200.00, is currently on hold due to a pricing discrepancy.\n\nItem CHR-100 was invoiced at USD 22.00 per unit, whereas the agreed purchase order price is USD 20.00 per unit. For 100 units, this results in a difference of USD 200.00.\n\nPlease confirm the correct unit price for CHR-100, as the invoice reflects USD 22.00 while the agreed price is USD 20.00. If the agreed price is USD 20.00, please issue a credit note for the USD 200.00 difference or provide a corrected invoice.\n\nKind regards,",
+    "workflow_execution_id": "0bd18962-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 5.65031369999997,
+      "extract_grn_s": 13.73512959999971,
+      "extract_invoice_s": 6.3125973000005615,
+      "rules_s": 0.0023080000009940704,
+      "agent_s": 31.198603100001492,
+      "email_s": 3.053028700000141,
+      "workflow_start_s": 0.17419259999951464,
+      "total_s": 60.1270698999997
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "a9537f40-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "b1537f40-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "b2537f40-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "c3bb274c-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "c4bb274c-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "cbbb274c-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "534509f2-f4b7-4b43-9a49-caf5500d920e",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 5.65,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 13.74,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 6.31,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 31.2,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 3.05,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 0bd18962-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

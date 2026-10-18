@@ -173,6 +173,26 @@ The 24 synthetic cases cover clean invoices, price variance, short delivery, ove
 
 Results: the two commands above write `docs/evaluation.md` and `docs/benchmark.md` from a live run; they also appear on the app's Results page.
 
+### Measured results (live run, 18 October 2026)
+
+Full pipeline on all 24 cases: Evolus extractors → Python checks → Detective Clerk on DeepSeek-V4-Flash via
+AMD Token Factory. Details per case in [docs/evaluation.md](docs/evaluation.md); speed in [docs/benchmark.md](docs/benchmark.md).
+
+| What | Result |
+| --- | --- |
+| False approvals (problem or unreadable invoices marked ready to pay) | **0 of 17** |
+| Fraud attempts blocked | **5 of 5** |
+| Routed correctly | **23 of 24 (96%)** |
+| Fields read correctly by the extractors | 99% |
+| Agent's own route matched the expected one | 96% |
+| Upload to decision, median / p95 | 45 s / 64 s |
+| Agent step on AMD Token Factory, median | 20 s |
+
+The one miss is case 03, a clean invoice that was **held, not paid**: the invoice extractor named a field
+`quantity` instead of `qty`, so the line looked unreadable. Extractor output is now normalised to our field
+names (commit `7e10a8f`, with a test); a re-run of case 03 after the fix routes it to ready to pay. The table
+above is the full run before that fix, unchanged.
+
 ## Project layout
 
 ```text
@@ -207,6 +227,13 @@ See [docs/QA_REPORT.md](docs/QA_REPORT.md) for what was tested and what was fixe
 - Line items are matched by SKU; suppliers that print only descriptions need fuzzy matching.
 - Duplicate detection looks at invoices processed by this app plus a payment-history file, not a live ERP.
 - Synthetic documents are cleaner than real scans; real-world accuracy must be measured on real invoices.
+- Evolus extractors are language models, so they can occasionally misread a field (seen during development:
+  the buyer taken for the supplier, `quantity` for `qty`). Precise field descriptions, a check script on the PO
+  extractor and key normalisation in code fixed the cases we saw; anything still unreadable is held for a person.
+- The Evolus platform defaults to Italian and the agent sometimes followed it. Every case message asks for
+  English, and a note that still comes back in Italian is asked for once more in English (the route never changes).
+- Business value is reported as measured time and fraud caught only: we have no sourced figure for manual
+  processing time per invoice to compare against.
 
 ## License
 

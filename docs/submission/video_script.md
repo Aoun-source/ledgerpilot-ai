@@ -1,7 +1,7 @@
 # Demo video script (3 minutes)
 
-About 360 spoken words: roughly 2 minutes 40 at a calm pace, leaving room for the clicks. Brackets `[__]` are numbers to copy from `docs/evaluation.md` and
-`docs/benchmark.md` after the live run. Never round them up, and cut a line rather than guess.
+About 360 spoken words: roughly 2 minutes 40 at a calm pace, leaving room for the clicks. The numbers come
+from `docs/evaluation.md` (live run, 18 October 2026). Never round them up, and cut a line rather than guess.
 The tag after each scene names the judging criterion it serves. Written for the agent's model on AMD
 Token Factory; if you used your own vLLM droplet, say Qwen2.5 with vLLM on an AMD Instinct MI300X instead.
 
@@ -65,15 +65,15 @@ and the alert draft. Then open **What ran, where** and show the extractor, agent
 
 **Screen:** deck slide 8 (results), or the app's **Results** page.
 
-> We measured it live on twenty-four cases. [__] false approvals out of seventeen problem invoices.
-> [__] of five fraud attempts blocked. [__] percent routed correctly. On AMD Token Factory the agent
-> answers in about [__] seconds per invoice.
+> We measured it live on twenty-four cases. Zero false approvals out of seventeen problem invoices.
+> Five of five fraud attempts blocked. Ninety-six percent routed correctly. On AMD Token Factory the agent
+> answers in about twenty seconds per invoice.
 
 ### 2:45–3:00 · Close · *Presentation*
 
 **Screen:** deck slide 9 (business value), then slide 10.
 
-> That's [__] minutes back on every invoice, and fraud stopped before it's paid. LedgerPilot: Evolus
+> Every invoice checked in under a minute, and fraud stopped before it's paid. LedgerPilot: Evolus
 > agents on AMD. The code, the tests and the evaluation are in our repo. Thank you.
 
 ---

@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_08",
+    "at": "2026-10-18T11:31:47+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_08",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice unit price for MON-27 is 214.5 while the purchase order agreed 210.0, a price variance of 22.50 on 5 units. Quantity and arithmetic match the GRN and invoice. The supplier is known in the vendor master.",
+      "evidence": [
+        "Invoice NW-8008 line MON-27 billed 214.5 per unit vs PO-2026-1008 agreed 210.0",
+        "GRN-5008 confirms 5 units received",
+        "Vendor master lists Northwind Electronics LLC (V002)"
+      ],
+      "supplier_question": "Please confirm the correct unit price for MON-27 on PO-2026-1008, as the invoice shows 214.5 versus the agreed 210.0.",
+      "raw": "{\"route\": \"hold_for_review\", \"explanation\": \"The invoice unit price for MON-27 is 214.5 while the purchase order agreed 210.0, a price variance of 22.50 on 5 units. Quantity and arithmetic match the GRN and invoice. The supplier is known in the vendor master.\", \"evidence\": [\"Invoice NW-8008 line MON-27 billed 214.5 per unit vs PO-2026-1008 agreed 210.0\", \"GRN-5008 confirms 5 units received\", \"Vendor master lists Northwind Electronics LLC (V002)\"], \"supplier_question\": \"Please confirm the correct unit price for MON-27 on PO-2026-1008, as the invoice shows 214.5 versus the agreed 210.0.\"}",
+      "conversation_id": "2136ae1d-59ff-4c24-ad91-4cfca049bf78",
+      "latency_s": 8.41839120000077,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "PRICE_VARIANCE",
+        "route": "hold_for_review",
+        "field": "line MON-27",
+        "expected": "210.0",
+        "actual": "214.5",
+        "impact": "22.50",
+        "message": "MON-27: billed 214.5 per unit, PO agreed 210.0; difference 22.50 on 5 units."
+      }
+    ],
+    "money_at_risk": "22.50",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1008",
+        "po_date": "2026-09-12",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "MON-27",
+            "description": "27-inch monitor",
+            "qty": 5,
+            "unit_price": 210.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5008",
+        "po_number": "PO-2026-1008",
+        "received_date": "2026-09-22",
+        "supplier_id": "V002",
+        "lines": [
+          {
+            "sku": "MON-27",
+            "description": "27-inch monitor",
+            "qty_received": 5
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "NW-8008",
+        "invoice_date": "2026-10-05",
+        "po_number": "PO-2026-1008",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "bank_iban": "US11NWND00000987654302",
+        "lines": [
+          {
+            "sku": "MON-27",
+            "description": "27-inch monitor",
+            "qty": 5,
+            "unit_price": 214.5,
+            "line_total": 1072.5
+          }
+        ],
+        "subtotal": 1072.5,
+        "tax": 0.0,
+        "total": 1072.5
+      }
+    },
+    "email_draft": "Subject: Price Discrepancy on Invoice NW-8008 \u2013 PO-2026-1008\n\nDear Accounts Receivable Team,\n\nOur reference is PO-2026-1008. Invoice NW-8008, dated October 5, 2026, for a total of USD 1,072.50, is currently on hold due to a pricing discrepancy.\n\nFor item MON-27, the invoice reflects a unit price of USD 214.50, whereas the agreed purchase order price is USD 210.00 per unit. For 5 units, this results in a difference of USD 22.50.\n\nPlease confirm that the correct unit price for MON-27 under PO-2026-1008 is USD 210.00. We kindly request that you issue a credit note for the difference or provide a corrected invoice.\n\nKind regards,",
+    "workflow_execution_id": "0468ea78-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 4.197913399999379,
+      "extract_grn_s": 3.9583232999993925,
+      "extract_invoice_s": 18.25312280000071,
+      "rules_s": 0.0023428999993484467,
+      "agent_s": 8.41839120000077,
+      "email_s": 2.9218925000004674,
+      "workflow_start_s": 0.16866829999889887,
+      "total_s": 37.92163979999896
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "0cd18962-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "11d18962-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "12d18962-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "da0d5e69-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "db0d5e69-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "c8daf070-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "2136ae1d-59ff-4c24-ad91-4cfca049bf78",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 4.2,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 3.96,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 18.25,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 8.42,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.92,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 0468ea78-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

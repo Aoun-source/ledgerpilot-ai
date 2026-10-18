@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_10",
+    "at": "2026-10-18T11:33:14+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_10",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice line has a missing quantity field)Skip, and the billed amount of 456.0 at 38.0 implies 12 units, which exceeds the 10 units ordered on the PO. The GRN shows 12 received, so the quantity billed exceeds the ordered quantity. The supplier and bank IBAN match the vendor master, so no fraud signal.",
+      "evidence": [
+        "PO-2026-1010 orders 10 units of BOX-M at 38.00",
+        "Invoice HP-8010 line total 456.0 at 38.0 implies 12 units billed, exceeding the ordered 10",
+        "Vendor master lists V005 Helios Packaging GmbH with agreed price 38.00 for BOX-M"
+      ],
+      "supplier_question": "Please confirm why 12 units of BOX-M were billed when the purchase order was for 10 units.",
+      "raw": "I'll look up the supplier in the vendor master library.\nI have the vendor master information. Let me analyze the case.\n\nVendor V005 Helios Packaging GmbH is in the approved vendor master with IBAN DE89HELI0000000044556605. The invoice bank IBAN is ********************6605, which matches the last 4 digits. The supplier is known.\n\nDiscrepancies:\n- MISSING_FIELD on line: qty is null in the invoice line. The invoice line has qty null, unit_price 38.0, line_total 456.0. 456/38 = 12 units. So the invoice bills 12 units at 38.00 = 456.00.\n- PO ordered 10 units at 38.00.\n- GRN received 12 units.\n\nThe invoice bills 12 units, which exceeds the PO ordered quantity of 10. Per vendor master: \"Quantities billed may not exceed quantities ordered or received.\" The invoice bills 12, which exceeds the ordered 10cars. This is a quantity issue.\n\nAlso there's a missing field (qty null) on the invoice line.\n\nThe route should be hold_for_review for quantity issue and missing data.\n\nLet me construct the JSON response.\n\nThe invoice bills 12 units (456/38) but the PO ordered only 10. The GRN received 12. So the quantity billed (12) exceeds the quantity ordered (10). This is a quantity discrepancy. Also the invoice line has qty null (missing field).\n\nRoute: hold_for_review.\n\nEvidence: PO ordered 10 units of BOX-M; invoice line total 456.0 at 38.0 implies 12 units billed, exceeding the ordered 10. Vendor master lists V005 Helios Packaging GmbH with agreed price 38.00 for BOX-M.\n\nSupplier question: ask why 12 units were billed when only 10 were ordered.\n\nLet me write the JSON.</think>{\"route\": \"hold_for_review\", \"explanation\": \"The invoice line has a missing quantity field)Skip, and the billed amount of 456.0 at 38.0 implies 12 units, which exceeds the 10 units ordered on the PO. The GRN shows 12 received, so the quantity billed exceeds the ordered quantity. The supplier and bank IBAN match the vendor master, so no fraud signal.\", \"evidence\": [\"PO-2026-1010 orders 10 units of BOX-M at 38.00\", \"Invoice HP-8010 line total 456.0 at 38.0 implies 12 units billed, exceeding the ordered 10\", \"Vendor master lists V005 Helios Packaging GmbH with agreed price 38.00 for BOX-M\"], \"supplier_question\": \"Please confirm why 12 units of BOX-M were billed when the purchase order was for 10 units.\"}",
+      "conversation_id": "40d0e8d2-a0b9-4861-81a7-11b7c780c9f3",
+      "latency_s": 30.74042709999958,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "MISSING_FIELD",
+        "route": "hold_for_review",
+        "field": "line BOX-M",
+        "expected": "qty and unit price",
+        "actual": null,
+        "impact": null,
+        "message": "Quantity or unit price unreadable on BOX-M."
+      }
+    ],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1010",
+        "po_date": "2026-09-15",
+        "supplier_id": "V005",
+        "supplier_name": "Helios Packaging GmbH",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty": 10,
+            "unit_price": 38.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5010",
+        "po_number": "PO-2026-1010",
+        "received_date": "2026-09-25",
+        "supplier_id": "V005",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty_received": 12
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "HP-8010",
+        "invoice_date": "2026-10-07",
+        "po_number": "PO-2026-1010",
+        "supplier_id": "V005",
+        "supplier_name": "Helios Packaging GmbH",
+        "currency": "EUR",
+        "bank_iban": "DE89HELI0000000044556605",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "quantity": 12,
+            "unit_price": 38.0,
+            "line_total": 456.0
+          }
+        ],
+        "subtotal": 456.0,
+        "tax": 0.0,
+        "total": 456.0
+      }
+    },
+    "email_draft": "Subject: Invoice HP-8010 on Hold \u2013 Quantity Discrepancy for BOX-M\n\nDear Accounts Receivable Team,\n\nOur reference: Purchase Order PO-2026-1010.\n\nYour invoice HP-8010, dated October 7, 2026, for a total amount of EUR 456.00, is currently on hold due to an invoice discrepancy. The quantity or unit price for item BOX-M is unreadable.\n\nPlease confirm why 12 units of BOX-M were billed when the purchase order specifies 10 units.\n\nKindly issue a credit note for the difference or provide a corrected invoice reflecting the purchase order quantity.\n\nYours faithfully,",
+    "workflow_execution_id": "da1c8aa9-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 6.82431539999925,
+      "extract_grn_s": 4.458268400001543,
+      "extract_invoice_s": 6.0044486000006145,
+      "rules_s": 0.0024240000002464512,
+      "agent_s": 30.74042709999958,
+      "email_s": 3.0749105000013515,
+      "workflow_start_s": 0.16967950000071141,
+      "total_s": 51.2754031000004
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "f42bd88d-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "da334c94-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "dc334c94-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "df334c94-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "e0334c94-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "e19f889a-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "40d0e8d2-a0b9-4861-81a7-11b7c780c9f3",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 6.82,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.46,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 6.0,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 30.74,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 3.07,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution da1c8aa9-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

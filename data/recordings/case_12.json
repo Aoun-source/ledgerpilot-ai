@@ -1,0 +1,172 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_12",
+    "at": "2026-10-18T11:50:04+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash, re-run after fixes"
+  },
+  "result": {
+    "label": "case_12",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice total does not match the sum of subtotal and tax; the arithmetic discrepancy is 100.00 EUR. All other fields (quantity, unit price, supplier) match the purchase order and goods receipt.",
+      "evidence": [
+        "Invoice MA-8012 total is 1137.0 but subtotal 850.0 plus tax 187.0 equals 1037.0",
+        "PO-2026-1012 and GRN-5012 both show 10 units of SED-02 at 85.0 EUR"
+      ],
+      "supplier_question": "Please confirm the correct total for invoice MA-8012, as the subtotal plus tax equals 1037.00 EUR rather than the stated 1137.00 EUR.",
+      "raw": "{\"route\": \"hold_for_review\", \"explanation\": \"The invoice total does not match the sum of subtotal and tax; the arithmetic discrepancy is 100.00 EUR. All other fields (quantity, unit price, supplier) match the purchase order and goods receipt.\", \"evidence\": [\"Invoice MA-8012 total is 1137.0 but subtotal 850.0 plus tax 187.0 equals 1037.0\", \"PO-2026-1012 and GRN-5012 both show 10 units of SED-02 at 85.0 EUR\"], \"supplier_question\": \"Please confirm the correct total for invoice MA-8012, as the subtotal plus tax equals 1037.00 EUR rather than the stated 1137.00 EUR.\"}",
+      "conversation_id": "48c3cbc3-2119-43b6-942d-e830a698d41e",
+      "latency_s": 8.320813299998918,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "TOTAL_ARITHMETIC",
+        "route": "hold_for_review",
+        "field": "total",
+        "expected": "1037.00",
+        "actual": "1137.0",
+        "impact": "100.00",
+        "message": "Subtotal plus tax does not equal the invoice total."
+      }
+    ],
+    "money_at_risk": "100.00",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1012",
+        "po_date": "2026-09-13",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty": 10,
+            "unit_price": 85.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5012",
+        "po_number": "PO-2026-1012",
+        "received_date": "2026-09-23",
+        "supplier_id": "V003",
+        "lines": [
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty_received": 10
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "MA-8012",
+        "invoice_date": "2026-10-05",
+        "po_number": "PO-2026-1012",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "bank_iban": "IT60MILA0000000000456703",
+        "lines": [
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty": 10,
+            "unit_price": 85.0,
+            "line_total": 850.0
+          }
+        ],
+        "subtotal": 850.0,
+        "tax": 187.0,
+        "total": 1137.0
+      }
+    },
+    "email_draft": "Subject: Invoice MA-8012 \u2013 Total Discrepancy\n\nDear Accounts Receivable Team,\n\nRegarding our purchase order PO-2026-1012, your invoice MA-8012 dated October 5, 2026, for a stated total of EUR 1,137.00, is currently on hold.\n\nOur review indicates that the subtotal plus tax amounts to EUR 1,037.00, which does not match the stated invoice total of EUR 1,137.00.\n\nPlease confirm the correct total for invoice MA-8012 and provide either a credit note or a corrected invoice reflecting the accurate amount.\n\nKind regards,",
+    "workflow_execution_id": "71a27b05-eaca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 5.935397600000215,
+      "extract_grn_s": 5.655073600000833,
+      "extract_invoice_s": 6.382683400001042,
+      "rules_s": 0.0023574999995616963,
+      "agent_s": 8.320813299998918,
+      "email_s": 2.6326181999993423,
+      "workflow_start_s": 0.1722050999997009,
+      "total_s": 29.101875800000926
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "844833f7-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "874833f7-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "884833f7-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "389051fd-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "399051fd-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "3c9051fd-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "48c3cbc3-2119-43b6-942d-e830a698d41e",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 5.94,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 5.66,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 6.38,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 8.32,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.63,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 71a27b05-eaca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

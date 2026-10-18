@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_03",
+    "at": "2026-10-18T11:48:29+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash, re-run after fixes"
+  },
+  "result": {
+    "label": "case_03",
+    "route": "approve_for_payment",
+    "rule_route": "approve_for_payment",
+    "agent": {
+      "route": "approve_for_payment",
+      "explanation": "The purchase order, goods-received note and invoice all agree on quantities and unit prices for both line items. The supplier V003 Milano Arredi S.r.l. is in the approved vendor master and the invoice bank IBAN matches the vendor master record. No discrepancies were found.",
+      "evidence": [
+        "Vendor master lists V003 Milano Arredi S.r.l. with IBAN ending 6703, matching the invoice",
+        "PO, GRN and invoice all show TAV-180 qty 1 at 640.00 and SED-02 qty 6 at 85.00",
+        "Discrepancy list is empty"
+      ],
+      "supplier_question": "",
+      "raw": "I need to look up the supplier in the vendor master library.\nThe supplier V003 Milano Arredi S.r.l. is in the vendor master with IBAN IT60MILA0000000000456703. The invoice bank IBAN is ********************6703, which matches the last digits. The discrepancy list is empty Poisson. Let me verify the bank account matches.\n\nThe vendor master lists V003 Milano Arredi S.r.l. with IBAN IT60MILA0000000000456703. The invoice shows bank_iban ********************6703, which ends in 6703, matching the vendor master. The discrepancy list is empty Poisson. The route rule says approve_for_payment.\n\nLet me check the agreed prices: TAV-180 = 640.00, SED-02 = 85.00. Both match the PO and invoice. Quantities match. No discrepancies.\n\nThe route is approve_for_payment.\n\n{\"route\": \"approve_for_payment\", \"explanation\": \"The purchase order, goods-received note and invoice all agree on quantities and unit prices for both line items. The supplier V003 Milano Arredi S.r.l. is in the approved vendor master and the invoice bank IBAN matches the vendor master record. No discrepancies were found.\", \"evidence\": [\"Vendor master lists V003 Milano Arredi S.r.l. with IBAN ending 6703, matching the invoice\", \"PO, GRN and invoice all show TAV-180 qty 1 at 640.00 and SED-02 qty 6 at 85.00\", \"Discrepancy list is empty\"], \"supplier_question\": \"\"}",
+      "conversation_id": "ab4de87d-0cfc-4512-9259-acf2f6ffcdfe",
+      "latency_s": 20.62142220000169,
+      "parsed": true
+    },
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1003",
+        "po_date": "2026-09-12",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "TAV-180",
+            "description": "Meeting table 180 cm",
+            "qty": 1,
+            "unit_price": 640.0
+          },
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty": 6,
+            "unit_price": 85.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5003",
+        "po_number": "PO-2026-1003",
+        "received_date": "2026-09-22",
+        "supplier_id": "V003",
+        "lines": [
+          {
+            "sku": "TAV-180",
+            "description": "Meeting table 180 cm",
+            "qty_received": 1
+          },
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty_received": 6
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "MA-8003",
+        "invoice_date": "2026-10-08",
+        "po_number": "PO-2026-1003",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "bank_iban": "IT60MILA0000000000456703",
+        "lines": [
+          {
+            "sku": "TAV-180",
+            "description": "Meeting table 180 cm",
+            "unit_price": 640.0,
+            "line_total": 640.0,
+            "qty": 1
+          },
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "unit_price": 85.0,
+            "line_total": 510.0,
+            "qty": 6
+          }
+        ],
+        "subtotal": 1150.0,
+        "tax": 0.0,
+        "total": 1150.0
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": "e9332ad0-e9ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 8.420816100000593,
+      "extract_grn_s": 5.005743800000346,
+      "extract_invoice_s": 17.853406300000643,
+      "rules_s": 0.0027996999997412786,
+      "agent_s": 20.62142220000169,
+      "workflow_start_s": 0.17923100000007253,
+      "total_s": 52.0877031
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "e21a14ad-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "ee1f3db6-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "ef1f3db6-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "f11f3db6-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "f21f3db6-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "acbd58be-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "ab4de87d-0cfc-4512-9259-acf2f6ffcdfe",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 8.42,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 5.01,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 17.85,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "0 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 20.62,
+        "ok": true,
+        "note": "route approve_for_payment"
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.18,
+        "ok": true,
+        "note": "execution e9332ad0-e9ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

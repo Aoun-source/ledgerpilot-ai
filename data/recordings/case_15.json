@@ -1,0 +1,182 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_15",
+    "at": "2026-10-18T11:39:13+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_15",
+    "route": "escalate_fraud",
+    "rule_route": "escalate_fraud",
+    "agent": {
+      "route": "escalate_fraud",
+      "explanation": "The invoice requests payment to a bank account (IBAN ending 3215) that differs from the vendor master bank account for Acme Office Supplies Ltd (GB82ACME00001234567801). This is a bank-detail mismatch, a fraud signal. Per AP policy, bank detail changes must be confirmed by phone with a known contact before any payment. The money at risk is 870.0 USD.",
+      "evidence": [
+        "Vendor master lists V001 Acme Office Supplies Ltd bank IBAN GB82ACME00001234567801",
+        "Invoice AC-8015 lists bank_iban ending 3215, which does not match the vendor master",
+        "AP fraud guide: bank-account mismatch is a payment-blocked fraud signal"
+      ],
+      "supplier_question": "Please confirm the correct bank account for payment by phone using a known contact, as the IBAN on invoice AC-8015 does not match our records.",
+      "raw": "I'll look up the vendor master to verify the supplier details.\nThe vendor master shows Acme Office Supplies Ltd (V001) has bank IBAN GB82ACME00001234567801, but the invoice asks for payment to IBAN ending in 3215. This is a bank-detail mismatch, which is a fraud signal.\n\n{\"route\": \"escalate_fraud\", \"explanation\": \"The invoice requests payment to a bank account (IBAN ending 3215) that differs from the vendor master bank account for Acme Office Supplies Ltd (GB82ACME00001234567801). This is a bank-detail mismatch, a fraud signal. Per AP policy, bank detail changes must be confirmed by phone with a known contact before any payment. The money at risk is 870.0 USD.\", \"evidence\": [\"Vendor master lists V001 Acme Office Supplies Ltd bank IBAN GB82ACME00001234567801\", \"Invoice AC-8015 lists bank_iban ending 3215, which does not match the vendor master\", \"AP fraud guide: bank-account mismatch is a payment-blocked fraud signal\"], \"supplier_question\": \"Please confirm the correct bank account for payment by phone using a known contact, as the IBAN on invoice AC-8015 does not match our records.\"}",
+      "conversation_id": "eb7dcf6d-3b70-4d3e-bef3-c9b298fa5232",
+      "latency_s": 16.644322100000863,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "MISSING_FIELD",
+        "route": "hold_for_review",
+        "field": "line DSK-200",
+        "expected": "qty and unit price",
+        "actual": null,
+        "impact": null,
+        "message": "Quantity or unit price unreadable on DSK-200."
+      },
+      {
+        "code": "BANK_MISMATCH",
+        "route": "escalate_fraud",
+        "field": "bank_iban",
+        "expected": "******************7801",
+        "actual": "******************3215",
+        "impact": "870.0",
+        "message": "Invoice asks for payment to a bank account that differs from the vendor master for Acme Office Supplies Ltd. Verify by phone using a known contact, never the number on the invoice."
+      }
+    ],
+    "money_at_risk": "870.0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1015",
+        "po_date": "2026-09-15",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "DSK-200",
+            "description": "Standing desk frame",
+            "qty": 6,
+            "unit_price": 145.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5015",
+        "po_number": "PO-2026-1015",
+        "received_date": "2026-09-25",
+        "supplier_id": "V001",
+        "lines": [
+          {
+            "sku": "DSK-200",
+            "description": "Standing desk frame",
+            "qty_received": 6
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "AC-8015",
+        "invoice_date": "2026-10-08",
+        "po_number": "PO-2026-1015",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "bank_iban": "GB15ZQRT00009876543215",
+        "lines": [
+          {
+            "sku": "DSK-200",
+            "description": "Standing desk frame",
+            "quantity": 6,
+            "unit_price": 145.0,
+            "line_total": 870.0
+          }
+        ],
+        "subtotal": 870.0,
+        "tax": 0.0,
+        "total": 870.0
+      }
+    },
+    "email_draft": "Subject: Internal Alert: Invoice AC-8015 Payment Blocked for Possible Fraud\n\nDear Finance Manager,\n\nPayment for invoice AC-8015 from Acme Office Supplies Ltd (Vendor V001), totaling USD 870.00, has been blocked due to possible fraud.\n\nThe following issues were identified:\n- The quantity or unit price is unreadable on DSK-200.\n- The invoice requests payment to a bank account that differs from the account recorded in the vendor master.\n\nPlease verify the payment details directly with the supplier by telephone, using the known contact information on file. Do not use the telephone number or other contact details printed on the invoice.\n\nKind regards,",
+    "workflow_execution_id": "a6172083-e8ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 6.016861600000993,
+      "extract_grn_s": 3.8435253000006924,
+      "extract_invoice_s": 13.378812599999947,
+      "rules_s": 0.0038514999996550614,
+      "agent_s": 16.644322100000863,
+      "email_s": 2.6598911000000953,
+      "workflow_start_s": 0.16977529999894614,
+      "total_s": 42.71817969999938
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "7b1e0869-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "7d1e0869-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "660c0d6f-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "6a0c0d6f-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "6b0c0d6f-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "e4413379-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "eb7dcf6d-3b70-4d3e-bef3-c9b298fa5232",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 6.02,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 3.84,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 13.38,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "2 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 16.64,
+        "ok": true,
+        "note": "route escalate_fraud"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.66,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution a6172083-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_05",
+    "at": "2026-10-18T11:29:36+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_05",
+    "route": "approve_for_payment",
+    "rule_route": "approve_for_payment",
+    "agent": {
+      "route": "approve_for_payment",
+      "explanation": "The three documents (PO, GRN, invoice) agree on quantities and unit prices for both line items. The supplier V005 Helios Packaging GmbH is in the approved vendor master and the bank IBAN matches. The discrepancy list is empty and tax is within tolerance.",
+      "evidence": [
+        "Vendor master lists V005 Helios Packaging GmbH with IBAN ending 6605, matching the invoice",
+        "PO, GRN and invoice all show 20 x BOX-M at 38.00 and 5 x TAPE-48 at 42.00",
+        "No discrepancies were computed by the system"
+      ],
+      "supplier_question": "",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe vendor master confirms V005 Helios Packaging GmbH with IBAN DE89HELI0000000044556605. The invoice shows bank IBAN ending in 6605, which matches the vendor master's ending 6605. The discrepancy list is empty Poisson. Let me verify the bank details match.\n\nThe vendor master lists IBAN DE89HELI0000000044556605. The invoice shows bank_iban \"********************6605\" (masked). The last 4 digits match (6605). The discrepancy list is empty.\n\nThe PO, GRN, and invoice all agree on quantities and unit prices. The supplier is approved (V005). The bank account matches the vendor master. The discrepancy list is empty, so route is approve_for_payment.\n\nLet me verify the tax: subtotal 970.0, tax 184.3. Tax is 19% of subtotal (970*0.19=184.3). That's below 30% threshold. All good.\n\nThe discrepancy list is emptycars. Route: approve_for_payment.\n\n{\"route\": \"approve_for_payment\", \"explanation\": \"The three documents (PO, GRN, invoice) agree on quantities and unit prices for both line items. The supplier V005 Helios Packaging GmbH is in the approved vendor master and the bank IBAN matches. The discrepancy list is empty and tax is within tolerance.\", \"evidence\": [\"Vendor master lists V005 Helios Packaging GmbH with IBAN ending 6605, matching the invoice\", \"PO, GRN and invoice all show 20 x BOX-M at 38.00 and 5 x TAPE-48 at 42.00\", \"No discrepancies were computed by the system\"], \"supplier_question\": \"\"}",
+      "conversation_id": "f843961a-fee4-464b-855c-6ecaeb7cf262",
+      "latency_s": 26.866874199999074,
+      "parsed": true
+    },
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1005",
+        "po_date": "2026-09-15",
+        "supplier_id": "V005",
+        "supplier_name": "Helios Packaging GmbH",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty": 20,
+            "unit_price": 38.0
+          },
+          {
+            "sku": "TAPE-48",
+            "description": "Packing tape 48 mm (36 rolls)",
+            "qty": 5,
+            "unit_price": 42.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5005",
+        "po_number": "PO-2026-1005",
+        "received_date": "2026-09-25",
+        "supplier_id": "V005",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty_received": 20
+          },
+          {
+            "sku": "TAPE-48",
+            "description": "Packing tape 48 mm (36 rolls)",
+            "qty_received": 5
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "HP-8005",
+        "invoice_date": "2026-10-06",
+        "po_number": "PO-2026-1005",
+        "supplier_id": "V005",
+        "supplier_name": "Helios Packaging GmbH",
+        "currency": "EUR",
+        "bank_iban": "DE89HELI0000000044556605",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty": 20,
+            "unit_price": 38.0,
+            "line_total": 760.0
+          },
+          {
+            "sku": "TAPE-48",
+            "description": "Packing tape 48 mm (36 rolls)",
+            "qty": 5,
+            "unit_price": 42.0,
+            "line_total": 210.0
+          }
+        ],
+        "subtotal": 970.0,
+        "tax": 184.3,
+        "total": 1154.3
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": "9ecb5b2b-e7ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 6.766833699999552,
+      "extract_grn_s": 6.0799487000003865,
+      "extract_invoice_s": 23.490918299999976,
+      "rules_s": 0.0021226000008027768,
+      "agent_s": 26.866874199999074,
+      "workflow_start_s": 0.17025110000031418,
+      "total_s": 63.377879499999835
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "7fd22c07-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "81d22c07-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "82d22c07-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "39b2f40e-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "3ab2f40e-e7ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "c354f11c-e7ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "f843961a-fee4-464b-855c-6ecaeb7cf262",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 6.77,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 6.08,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 23.49,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "0 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 26.87,
+        "ok": true,
+        "note": "route approve_for_payment"
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 9ecb5b2b-e7ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

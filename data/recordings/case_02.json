@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_02",
+    "at": "2026-10-18T11:26:54+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_02",
+    "route": "approve_for_payment",
+    "rule_route": "approve_for_payment",
+    "agent": {
+      "route": "approve_for_payment",
+      "explanation": "The purchase order, goods-received note, and invoice all agree on quantities and unit prices. The supplier V002 Northwind Electronics LLC is in the approved vendor master with matching bank account. No discrepancies were found.",
+      "evidence": [
+        "Vendor master lists V002 Northwind Electronics LLC with IBAN ending 4302, matching the invoice",
+        "Agreed prices for LAP-14 (780.00) and DOC-USB (95.00) match the PO and invoice",
+        "Quantities ordered, received, and billed all match (3 each)"
+      ],
+      "supplier_question": "",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe vendor master confirms V002 Northwind Electronics LLC with IBAN ending 4302, matching the invoice. The agreed prices match (LAP-14 at 780.00, DOC-USB at 95.00). Quantities match PO, GRN, and invoice. No discrepancies. The bank IBAN on the invoice ends in 4302, matching the vendor master US11NWND00000987654302. All matches.\n\n{\"route\": \"approve_for_payment\", \"explanation\": \"The purchase order, goods-received note, and invoice all agree on quantities and unit prices. The supplier V002 Northwind Electronics LLC is in the approved vendor master with matching bank account. No discrepancies were found.\", \"evidence\": [\"Vendor master lists V002 Northwind Electronics LLC with IBAN ending 4302, matching the invoice\", \"Agreed prices for LAP-14 (780.00) and DOC-USB (95.00) match the PO and invoice\", \"Quantities ordered, received, and billed all match (3 each)\"], \"supplier_question\": \"\"}",
+      "conversation_id": "8ecce3ca-e26a-4edf-97e4-9f2b0f665aa5",
+      "latency_s": 15.504338400000051,
+      "parsed": true
+    },
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1002",
+        "po_date": "2026-09-13",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty": 3,
+            "unit_price": 780.0
+          },
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty": 3,
+            "unit_price": 95.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5002",
+        "po_number": "PO-2026-1002",
+        "received_date": "2026-09-23",
+        "supplier_id": "V002",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty_received": 3
+          },
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty_received": 3
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "NW-8002",
+        "invoice_date": "2026-10-07",
+        "po_number": "PO-2026-1002",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "bank_iban": "US11NWND00000987654302",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty": 3,
+            "unit_price": 780.0,
+            "line_total": 2340.0
+          },
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty": 3,
+            "unit_price": 95.0,
+            "line_total": 285.0
+          }
+        ],
+        "subtotal": 2625.0,
+        "tax": 0.0,
+        "total": 2625.0
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": "c9d7e0cb-e6ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 5.960587199999281,
+      "extract_grn_s": 4.975587400000222,
+      "extract_invoice_s": 22.69248140000127,
+      "rules_s": 0.0020982000005460577,
+      "agent_s": 15.504338400000051,
+      "workflow_start_s": 0.1688959999992221,
+      "total_s": 49.30494759999965
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "174c74ae-e6ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "194c74ae-e6ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "1a4c74ae-e6ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "87631bb5-e6ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "88631bb5-e6ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "8f80f4be-e6ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "8ecce3ca-e26a-4edf-97e4-9f2b0f665aa5",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 5.96,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.98,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 22.69,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "0 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 15.5,
+        "ok": true,
+        "note": "route approve_for_payment"
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution c9d7e0cb-e6ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

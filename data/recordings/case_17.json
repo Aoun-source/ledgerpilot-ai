@@ -1,0 +1,190 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_17",
+    "at": "2026-10-18T11:40:47+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_17",
+    "route": "escalate_fraud",
+    "rule_route": "escalate_fraud",
+    "agent": {
+      "route": "escalate_fraud",
+      "explanation": "The discrepancy list flags a possible duplicate: the same supplier billed the same amount (1920.0) on 2026-09-28 under invoice HP-3301, within 30 days of this invoice HP-8017. This matches the duplicate-invoice fraud pattern and requires escalation.",
+      "evidence": [
+        "CASE discrepancy POSSIBLE_DUPLICATE: same supplier billed 1920.0 on 2026-09-28 under HP-3301",
+        "Invoice HP-8017 total 1920.0 matches prior invoice amount"
+      ],
+      "supplier_question": "Please confirm whether invoice HP-8017 is a duplicate of HP-3301 or a separate legitimate charge.",
+      "raw": "{\"route\": \"escalate_fraud\", \"explanation\": \"The discrepancy list flags a possible duplicate: the same supplier billed the same amount (1920.0) on 2026-09-28 under invoice HP-3301, within 30 days of this invoice HP-8017. This matches the duplicate-invoice fraud pattern and requires escalation.\", \"evidence\": [\"CASE discrepancy POSSIBLE_DUPLICATE: same supplier billed 1920.0 on 2026-09-28 under HP-3301\", \"Invoice HP-8017 total 1920.0 matches prior invoice amount\"], \"supplier_question\": \"Please confirm whether invoice HP-8017 is a duplicate of HP-3301 or a separate legitimate charge.\"}",
+      "conversation_id": "24a52347-d060-41c6-9654-84c5a50e2e6f",
+      "latency_s": 9.156940399998348,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "POSSIBLE_DUPLICATE",
+        "route": "escalate_fraud",
+        "field": "total",
+        "expected": "no earlier invoice for 1920.00 within 30 days",
+        "actual": "HP-3301 on 2026-09-28",
+        "impact": "1920.0",
+        "message": "Same supplier billed the same amount (1920.0) on 2026-09-28 under number HP-3301."
+      }
+    ],
+    "money_at_risk": "1920.0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1017",
+        "po_date": "2026-09-13",
+        "supplier_id": "V005",
+        "supplier_name": "Helios Packaging GmbH",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty": 30,
+            "unit_price": 38.0
+          },
+          {
+            "sku": "TAPE-48",
+            "description": "Packing tape 48 mm (36 rolls)",
+            "qty": 18,
+            "unit_price": 42.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5017",
+        "po_number": "PO-2026-1017",
+        "received_date": "2026-09-23",
+        "supplier_id": "V005",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty_received": 30
+          },
+          {
+            "sku": "TAPE-48",
+            "description": "Packing tape 48 mm (36 rolls)",
+            "qty_received": 18
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "HP-8017",
+        "invoice_date": "2026-10-06",
+        "po_number": "PO-2026-1017",
+        "supplier_id": "V005",
+        "supplier_name": "Helios Packaging GmbH",
+        "currency": "EUR",
+        "bank_iban": "DE89HELI0000000044556605",
+        "lines": [
+          {
+            "sku": "BOX-M",
+            "description": "Corrugated box, medium (pack of 100)",
+            "qty": 30,
+            "unit_price": 38.0,
+            "line_total": 1140.0
+          },
+          {
+            "sku": "TAPE-48",
+            "description": "Packing tape 48 mm (36 rolls)",
+            "qty": 18,
+            "unit_price": 42.0,
+            "line_total": 756.0
+          }
+        ],
+        "subtotal": 1896.0,
+        "tax": 24.0,
+        "total": 1920.0
+      }
+    },
+    "email_draft": "Subject: Fraud Review Required \u2013 Invoice HP-8017\n\nDear Finance Manager,\n\nPayment for invoice HP-8017 from Helios Packaging GmbH (V005), totaling EUR 1,920.00, has been blocked due to a possible fraud concern.\n\nThe same supplier previously billed the identical amount of EUR 1,920.00 on 2026-09-28 under invoice number HP-3301.\n\nPlease verify the payment details directly with the supplier by phone, using the contact information on file rather than any contact details printed on the invoice.\n\nKind regards,",
+    "workflow_execution_id": "be1986bc-e8ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 7.444395599999552,
+      "extract_grn_s": 13.259616199999073,
+      "extract_invoice_s": 25.036965399998735,
+      "rules_s": 0.005250900001556147,
+      "agent_s": 9.156940399998348,
+      "email_s": 2.443577500000174,
+      "workflow_start_s": 0.16835419999915757,
+      "total_s": 57.516433900000266
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "8627a499-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "8b27a499-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "8c27a499-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "076ca7a6-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "086ca7a6-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "79ee97b5-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "24a52347-d060-41c6-9654-84c5a50e2e6f",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 7.44,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 13.26,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 25.04,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.01,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 9.16,
+        "ok": true,
+        "note": "route escalate_fraud"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.44,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution be1986bc-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

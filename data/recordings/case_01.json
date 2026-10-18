@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_01",
+    "at": "2026-10-18T11:26:04+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_01",
+    "route": "approve_for_payment",
+    "rule_route": "approve_for_payment",
+    "agent": {
+      "route": "approve_for_payment",
+      "explanation": "The discrepancy list is empty; quantities, unit prices, line totals, subtotal, tax and total all match between the purchase order, goods-received note and invoice. The supplier is known in the vendor master. The bank IBAN on the invoice matches the vendor master record.",
+      "evidence": [
+        "No discrepancies reported in the CASE",
+        "PO-2026-1001, GRN-5001 and invoice AC-8001 all match on quantities and prices",
+        "Vendor V001 Acme Office Supplies Ltd is in the vendor master"
+      ],
+      "supplier_question": "",
+      "raw": "{\"route\": \"approve_for_payment\", \"explanation\": \"The discrepancy list is empty; quantities, unit prices, line totals, subtotal, tax and total all match between the purchase order, goods-received note and invoice. The supplier is known in the vendor master. The bank IBAN on the invoice matches the vendor master record.\", \"evidence\": [\"No discrepancies reported in the CASE\", \"PO-2026-1001, GRN-5001 and invoice AC-8001 all match on quantities and prices\", \"Vendor V001 Acme Office Supplies Ltd is in the vendor master\"], \"supplier_question\": \"\"}",
+      "conversation_id": "7eaccdbe-a9e6-4a46-8e5b-25557ac09b4e",
+      "latency_s": 25.88391760000013,
+      "parsed": true
+    },
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1001",
+        "po_date": "2026-09-14",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "DSK-200",
+            "description": "Standing desk frame",
+            "qty": 4,
+            "unit_price": 145.0
+          },
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty": 10,
+            "unit_price": 18.5
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5001",
+        "po_number": "PO-2026-1001",
+        "received_date": "2026-09-24",
+        "supplier_id": "V001",
+        "lines": [
+          {
+            "sku": "DSK-200",
+            "description": "Standing desk frame",
+            "qty_received": 4
+          },
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty_received": 10
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "AC-8001",
+        "invoice_date": "2026-10-06",
+        "po_number": "PO-2026-1001",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "bank_iban": "GB82ACME00001234567801",
+        "lines": [
+          {
+            "sku": "DSK-200",
+            "description": "Standing desk frame",
+            "qty": 4,
+            "unit_price": 145.0,
+            "line_total": 580.0
+          },
+          {
+            "sku": "PPR-A4",
+            "description": "A4 paper, box of 5 reams",
+            "qty": 10,
+            "unit_price": 18.5,
+            "line_total": 185.0
+          }
+        ],
+        "subtotal": 765.0,
+        "tax": 0.0,
+        "total": 765.0
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": "154c74ae-e6ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 8.43300950000048,
+      "extract_grn_s": 5.605082300000504,
+      "extract_invoice_s": 11.246232699999382,
+      "rules_s": 0.002774100001261104,
+      "agent_s": 25.88391760000013,
+      "workflow_start_s": 0.1689313000006223,
+      "total_s": 51.34763740000017
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "bf008c8f-e6ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "c1008c8f-e6ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "c2008c8f-e6ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "389d4c98-e6ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "399d4c98-e6ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "e6dd049f-e6ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "7eaccdbe-a9e6-4a46-8e5b-25557ac09b4e",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 8.43,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 5.61,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 11.25,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "0 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 25.88,
+        "ok": true,
+        "note": "route approve_for_payment"
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 154c74ae-e6ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

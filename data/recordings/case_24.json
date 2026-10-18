@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_24",
+    "at": "2026-10-18T11:45:32+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_24",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice bills only 4 units of DOC-USB while the PO ordered 10 and the GRN received 10, so the billed quantity does not match the order. The unit price of 95.00 matches the agreed vendor price and the supplier and bank account match the vendor master. This is a quantity discrepancy that needs review before payment.",
+      "evidence": [
+        "PO-2026-1024 orders 10 x DOC-USB at 95.00; GRN-5024 received 10 units",
+        "Invoice NW-8024 bills only 4 x DOC-USB at 95.00, total 380.00",
+        "Vendor master lists V002 Northwind Electronics LLC with DOC-USB agreed price 95.00"
+      ],
+      "supplier_question": "Please confirm why invoice NW-8024 bills only 4 of the 10 USB-C docking stations ordered and received on PO-2026-1024.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe vendor master confirms V002 Northwind Electronics LLC is approved, with DOC-USB agreed price of 95.00 USD, and bank IBAN US11NWND00000987654302.\n\nThe invoice bills qty 4 for DOC-USB, but the PO ordered 10 and the GRN received 10. The discrepancy is PO_ALREADY_BILLED - the invoice bills fewer units than ordered/received. This is a quantity issue (under-billing), which per the rules is a hold_for_review. The bank IBAN on the invoice is masked (******************4302) but the vendor master shows US11NWND00000987654302 ending in 4302, so it matches.\n\nThe route chosen by the rules is hold_for_review. The discrepancy list is not empty (PO_ALREADY_BILLED), so approve_for_payment is not appropriate. This is a quantity issue, so hold_for_review is correct.\n\n{\"route\": \"hold_for_review\",\n \"explanation\": \"The invoice bills only 4 units of DOC-USB while the PO ordered 10 and the GRN received 10, so the billed quantity does not match the order. The unit price of 95.00 matches the agreed vendor price and the supplier and bank account match the vendor master. This is a quantity discrepancy that needs review before payment.\",\n \"evidence\": [\"PO-2026-1024 orders 10 x DOC-USB at 95.00; GRN-5024 received 10 units\", \"Invoice NW-8024 bills only 4 x DOC-USB at 95.00, total 380.00\", \"Vendor master lists V002 Northwind Electronics LLC with DOC-USB agreed price 95.00\"],\n \"supplier_question\": \"Please confirm why invoice NW-8024 bills only 4 of the 10 USB-C docking stations ordered and received on PO-2026-1024.\"}",
+      "conversation_id": "abbf4286-2a04-4670-bae8-5db0a3966911",
+      "latency_s": 24.002318200000445,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "PO_ALREADY_BILLED",
+        "route": "hold_for_review",
+        "field": "line DOC-USB",
+        "expected": "at most 0 more",
+        "actual": "4",
+        "impact": "380.00",
+        "message": "DOC-USB: 10 of 10 ordered units were already billed on NW-7024; this invoice bills 4 more."
+      }
+    ],
+    "money_at_risk": "380.00",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1024",
+        "po_date": "2026-09-11",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty": 10,
+            "unit_price": 95.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5024",
+        "po_number": "PO-2026-1024",
+        "received_date": "2026-09-21",
+        "supplier_id": "V002",
+        "lines": [
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty_received": 10
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "NW-8024",
+        "invoice_date": "2026-10-05",
+        "po_number": "PO-2026-1024",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "bank_iban": "US11NWND00000987654302",
+        "lines": [
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty": 4,
+            "unit_price": 95.0,
+            "line_total": 380.0
+          }
+        ],
+        "subtotal": 380.0,
+        "tax": 0.0,
+        "total": 380.0
+      }
+    },
+    "email_draft": "Subject: Invoice NW-8024 on Hold \u2013 PO-2026-1024\n\nDear Accounts Receivable Team,\n\nOur reference: PO-2026-1024\n\nInvoice NW-8024, dated October 5, 2026, totaling USD 380.00, is currently on hold due to a discrepancy concerning item DOC-USB.\n\nOur records indicate that all 10 units ordered and received under PO-2026-1024 were already billed on invoice NW-7024. However, invoice NW-8024 bills an additional 4 units. Please confirm why this invoice bills only 4 of the 10 USB-C docking stations ordered and received under the purchase order, and clarify the relationship between these quantities and the prior invoice.\n\nPlease issue a credit note or a corrected invoice, as appropriate.\n\nKind regards,",
+    "workflow_execution_id": "6cde0564-e9ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 5.730340000000069,
+      "extract_grn_s": 3.4437771999982942,
+      "extract_invoice_s": 6.225403399999777,
+      "rules_s": 0.005379199999879347,
+      "agent_s": 24.002318200000445,
+      "email_s": 3.1778199000000313,
+      "workflow_start_s": 0.17196200000034878,
+      "total_s": 42.758258199999545
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "6c64f249-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "6d554150-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "6e554150-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "72554150-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "73554150-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "76554150-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "abbf4286-2a04-4670-bae8-5db0a3966911",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 5.73,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 3.44,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 6.23,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.01,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 24.0,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 3.18,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 6cde0564-e9ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

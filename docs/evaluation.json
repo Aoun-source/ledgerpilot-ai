@@ -1,0 +1,471 @@
+{
+  "summary": {
+    "label": "DeepSeek-V4-Flash",
+    "model": "DeepSeek-V4-Flash",
+    "cases": 24,
+    "false_approvals": 0,
+    "p95_latency_s": 64.4,
+    "routing_accuracy": 0.9583333333333334,
+    "exception_recall": 1.0,
+    "false_alarm_rate": 0.14285714285714285,
+    "fraud_recall": 1.0,
+    "field_accuracy": 0.9917491749174917,
+    "agent_agreement": 0.9565217391304348,
+    "median_latency_s": 45.215,
+    "median_agent_s": 20.29
+  },
+  "cases": [
+    {
+      "case": "case_01",
+      "type": "Clean invoice",
+      "description": "Clean three-way match",
+      "expected": "approve_for_payment",
+      "got": "approve_for_payment",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": "approve_for_payment",
+      "fields_correct": 32,
+      "fields_total": 32,
+      "latency_s": 51.35,
+      "agent_s": 25.88,
+      "error": null
+    },
+    {
+      "case": "case_02",
+      "type": "Clean invoice",
+      "description": "Clean three-way match",
+      "expected": "approve_for_payment",
+      "got": "approve_for_payment",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": "approve_for_payment",
+      "fields_correct": 32,
+      "fields_total": 32,
+      "latency_s": 49.3,
+      "agent_s": 15.5,
+      "error": null
+    },
+    {
+      "case": "case_03",
+      "type": "Clean invoice",
+      "description": "Clean three-way match, EUR with 22% VAT",
+      "expected": "approve_for_payment",
+      "got": "hold_for_review",
+      "correct": false,
+      "codes_expected": [],
+      "codes_got": [
+        "MISSING_FIELD"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 30,
+      "fields_total": 32,
+      "latency_s": 54.74,
+      "agent_s": 22.82,
+      "error": null
+    },
+    {
+      "case": "case_04",
+      "type": "Clean invoice",
+      "description": "Clean three-way match",
+      "expected": "approve_for_payment",
+      "got": "approve_for_payment",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": "approve_for_payment",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 44.65,
+      "agent_s": 18.9,
+      "error": null
+    },
+    {
+      "case": "case_05",
+      "type": "Clean invoice",
+      "description": "Clean three-way match, EUR with 19% VAT",
+      "expected": "approve_for_payment",
+      "got": "approve_for_payment",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": "approve_for_payment",
+      "fields_correct": 32,
+      "fields_total": 32,
+      "latency_s": 63.38,
+      "agent_s": 26.87,
+      "error": null
+    },
+    {
+      "case": "case_06",
+      "type": "Clean invoice",
+      "description": "Clean three-way match",
+      "expected": "approve_for_payment",
+      "got": "approve_for_payment",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": "approve_for_payment",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 32.75,
+      "agent_s": 12.48,
+      "error": null
+    },
+    {
+      "case": "case_07",
+      "type": "Billing error (hold): PRICE_VARIANCE",
+      "description": "Unit price $22 billed vs $20 on PO for 100 chairs ($200 overcharge)",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "PRICE_VARIANCE"
+      ],
+      "codes_got": [
+        "PRICE_VARIANCE"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 60.13,
+      "agent_s": 31.2,
+      "error": null
+    },
+    {
+      "case": "case_08",
+      "type": "Billing error (hold): PRICE_VARIANCE",
+      "description": "Small price increase on monitors",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "PRICE_VARIANCE"
+      ],
+      "codes_got": [
+        "PRICE_VARIANCE"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 37.92,
+      "agent_s": 8.42,
+      "error": null
+    },
+    {
+      "case": "case_09",
+      "type": "Billing error (hold): QTY_NOT_RECEIVED",
+      "description": "Billed 100 towel sets, only 90 received",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "QTY_NOT_RECEIVED"
+      ],
+      "codes_got": [
+        "QTY_NOT_RECEIVED"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 35.43,
+      "agent_s": 15.48,
+      "error": null
+    },
+    {
+      "case": "case_10",
+      "type": "Billing error (hold): QTY_OVER_PO",
+      "description": "Billed 12 packs, PO ordered 10 (12 delivered)",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "QTY_OVER_PO"
+      ],
+      "codes_got": [
+        "MISSING_FIELD"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 22,
+      "fields_total": 23,
+      "latency_s": 51.28,
+      "agent_s": 30.74,
+      "error": null
+    },
+    {
+      "case": "case_11",
+      "type": "Billing error (hold): LINE_ARITHMETIC",
+      "description": "Line total wrong: 20 x 18.50 printed as 390.00",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "LINE_ARITHMETIC"
+      ],
+      "codes_got": [
+        "LINE_ARITHMETIC"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 83.56,
+      "agent_s": 46.3,
+      "error": null
+    },
+    {
+      "case": "case_12",
+      "type": "Billing error (hold): TOTAL_ARITHMETIC",
+      "description": "Total is 100 more than subtotal + VAT",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "TOTAL_ARITHMETIC"
+      ],
+      "codes_got": [
+        "TOTAL_ARITHMETIC"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 45.78,
+      "agent_s": 26.7,
+      "error": null
+    },
+    {
+      "case": "case_13",
+      "type": "Billing error (hold): ITEM_NOT_ON_PO",
+      "description": "Extra warranty line that is not on the PO",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "ITEM_NOT_ON_PO"
+      ],
+      "codes_got": [
+        "ITEM_NOT_ON_PO"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 27,
+      "fields_total": 27,
+      "latency_s": 123.43,
+      "agent_s": 19.53,
+      "error": null
+    },
+    {
+      "case": "case_14",
+      "type": "Billing error (hold): CURRENCY_MISMATCH",
+      "description": "Invoice in USD, PO in EUR",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "CURRENCY_MISMATCH"
+      ],
+      "codes_got": [
+        "CURRENCY_MISMATCH",
+        "MISSING_FIELD"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 22,
+      "fields_total": 23,
+      "latency_s": 63.39,
+      "agent_s": 20.5,
+      "error": null
+    },
+    {
+      "case": "case_15",
+      "type": "Fraud signal (block): BANK_MISMATCH",
+      "description": "Perfect invoice, but bank account changed (payment-diversion fraud)",
+      "expected": "escalate_fraud",
+      "got": "escalate_fraud",
+      "correct": true,
+      "codes_expected": [
+        "BANK_MISMATCH"
+      ],
+      "codes_got": [
+        "BANK_MISMATCH",
+        "MISSING_FIELD"
+      ],
+      "agent_route": "escalate_fraud",
+      "fields_correct": 22,
+      "fields_total": 23,
+      "latency_s": 42.72,
+      "agent_s": 16.64,
+      "error": null
+    },
+    {
+      "case": "case_16",
+      "type": "Fraud signal (block): DUPLICATE_INVOICE",
+      "description": "Invoice number already paid last month",
+      "expected": "escalate_fraud",
+      "got": "escalate_fraud",
+      "correct": true,
+      "codes_expected": [
+        "DUPLICATE_INVOICE"
+      ],
+      "codes_got": [
+        "DUPLICATE_INVOICE"
+      ],
+      "agent_route": "escalate_fraud",
+      "fields_correct": 32,
+      "fields_total": 32,
+      "latency_s": 36.05,
+      "agent_s": 7.65,
+      "error": null
+    },
+    {
+      "case": "case_17",
+      "type": "Fraud signal (block): POSSIBLE_DUPLICATE",
+      "description": "Same amount as an invoice paid 1 week ago, new number",
+      "expected": "escalate_fraud",
+      "got": "escalate_fraud",
+      "correct": true,
+      "codes_expected": [
+        "POSSIBLE_DUPLICATE"
+      ],
+      "codes_got": [
+        "POSSIBLE_DUPLICATE"
+      ],
+      "agent_route": "escalate_fraud",
+      "fields_correct": 32,
+      "fields_total": 32,
+      "latency_s": 57.52,
+      "agent_s": 9.16,
+      "error": null
+    },
+    {
+      "case": "case_18",
+      "type": "Fraud signal (block): UNKNOWN_VENDOR",
+      "description": "Look-alike supplier not in vendor master",
+      "expected": "escalate_fraud",
+      "got": "escalate_fraud",
+      "correct": true,
+      "codes_expected": [
+        "UNKNOWN_VENDOR"
+      ],
+      "codes_got": [
+        "UNKNOWN_VENDOR"
+      ],
+      "agent_route": "escalate_fraud",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 40.72,
+      "agent_s": 22.09,
+      "error": null
+    },
+    {
+      "case": "case_19",
+      "type": "Clean invoice",
+      "description": "Clean three-way match",
+      "expected": "approve_for_payment",
+      "got": "approve_for_payment",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": "approve_for_payment",
+      "fields_correct": 32,
+      "fields_total": 32,
+      "latency_s": 42.58,
+      "agent_s": 16.58,
+      "error": null
+    },
+    {
+      "case": "case_20",
+      "type": "Unreadable document",
+      "description": "Invoice PDF is corrupt / unreadable",
+      "expected": "processing_error",
+      "got": "processing_error",
+      "correct": true,
+      "codes_expected": [],
+      "codes_got": [],
+      "agent_route": null,
+      "fields_correct": 10,
+      "fields_total": 10,
+      "latency_s": 13.37,
+      "agent_s": 0,
+      "error": "The invoice PDF (invoice.pdf) is damaged or cut off. Ask the sender for a new copy; a person must process this invoice."
+    },
+    {
+      "case": "case_21",
+      "type": "Fraud signal (block): LOOKALIKE_INVOICE_NUMBER",
+      "description": "Paid invoice AC-7710 sent again as AC7710 (dash removed)",
+      "expected": "escalate_fraud",
+      "got": "escalate_fraud",
+      "correct": true,
+      "codes_expected": [
+        "LOOKALIKE_INVOICE_NUMBER"
+      ],
+      "codes_got": [
+        "LOOKALIKE_INVOICE_NUMBER"
+      ],
+      "agent_route": "escalate_fraud",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 64.4,
+      "agent_s": 20.29,
+      "error": null
+    },
+    {
+      "case": "case_22",
+      "type": "Billing error (hold): TAX_OUT_OF_RANGE",
+      "description": "Tax padded to 60% of the subtotal; the sums still add up",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "TAX_OUT_OF_RANGE"
+      ],
+      "codes_got": [
+        "TAX_OUT_OF_RANGE"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 44.31,
+      "agent_s": 24.82,
+      "error": null
+    },
+    {
+      "case": "case_23",
+      "type": "Billing error (hold): NEGATIVE_VALUE",
+      "description": "Credit note for 2 returned rolls sent in as an invoice",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "NEGATIVE_VALUE"
+      ],
+      "codes_got": [
+        "NEGATIVE_VALUE"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 36.3,
+      "agent_s": 15.71,
+      "error": null
+    },
+    {
+      "case": "case_24",
+      "type": "Billing error (hold): PO_ALREADY_BILLED",
+      "description": "PO for 10 docks was fully billed last month; this invoice bills 4 more",
+      "expected": "hold_for_review",
+      "got": "hold_for_review",
+      "correct": true,
+      "codes_expected": [
+        "PO_ALREADY_BILLED"
+      ],
+      "codes_got": [
+        "PO_ALREADY_BILLED"
+      ],
+      "agent_route": "hold_for_review",
+      "fields_correct": 23,
+      "fields_total": 23,
+      "latency_s": 42.76,
+      "agent_s": 24.0,
+      "error": null
+    }
+  ]
+}

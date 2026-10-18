@@ -1,0 +1,190 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_16",
+    "at": "2026-10-18T11:39:49+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_16",
+    "route": "escalate_fraud",
+    "rule_route": "escalate_fraud",
+    "agent": {
+      "route": "escalate_fraud",
+      "explanation": "The invoice NW-55120 from Northwind Electronics LLC was already processed, indicating a duplicate invoice. The discrepancy list flags this as a duplicate, which requires escalation. The amounts and quantities match the PO and GRN, but the duplicate status overrides approval.",
+      "evidence": [
+        "Discrepancy code DUPLICATE_INVOICE for invoice NW-55120",
+        "Invoice total 4375.0 USD matches PO and GRN quantities"
+      ],
+      "supplier_question": "Please confirm whether invoice NW-55120 was issued in error, as it appears to be a duplicate of an already-processed invoice.",
+      "raw": "{\"route\": \"escalate_fraud\", \"explanation\": \"The invoice NW-55120 from Northwind Electronics LLC was already processed, indicating a duplicate invoice. The discrepancy list flags this as a duplicate, which requires escalation. The amounts and quantities match the PO and GRN, but the duplicate status overrides approval.\", \"evidence\": [\"Discrepancy code DUPLICATE_INVOICE for invoice NW-55120\", \"Invoice total 4375.0 USD matches PO and GRN quantities\"], \"supplier_question\": \"Please confirm whether invoice NW-55120 was issued in error, as it appears to be a duplicate of an already-processed invoice.\"}",
+      "conversation_id": "82a6961d-8768-4cef-9acc-87c15e167094",
+      "latency_s": 7.647101000000475,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "DUPLICATE_INVOICE",
+        "route": "escalate_fraud",
+        "field": "invoice_number",
+        "expected": "new invoice number",
+        "actual": "NW-55120",
+        "impact": "4375.0",
+        "message": "Invoice NW-55120 from this supplier was already processed."
+      }
+    ],
+    "money_at_risk": "4375.0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1016",
+        "po_date": "2026-09-14",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty": 5,
+            "unit_price": 780.0
+          },
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty": 5,
+            "unit_price": 95.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5016",
+        "po_number": "PO-2026-1016",
+        "received_date": "2026-09-24",
+        "supplier_id": "V002",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty_received": 5
+          },
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty_received": 5
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "NW-55120",
+        "invoice_date": "2026-10-05",
+        "po_number": "PO-2026-1016",
+        "supplier_id": "V002",
+        "supplier_name": "Northwind Electronics LLC",
+        "currency": "USD",
+        "bank_iban": "US11NWND00000987654302",
+        "lines": [
+          {
+            "sku": "LAP-14",
+            "description": "14-inch business laptop",
+            "qty": 5,
+            "unit_price": 780.0,
+            "line_total": 3900.0
+          },
+          {
+            "sku": "DOC-USB",
+            "description": "USB-C docking station",
+            "qty": 5,
+            "unit_price": 95.0,
+            "line_total": 475.0
+          }
+        ],
+        "subtotal": 4375.0,
+        "tax": 0.0,
+        "total": 4375.0
+      }
+    },
+    "email_draft": "Subject: Fraud Review Required \u2013 Invoice NW-55120\n\nDear Finance Manager,\n\nPayment for invoice NW-55120 from Northwind Electronics LLC (V002), totaling USD 4,375.00, has been blocked due to a possible fraud concern.\n\nOur review indicates that an invoice from this supplier has already been processed. Please verify the payment request directly with Northwind Electronics by telephone, using the supplier contact details on file. Do not use any contact information printed on the invoice.\n\nKind regards,",
+    "workflow_execution_id": "8527a499-e8ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 5.981850900001518,
+      "extract_grn_s": 5.216008100000181,
+      "extract_invoice_s": 14.526090699999259,
+      "rules_s": 0.00452690000020084,
+      "agent_s": 7.647101000000475,
+      "email_s": 2.4942611000005854,
+      "workflow_start_s": 0.17554430000018328,
+      "total_s": 36.04667380000137
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "a7172083-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "aa172083-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "ac172083-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "896c7c8b-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "8a6c7c8b-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "4bcf6293-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "82a6961d-8768-4cef-9acc-87c15e167094",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 5.98,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 5.22,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 14.53,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 7.65,
+        "ok": true,
+        "note": "route escalate_fraud"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.49,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.18,
+        "ok": true,
+        "note": "execution 8527a499-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

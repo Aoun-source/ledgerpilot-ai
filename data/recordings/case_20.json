@@ -1,0 +1,88 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_20",
+    "at": "2026-10-18T11:42:24+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_20",
+    "route": "processing_error",
+    "rule_route": null,
+    "agent": null,
+    "discrepancies": [],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1020",
+        "po_date": "2026-09-15",
+        "supplier_id": "V001",
+        "supplier_name": "Acme Office Supplies Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "CHR-100",
+            "description": "Ergonomic office chair",
+            "qty": 5,
+            "unit_price": 20.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5020",
+        "po_number": "PO-2026-1020",
+        "received_date": "2026-09-25",
+        "supplier_id": "V001",
+        "lines": [
+          {
+            "sku": "CHR-100",
+            "description": "Ergonomic office chair",
+            "qty_received": 5
+          }
+        ]
+      }
+    },
+    "email_draft": "",
+    "workflow_execution_id": null,
+    "timings": {
+      "extract_po_s": 9.726842699999906,
+      "extract_grn_s": 3.640473200000997,
+      "total_s": 13.367659000001368
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "2b1f30ee-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "2d1f30ee-e8ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "b59143f4-e8ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "b89143f4-e8ca-f111-bf5b-6045bd9ce552"
+      }
+    },
+    "error": "The invoice PDF (invoice.pdf) is damaged or cut off. Ask the sender for a new copy; a person must process this invoice.",
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 9.73,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 3.64,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Check INVOICE file",
+        "where": "Python",
+        "seconds": 0,
+        "ok": false,
+        "note": "The invoice PDF (invoice.pdf) is damaged or cut off. Ask the sender for a new copy; a person must process this invoice."
+      }
+    ]
+  }
+}

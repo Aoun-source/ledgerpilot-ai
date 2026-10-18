@@ -1,0 +1,182 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_23",
+    "at": "2026-10-18T11:44:49+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_23",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The invoice contains negative quantity and negative total amounts, which the AP policy states must be held for a person as they look like a credit note or a reading error. The supplier and bank account match the vendor master, so there is no fraud signal. The unit price of 120.0 matches the agreed price list for CTN-500.",
+      "evidence": [
+        "Invoice RT-8023 line CTN-500 has qty -2 and line_total -240.0, total -240.0",
+        "Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN ending 4404 and agreed price 120.00 for CTN-500",
+        "AP policy: 'Credit notes and negative amounts are held for a person'"
+      ],
+      "supplier_question": "Please confirm whether invoice RT-8023 is a credit note or whether the negative quantity and total are an error.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe supplier V004 Ravi Textiles Pvt Ltd is in the vendor master with IBAN ending 4404, which matches the invoice. The invoice has negative quantities and totals, which the vendor library says are held for a person (credit notes and negative amounts are held). The route is hold_for_review.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The invoice contains negative quantity and negative total amounts, which the AP policy states must be held for a person as they look like a credit note or a reading error. The supplier and bank account match the vendor master, so there is no fraud signal. The unit price of 120.0 matches the agreed price list for CTN-500.\", \"evidence\": [\"Invoice RT-8023 line CTN-500 has qty -2 and line_total -240.0, total -240.0\", \"Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN ending 4404 and agreed price 120.00 for CTN-500\", \"AP policy: 'Credit notes and negative amounts are held for a person'\"], \"supplier_question\": \"Please confirm whether invoice RT-8023 is a credit note or whether the negative quantity and total are an error.\"}",
+      "conversation_id": "14294613-fec3-4b5b-8a63-fc9f9d7b1c0e",
+      "latency_s": 15.706824700000652,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "NEGATIVE_VALUE",
+        "route": "hold_for_review",
+        "field": "total",
+        "expected": "a positive amount",
+        "actual": "-240.0",
+        "impact": null,
+        "message": "Invoice total is negative: this looks like a credit note, not an invoice to pay."
+      },
+      {
+        "code": "NEGATIVE_VALUE",
+        "route": "hold_for_review",
+        "field": "line CTN-500",
+        "expected": "positive quantity and price",
+        "actual": "-2 x 120.0",
+        "impact": null,
+        "message": "CTN-500: negative quantity or price. This looks like a credit or a reading error; a person must check it."
+      }
+    ],
+    "money_at_risk": "0",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1023",
+        "po_date": "2026-09-12",
+        "supplier_id": "V004",
+        "supplier_name": "Ravi Textiles Pvt Ltd",
+        "currency": "USD",
+        "lines": [
+          {
+            "sku": "CTN-500",
+            "description": "Cotton fabric roll, 50 m",
+            "qty": 12,
+            "unit_price": 120.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5023",
+        "po_number": "PO-2026-1023",
+        "received_date": "2026-09-22",
+        "supplier_id": "V004",
+        "lines": [
+          {
+            "sku": "CTN-500",
+            "description": "Cotton fabric roll, 50 m",
+            "qty_received": 12
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "RT-8023",
+        "invoice_date": "2026-10-08",
+        "po_number": "PO-2026-1023",
+        "supplier_id": "V004",
+        "supplier_name": "Ravi Textiles Pvt Ltd",
+        "currency": "USD",
+        "bank_iban": "PK36RAVI0000001122334404",
+        "lines": [
+          {
+            "sku": "CTN-500",
+            "description": "Cotton fabric roll, 50 m",
+            "qty": -2,
+            "unit_price": 120.0,
+            "line_total": -240.0
+          }
+        ],
+        "subtotal": -240.0,
+        "tax": 0.0,
+        "total": -240.0
+      }
+    },
+    "email_draft": "Subject: Action Required: Invoice RT-8023 on Hold\n\nDear Accounts Receivable Team,\n\nWith reference to PO-2026-1023, invoice RT-8023 dated October 8, 2026, totaling -USD 240.00, has been placed on hold.\n\nOur review identified the following issues:\n\n- The invoice total is negative, which suggests that it may be a credit note rather than an invoice requiring payment.\n- Item CTN-500 shows a negative quantity or price. This may indicate a credit transaction or a data entry error and requires verification.\n\nPlease confirm whether invoice RT-8023 is intended to be a credit note or whether the negative quantity and total are errors.\n\nIf it is a credit transaction, please issue a credit note. Otherwise, please provide a corrected invoice with the accurate quantity, pricing, and total.\n\nKind regards,",
+    "workflow_execution_id": "6b64f249-e9ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 4.238590599999952,
+      "extract_grn_s": 4.90707139999904,
+      "extract_invoice_s": 6.941615300000194,
+      "rules_s": 0.0052561000011337455,
+      "agent_s": 15.706824700000652,
+      "email_s": 4.326650999999401,
+      "workflow_start_s": 0.170933999999761,
+      "total_s": 36.29793849999987
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "39c66835-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "3cc66835-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "3dc66835-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "ba929f3c-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "bb929f3c-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "bd929f3c-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "14294613-fec3-4b5b-8a63-fc9f9d7b1c0e",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 4.24,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.91,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 6.94,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.01,
+        "ok": true,
+        "note": "2 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 15.71,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 4.33,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.17,
+        "ok": true,
+        "note": "execution 6b64f249-e9ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}

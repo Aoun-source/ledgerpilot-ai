@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "recorded": {
+    "case": "case_22",
+    "at": "2026-10-18T11:44:12+00:00",
+    "model": "DeepSeek-V4-Flash",
+    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+  },
+  "result": {
+    "label": "case_22",
+    "route": "hold_for_review",
+    "rule_route": "hold_for_review",
+    "agent": {
+      "route": "hold_for_review",
+      "explanation": "The supplier, price, quantity, and bank account all match the vendor master and the three-way match. The only issue is the tax of 408.0, which is 60% of the subtotal 680.0, exceeding the 30% policy cap of 204.00. This is a tax/arithmetic issue requiring review.",
+      "evidence": [
+        "Vendor master lists V003 Milano Arredi S.r.l. with IBAN ending 6703, matching the invoice",
+        "PO, GRN, and invoice all agree on 8 units of SED-02 at 85.00 EUR",
+        "Invoice tax of 408.0 exceeds the 30% of subtotal cap (204.00) per AP policy"
+      ],
+      "supplier_question": "Please confirm the correct tax amount on invoice MA-8022, as the tax of 408.0 appears to exceed the expected rate on the 680.0 subtotal.",
+      "raw": "I'll look up the supplier in the vendor master library.\nThe supplier V003 Milano Arredi S.r.l. is in the vendor master with IBAN ending 6703, which matches the invoice. The price and quantity match. The only discrepancy is the tax being 408.0, which is 60% of the subtotal 680.0, exceeding the 30% policy threshold.\n\n{\"route\": \"hold_for_review\", \"explanation\": \"The supplier, price, quantity, and bank account all match the vendor master and the three-way match. The only issue is the tax of 408.0, which is 60% of the subtotal 680.0, exceeding the 30% policy cap of 204.00. This is a tax/arithmetic issue requiring review.\", \"evidence\": [\"Vendor master lists V003 Milano Arredi S.r.l. with IBAN ending 6703, matching the invoice\", \"PO, GRN, and invoice all agree on 8 units of SED-02 at 85.00 EUR\", \"Invoice tax of 408.0 exceeds the 30% of subtotal cap (204.00) per AP policy\"], \"supplier_question\": \"Please confirm the correct tax amount on invoice MA-8022, as the tax of 408.0 appears to exceed the expected rate on the 680.0 subtotal.\"}",
+      "conversation_id": "7ca164ee-bad3-4946-b1b4-5ace5d7db2a8",
+      "latency_s": 24.815627300000415,
+      "parsed": true
+    },
+    "discrepancies": [
+      {
+        "code": "TAX_OUT_OF_RANGE",
+        "route": "hold_for_review",
+        "field": "tax",
+        "expected": "at most 204.00 (30% of 680.0)",
+        "actual": "408.0",
+        "impact": "204.00",
+        "message": "Tax of 408.0 is more than 30% of the subtotal 680.0."
+      }
+    ],
+    "money_at_risk": "204.00",
+    "extracted": {
+      "po": {
+        "po_number": "PO-2026-1022",
+        "po_date": "2026-09-13",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "lines": [
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty": 8,
+            "unit_price": 85.0
+          }
+        ]
+      },
+      "grn": {
+        "grn_number": "GRN-5022",
+        "po_number": "PO-2026-1022",
+        "received_date": "2026-09-23",
+        "supplier_id": "V003",
+        "lines": [
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty_received": 8
+          }
+        ]
+      },
+      "invoice": {
+        "invoice_number": "MA-8022",
+        "invoice_date": "2026-10-07",
+        "po_number": "PO-2026-1022",
+        "supplier_id": "V003",
+        "supplier_name": "Milano Arredi S.r.l.",
+        "currency": "EUR",
+        "bank_iban": "IT60MILA0000000000456703",
+        "lines": [
+          {
+            "sku": "SED-02",
+            "description": "Visitor chair",
+            "qty": 8,
+            "unit_price": 85.0,
+            "line_total": 680.0
+          }
+        ],
+        "subtotal": 680.0,
+        "tax": 408.0,
+        "total": 1088.0
+      }
+    },
+    "email_draft": "Subject: Request for Tax Correction \u2013 Invoice MA-8022\n\nDear Accounts Receivable Team,\n\nWith reference to purchase order PO-2026-1022, invoice MA-8022 dated October 7, 2026, for a total amount of EUR 1,088.00, has been placed on hold.\n\nThe tax amount of EUR 408.00 appears to exceed 30% of the subtotal of EUR 680.00. Please confirm the correct tax amount applicable to this invoice, as the amount currently indicated appears inconsistent with the expected tax rate.\n\nIf the tax amount is incorrect, please issue a credit note and provide a corrected invoice.\n\nKind regards,",
+    "workflow_execution_id": "38c66835-e9ca-f111-bf5b-6045bd9ce552",
+    "timings": {
+      "extract_po_s": 3.777981199998976,
+      "extract_grn_s": 4.213288599999942,
+      "extract_invoice_s": 8.582675100000415,
+      "rules_s": 0.004241799999363138,
+      "agent_s": 24.815627300000415,
+      "email_s": 2.721627400000216,
+      "workflow_start_s": 0.1919619000000239,
+      "total_s": 44.30851729999995
+    },
+    "trace": {
+      "extract_po": {
+        "execution_id": "255bc21a-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "275bc21a-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_grn": {
+        "execution_id": "285bc21a-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "d4aa7e21-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "extract_invoice": {
+        "execution_id": "d5aa7e21-e9ca-f111-bf5b-6045bd9ce552",
+        "audit_id": "d7aa7e21-e9ca-f111-bf5b-6045bd9ce552"
+      },
+      "agent": {
+        "conversation_id": "7ca164ee-bad3-4946-b1b4-5ace5d7db2a8",
+        "parsed": true
+      }
+    },
+    "error": null,
+    "steps": [
+      {
+        "step": "Extract PO",
+        "where": "Evolus extractor",
+        "seconds": 3.78,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract GRN",
+        "where": "Evolus extractor",
+        "seconds": 4.21,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Extract INVOICE",
+        "where": "Evolus extractor",
+        "seconds": 8.58,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Three-way match + fraud checks",
+        "where": "Python (Decimal)",
+        "seconds": 0.0,
+        "ok": true,
+        "note": "1 finding(s)"
+      },
+      {
+        "step": "Agent review",
+        "where": "Evolus agent on AMD Token Factory",
+        "seconds": 24.82,
+        "ok": true,
+        "note": "route hold_for_review"
+      },
+      {
+        "step": "Draft email",
+        "where": "Evolus AI Tool",
+        "seconds": 2.72,
+        "ok": true,
+        "note": ""
+      },
+      {
+        "step": "Start routing workflow",
+        "where": "Evolus workflow",
+        "seconds": 0.19,
+        "ok": true,
+        "note": "execution 38c66835-e9ca-f111-bf5b-6045bd9ce552"
+      }
+    ]
+  }
+}
