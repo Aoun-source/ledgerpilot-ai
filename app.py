@@ -7,6 +7,7 @@ from __future__ import annotations
 import html
 import json
 import os
+import re
 import sys
 import tempfile
 import time
@@ -1030,6 +1031,7 @@ if page == "chat":
                 with st.chat_message("assistant", avatar=":material/smart_toy:"), st.spinner("Detective Clerk is thinking"):
                     try:
                         answer = mask_accounts(ClerkAgent(settings).chat(history[-10:]))
+                        answer = re.sub(r"\)Skip\.?", ".", answer)  # a stray token this model sometimes emits
                     except Exception as exc:  # noqa: BLE001 - a clerk sees a sentence, never a stack trace
                         answer = f"The agent didn't answer this time ({type(exc).__name__}). Please try again in a moment."
                 history.append({"role": "assistant", "content": answer or "The agent sent an empty reply. Please try again."})
