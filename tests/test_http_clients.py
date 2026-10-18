@@ -141,6 +141,26 @@ def test_agent_reply_in_code_fence_with_prose(svc, settings):
     assert v.route is Route.FRAUD and v.evidence == ["VM"]
 
 
+def test_agent_note_in_italian_is_asked_again_in_english(svc, settings):
+    # Seen live: the Evolus platform defaults to Italian and the model sometimes follows it.
+    replies = iter([
+        json.dumps({"route": "hold_for_review", "explanation": "Il fornitore è presente nel vendor master, ma il prezzo "
+                    "della fattura non corrisponde all'ordine.", "evidence": ["Prezzo per unità diverso"]}),
+        json.dumps({"route": "hold_for_review", "explanation": "The supplier is in the vendor master, but the invoice "
+                    "price does not match the order.", "evidence": ["Unit price differs"]})])
+    svc.agent_reply = lambda case: next(replies)
+    v = ClerkAgent(settings).review({"rule_route": "hold_for_review"})
+    assert v.route is Route.HOLD and v.explanation.startswith("The supplier") and v.evidence == ["Unit price differs"]
+    assert svc.count(r"^/v1/chat/completions") == 2
+
+
+def test_agent_english_note_is_not_asked_again(svc, settings):
+    svc.agent_reply = lambda case: json.dumps({"route": "approve_for_payment", "explanation": "All three documents "
+                                               "agree and the bank account matches the vendor master.", "evidence": []})
+    ClerkAgent(settings).review({"rule_route": "approve_for_payment"})
+    assert svc.count(r"^/v1/chat/completions") == 1
+
+
 def test_model_health_ok_and_down(svc, settings):
     h = model_health(settings)
     assert h["ok"] and "ledgerpilot-model" in h["models"]

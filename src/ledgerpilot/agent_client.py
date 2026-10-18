@@ -81,10 +81,32 @@ class ClerkAgent:
         start = time.perf_counter()
         raw_resp = self.client.chat.completions.with_raw_response.create(
             model=self.model, messages=[{"role": "user", "content": prompt}])
-        latency = time.perf_counter() - start
         completion = raw_resp.parse()
         text = (completion.choices[0].message.content or "").strip()
-        return parse_verdict(text, raw_resp.headers.get("X-Conversation-Id"), latency)
+        verdict = parse_verdict(text, raw_resp.headers.get("X-Conversation-Id"), time.perf_counter() - start)
+        if verdict.parsed and looks_italian(" ".join([verdict.explanation, *verdict.evidence])):
+            # The model sometimes still answers in the platform's Italian: ask once for the same JSON in English.
+            # The decision never changes here; only the wording is replaced, and only if the route is unchanged.
+            again = self.client.chat.completions.create(model=self.model, messages=[
+                {"role": "user", "content": prompt}, {"role": "assistant", "content": text},
+                {"role": "user", "content": "Rewrite your JSON reply above in English. Keep the same route and the "
+                                            "same numbers. Reply with only the JSON object."}])
+            english = parse_verdict((again.choices[0].message.content or "").strip())
+            if english.route == verdict.route and not looks_italian(english.explanation):
+                verdict.explanation, verdict.evidence = english.explanation, english.evidence
+                verdict.supplier_question = english.supplier_question
+            verdict.latency_s = time.perf_counter() - start
+        return verdict
+
+
+_ITALIAN = {"il", "lo", "la", "gli", "della", "delle", "dei", "che", "non", "sono", "fattura", "fornitore",
+            "nessuna", "discrepanza", "discrepanze", "quantità", "prezzo", "importo", "è", "per", "con", "nel"}
+
+
+def looks_italian(text: str) -> bool:
+    """A cheap check: several common Italian words in a short note mean it isn't in English."""
+    words = re.findall(r"[a-zà-ù]+", text.lower())
+    return sum(w in _ITALIAN for w in words) >= 4
 
 
 def _first_json_object(text: str) -> dict[str, Any]:
