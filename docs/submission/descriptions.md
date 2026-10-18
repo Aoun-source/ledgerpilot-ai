@@ -34,8 +34,8 @@ or rejects in a review queue, and every step is logged.
 
 The design keeps money safe. Code does every number. The agent can make a decision stricter but
 never looser, so it cannot approve a fraud finding. When its review doesn't come back, or a value can't
-be read, the invoice goes to a person with the reason shown. The model never sees the full bank
-account. Each finding shows its code, the rule that fired and the amount at risk, so a clerk can check
+be read, the invoice goes to a person with the reason shown. The invoice's bank account reaches the
+model only as its last four characters, and no full account number is ever shown on screen. Each finding shows its code, the rule that fired and the amount at risk, so a clerk can check
 it in seconds.
 
 We measured it live on 24 synthetic cases (7 clean, 11 billing errors, 5 fraud attempts, 1 unreadable

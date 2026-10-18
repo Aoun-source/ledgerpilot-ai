@@ -56,7 +56,7 @@ SLIDES = [
      ["Code does every number; the agent never recomputes one.",
       "The agent can make a route stricter, never looser, so it cannot approve fraud.",
       "No answer, or an unreadable value, sends the invoice to a person with the reason.",
-      "The model never sees the full bank account."]),
+      "The invoice's bank account reaches the model only as its last 4 characters."]),
     ("Built to be checked",
      "Open model on AMD, Evolus agents, and a test suite behind it.",
      ["Over 200 offline tests and a Docker image built in CI",

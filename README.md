@@ -187,6 +187,7 @@ AMD Token Factory. Details per case in [docs/evaluation.md](docs/evaluation.md);
 | Agent's own route matched the expected one | 96% |
 | Upload to decision, median / p95 | 45 s / 64 s |
 | Agent step on AMD Token Factory, median | 20 s |
+| Model call on its own (benchmark, straight to Token Factory), p50 | 7.8 s, ~931 input and ~165 output tokens per invoice |
 
 The one miss is case 03, a clean invoice that was **held, not paid**: the invoice extractor named a field
 `quantity` instead of `qty`, so the line looked unreadable. Extractor output is now normalised to our field

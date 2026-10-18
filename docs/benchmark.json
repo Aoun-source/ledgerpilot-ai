@@ -1,0 +1,28 @@
+[
+  {
+    "label": "DeepSeek-V4-Flash",
+    "provider": "token_factory",
+    "concurrency": 1,
+    "requests": 12,
+    "wall_s": 138.59,
+    "p50_latency_s": 7.76,
+    "p95_latency_s": 17.38,
+    "rpm": 10,
+    "per_request_tokens_per_s": 21.3,
+    "avg_input_tokens": 931,
+    "avg_output_tokens": 163
+  },
+  {
+    "label": "DeepSeek-V4-Flash",
+    "provider": "token_factory",
+    "concurrency": 4,
+    "requests": 12,
+    "wall_s": 76.65,
+    "p50_latency_s": 8.64,
+    "p95_latency_s": 15.72,
+    "rpm": 10,
+    "per_request_tokens_per_s": 19.2,
+    "avg_input_tokens": 931,
+    "avg_output_tokens": 166
+  }
+]
