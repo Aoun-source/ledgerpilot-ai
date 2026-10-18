@@ -6,6 +6,10 @@ LedgerPilot is an accounts-payable agent built on **Evolus** and powered by an *
 
 Built for the AMD Developer Hackathon: ACT III, track **Evolus Business Agents on AMD**.
 
+**Live app:** [ledgerpilot-ai.streamlit.app](https://ledgerpilot-ai.streamlit.app) · **Demo video:** [docs/submission/LedgerPilot_demo.mp4](docs/submission/LedgerPilot_demo.mp4) · **Slides:** [docs/submission/LedgerPilot_pitch.pdf](docs/submission/LedgerPilot_pitch.pdf)
+
+The hosted app holds no API keys, so it shows its connection notes until you run it with your own `.env` (see Run it).
+
 ## Why it matters
 
 Accounts-payable teams match invoices by hand. Two things slip through:

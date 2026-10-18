@@ -21,5 +21,9 @@ AMD Token Factory, AMD GPUs, DeepSeek-V4-Flash, Evolus, Python, Pydantic, Stream
 ## Track
 Evolus Business Agents on AMD
 
+## Links
+- Live app: https://ledgerpilot-ai.streamlit.app
+- GitHub: https://github.com/Aoun-source/ledgerpilot-ai
+
 ## Cover image
 docs/submission/cover.png
