@@ -364,7 +364,13 @@ button:focus-visible, a:focus-visible, [role="radio"]:focus-visible { outline: 2
 [data-testid="stSidebar"] [data-testid="stExpander"] summary p { font-size: 13.5px; }
 .lp-side-foot { color: var(--muted); font-size: 12.5px; line-height: 1.5; margin-top: 1rem; }
 [data-testid="stMarkdownContainer"] p.lp-side-foot { font-size: 12.5px; margin-top: 1rem; }
-.st-key-go-check button { white-space: nowrap; }
+.st-key-go-check button, .st-key-go-chat button { white-space: nowrap; }
+.lp-agent-head { display: flex; gap: .9rem; align-items: flex-start; }
+.lp-agent-head .ic { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-2); }
+.lp-agent-head .lp-section { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.lp-agent-head .lp-section-sub { margin-bottom: 0; }
+.st-key-card-agent button p { font-size: 13.5px; }
 
 @media (max-width: 1100px) { .lp-flow { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 900px) {
@@ -460,7 +466,10 @@ def count_live_check() -> None:
 def cached_health(base_url: str, model: str) -> dict:
     # keyed on URL/model so a changed endpoint is re-checked; cached so a dead endpoint never slows every
     # click, and so the check doesn't eat into Token Factory's shared per-minute limit
-    return model_health(settings, timeout=6)
+    result = model_health(settings, timeout=6)
+    if not result["ok"] and "isn't in the Token Factory catalog" not in result.get("detail", ""):
+        result = model_health(settings, timeout=12)  # one slow answer (a cold start) shouldn't read as down
+    return result
 
 
 def money(value) -> str:
@@ -490,6 +499,15 @@ def empty_state(ic: str, title: str, text: str) -> str:
 
 def go(page: str) -> None:
     st.session_state["nav"] = page
+
+
+CHAT_STARTERS = ("Hi! Who are you and what do you do?", "What is a three-way match?",
+                 "What does invoice fraud usually look like?", "How do I verify a bank-account change safely?")
+
+
+def ask_starter(question: str) -> None:
+    st.session_state["chat_pending"] = question
+    st.session_state["nav"] = "chat"
 
 
 # ------------------------------------------------------------------ samples and links
@@ -626,9 +644,10 @@ def supplier_of(row: dict) -> str:
 
 
 if page == "overview":
-    head, action = st.columns([1.9, 1], vertical_alignment="center")
+    head, ask, action = st.columns([1.5, .65, .75], vertical_alignment="center")
     with head:
         page_header("Accounts payable overview", "Every invoice checked before payment.")
+    ask.button("Ask the agent", icon=":material/forum:", on_click=go, args=("chat",), width="stretch", key="go-chat")
     action.button("Check an invoice", type="primary", icon=":material/add:", on_click=go, args=("check",),
                   width="stretch", key="go-check")
     st.markdown('<section class="lp-kpis">'
@@ -637,6 +656,19 @@ if page == "overview":
                 + kpi("review", "Needs review", str(len(held_rows)), f"{money(held)} held from payment", "hold", "hold")
                 + kpi("blocked", "Payments blocked", str(blocked), "possible fraud, supplier to verify", "fraud", "fraud")
                 + "</section>", unsafe_allow_html=True)
+
+    with st.container(key="card-agent"):
+        agent_on = not missing
+        st.markdown(f'<div class="lp-agent-head"><div class="ic">{icon("bot", 22)}</div><div>'
+                    f'<div class="lp-section">Detective Clerk, your AI agent'
+                    f'<span class="lp-pill lp-{"ok" if agent_on else "hold"}">{"Online" if agent_on else "Not connected"}'
+                    f'</span></div><p class="lp-section-sub">Ask about invoices, three-way matching or supplier fraud. '
+                    f'It runs on Evolus with {E(settings.amd_model or "the model")} on {E(settings.model_where)}, '
+                    f'and explains every decision LedgerPilot makes.</p></div></div>', unsafe_allow_html=True)
+        cols = st.columns(2)
+        for i, q in enumerate(CHAT_STARTERS):
+            cols[i % 2].button(q, key=f"ov-starter-{i}", on_click=ask_starter, args=(q,), width="stretch",
+                           disabled=not agent_on)
 
     left, right = st.columns([1.15, 1], gap="medium")
     with left, st.container(key="card-activity"):
@@ -989,14 +1021,6 @@ if page == "check":
 
 
 # ------------------------------------------------------------------ ask the agent
-CHAT_STARTERS = ("Hi! Who are you and what do you do?", "What is a three-way match?",
-                 "What does invoice fraud usually look like?", "How do I verify a bank-account change safely?")
-
-
-def ask_starter(question: str) -> None:
-    st.session_state["chat_pending"] = question
-
-
 if page == "chat":
     page_header("Ask the agent", "Chat with Detective Clerk, the Evolus agent behind LedgerPilot. Ask how a three-way "
                 "match works, what invoice fraud looks like, or how to verify a supplier safely.")
@@ -1010,8 +1034,9 @@ if page == "chat":
         if not history:
             with st.container(key="card-chat-start"):
                 st.markdown('<div class="lp-section">Try asking</div><p class="lp-section-sub">Answers come from the '
-                            'agent on DeepSeek-V4-Flash (AMD Token Factory) through Evolus, using the vendor master and '
-                            'the AP fraud guide in its knowledge library.</p>', unsafe_allow_html=True)
+                            f'agent on {E(settings.amd_model or "the model")} ({E(settings.model_where)}) through Evolus, '
+                            'using the vendor master and the AP fraud guide in its knowledge library.</p>',
+                            unsafe_allow_html=True)
                 cols = st.columns(2)
                 for i, q in enumerate(CHAT_STARTERS):
                     cols[i % 2].button(q, key=f"starter-{i}", on_click=ask_starter, args=(q,), width="stretch")
