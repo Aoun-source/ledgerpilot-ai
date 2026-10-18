@@ -88,6 +88,14 @@ _SYNONYMS = {"quantity": "qty", "quantity_billed": "qty", "quantity_ordered": "q
 _GRN_SYNONYMS = {"qty": "qty_received", "quantity": "qty_received", "quantity_received": "qty_received"}
 
 
+_ACCOUNT = re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){10,30}\b")
+
+
+def mask_accounts(text: str) -> str:
+    """Mask anything shaped like an IBAN in free text, keeping the last 4 characters."""
+    return _ACCOUNT.sub(lambda m: mask(m.group(0).replace(" ", "")), text or "")
+
+
 def _snake(name: str) -> str:
     return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
 
@@ -227,6 +235,10 @@ class Pipeline:
             res.trace["agent_error"] = f"{type(exc).__name__}: {exc}"[:300]
             res.step("Agent review", f"Evolus agent on {self.s.model_where}", 0, ok=False, note="unreachable: rule route used")
             return None
+        # The agent may quote a full account number from the vendor library: mask every one before it is shown.
+        verdict.explanation = mask_accounts(verdict.explanation)
+        verdict.evidence = [mask_accounts(e) for e in verdict.evidence]
+        verdict.supplier_question = mask_accounts(verdict.supplier_question)
         res.timings["agent_s"] = verdict.latency_s
         res.step("Agent review", f"Evolus agent on {self.s.model_where}", verdict.latency_s, ok=verdict.parsed,
                  note=f"route {verdict.route.value}" if verdict.route else "reply not understood: rule route used")

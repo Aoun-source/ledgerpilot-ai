@@ -7,6 +7,7 @@ The real app always calls Evolus and the AMD-hosted agent.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -165,3 +166,10 @@ def test_extractor_field_names_are_normalized():
     assert grn["grn_number"] == "G-1" and grn["lines"][0]["qty_received"] == 2
     # a correct key is never overwritten by a synonym
     assert pl.normalize("invoice", {"lines": [{"qty": 3, "quantity": 9}]})["lines"][0]["qty"] == 3
+
+
+def test_account_numbers_in_agent_text_are_masked():
+    text = "Vendor master account GB82ACME00001234567801 differs from DE89 HELI 0000 0000 4455 6605; PO-2026-1015 is fine."
+    out = pl.mask_accounts(text)
+    assert "GB82ACME00001234567801" not in out and len(re.findall(r"\*{10,}\w{4}", out)) == 2
+    assert "7801" in out and "6605" in out and "PO-2026-1015" in out
