@@ -13,7 +13,7 @@ LedgerPilot does the matching and stops those payments before they go out. Evolu
 
 The design keeps money safe. Code does every number. The agent can make a decision stricter but never looser, so it cannot approve a fraud finding. When its review doesn't come back, or a value can't be read, the invoice goes to a person with the reason shown. The model never sees the full bank account. Each finding shows its code, the rule that fired and the amount at risk, so a clerk can check it in seconds.
 
-The repo includes 217 offline tests, a Docker image built in CI, evaluation and benchmark scripts over 24 synthetic cases (clean invoices, billing errors, fraud attempts and an unreadable PDF), and a demo mode that replays recorded runs, clearly labelled, if the services are down.
+The repo includes over 200 offline tests, a Docker image built in CI, evaluation and benchmark scripts over 24 synthetic cases (clean invoices, billing errors, fraud attempts and an unreadable PDF), and a demo mode that replays recorded runs, clearly labelled, if the services are down.
 
 ## Technology tags
 AMD Token Factory, AMD GPUs, DeepSeek-V4-Flash, Evolus, Python, Pydantic, Streamlit, SQLite, Docker, fraud detection, fintech, accounts payable

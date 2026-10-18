@@ -36,7 +36,7 @@ vLLM must run with `--enable-auto-tool-choice --tool-call-parser hermes`.
 
 Click **Test connection**.
 
-## 2. Create the agent "LedgerPilot Clerk"
+## 2. Create the agent "Detective Clerk"
 
 - Model: your AMD model from step 1.
 - Instructions: paste `AGENT_INSTRUCTIONS` from `src/ledgerpilot/agent_client.py`.
@@ -106,7 +106,7 @@ Create the library, copy its ID to `EVOLUS_LIBRARY_ID`, then upload through the 
 python scripts/upload_library.py
 ```
 
-Attach the library to the LedgerPilot Clerk agent.
+Attach the library to the Detective Clerk agent (What it knows → Other libraries).
 
 ## 5. Workflow "Exception routing"
 

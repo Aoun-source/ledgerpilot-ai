@@ -43,7 +43,7 @@ PDF): [__] false approvals out of 17 problem invoices, [__] of 5 fraud attempts 
 routed correctly, with a median of [__] s from upload to decision. On AMD Token Factory the agent step
 answers in a median of [__] s, using about [__] tokens per invoice.
 
-The repo includes 217 offline tests, a Docker image built in CI, the evaluation and benchmark
+The repo includes over 200 offline tests, a Docker image built in CI, the evaluation and benchmark
 scripts, and a demo mode that replays recorded live runs, clearly labelled, if the services are down.
 
 ## Technology tags

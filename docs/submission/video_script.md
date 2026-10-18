@@ -63,7 +63,7 @@ and the alert draft. Then open **What ran, where** and show the extractor, agent
 
 ### 2:20–2:45 · Results · *Business value*
 
-**Screen:** deck slide 8 (results), or the app's **Results** tab.
+**Screen:** deck slide 8 (results), or the app's **Results** page.
 
 > We measured it live on twenty-four cases. [__] false approvals out of seventeen problem invoices.
 > [__] of five fraud attempts blocked. [__] percent routed correctly. On AMD Token Factory the agent

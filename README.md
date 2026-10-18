@@ -125,7 +125,7 @@ docker compose up --build -d       # http://localhost:8501
 | `AMD_MODEL` | no (default `DeepSeek-V4-Flash` on Token Factory, `ledgerpilot-model` on vLLM) | model name; must match the model your Evolus agent uses |
 | `AMD_REASONING_EFFORT` | no | `none`, `low`, `medium`, `high`: turns thinking down on models that think by default |
 | `EVOLUS_API_KEY`, `EVOLUS_APP_ID` | yes | Evolus API key and space (application) ID |
-| `EVOLUS_AGENT_ID` | yes | the LedgerPilot Clerk agent |
+| `EVOLUS_AGENT_ID` | yes | the Detective Clerk agent (instructions in `src/ledgerpilot/agent_client.py`) |
 | `EVOLUS_EXTRACTOR_INVOICE_ID`, `EVOLUS_EXTRACTOR_PO_ID`, `EVOLUS_EXTRACTOR_GRN_ID` | yes | the three document extractors |
 | `EVOLUS_EXTRACTOR_AGENT_ID` | no | agent that owns the extractors, if not the Clerk |
 | `EVOLUS_WORKFLOW_ID` | no | "Exception routing" workflow; skipped when empty |
@@ -150,7 +150,7 @@ Links for the demo (replace the host with yours):
 - `http://localhost:8501/?demo=1&case=case_15` opens demo mode and replays case 15
 
 The three rehearsal cases also have one-click buttons at the top of the page:
-case 01 (ready to pay), case 07 (on hold, $200 over the PO price) and case 15 (payment blocked, bank account changed).
+case 01 (ready to pay), case 07 (needs review, $200 over the PO price) and case 15 (payment blocked, bank account changed).
 
 ## Tests and evaluation
 
@@ -166,7 +166,7 @@ On your own vLLM droplet it measures throughput and cost instead: add `--request
 
 The 24 synthetic cases cover clean invoices, price variance, short delivery, over-billing, arithmetic errors, items not on the PO, currency mismatch, changed bank account, duplicate and near-duplicate invoices, a look-alike invoice number, padded tax, a credit note sent as an invoice, a PO billed twice, an unknown look-alike supplier and a corrupt PDF. All data is fictional.
 
-Results: the two commands above write `docs/evaluation.md` and `docs/benchmark.md` from a live run; they also appear in the app's Results tab.
+Results: the two commands above write `docs/evaluation.md` and `docs/benchmark.md` from a live run; they also appear on the app's Results page.
 
 ## Project layout
 

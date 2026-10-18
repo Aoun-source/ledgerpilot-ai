@@ -59,7 +59,7 @@ SLIDES = [
       "The model never sees the full bank account."]),
     ("Built to be checked",
      "Open model on AMD, Evolus agents, and a test suite behind it.",
-     ["217 offline tests and a Docker image built in CI",
+     ["Over 200 offline tests and a Docker image built in CI",
       "Evaluation and benchmark scripts over 24 synthetic cases",
       "Demo mode that replays recorded runs, clearly labelled",
       "Python · Pydantic · Streamlit · SQLite · Evolus · AMD Token Factory"]),
