@@ -116,7 +116,9 @@ class FakeServices:
                     payload = json.loads(body)
                     call["json"] = payload
                     text = payload["messages"][-1]["content"]
-                    case = json.loads(text.split("CASE:", 1)[1]) if "CASE:" in text else {}
+                    # the case JSON follows "CASE:"; any instruction after the object is ignored
+                    case = (json.JSONDecoder().raw_decode(text.split("CASE:", 1)[1].lstrip())[0]
+                            if "CASE:" in text else {})
                     content = svc.agent_reply(case)
                     return self._send(200, {
                         "id": "c1", "object": "chat.completion", "created": 0, "model": payload["model"],
