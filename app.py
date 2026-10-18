@@ -6,7 +6,11 @@ from __future__ import annotations
 
 import html
 import json
+import os
 import sys
+import tempfile
+import time
+import uuid
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -387,6 +391,14 @@ LOGO = ('<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden
 # ------------------------------------------------------------------ setup
 @st.cache_resource
 def get_settings():
+    # On Streamlit Cloud the keys live in the app's Secrets (server side, never sent to the browser).
+    # Copy plain top-level values into the environment, where the settings are read; .env still wins locally.
+    try:
+        for key, value in st.secrets.items():
+            if isinstance(value, (str, int, float, bool)):
+                os.environ.setdefault(key, str(value))
+    except Exception:  # noqa: BLE001 - no secrets file is the normal local case
+        pass
     return load_settings()
 
 
@@ -395,12 +407,52 @@ try:
 except ConfigError as exc:
     st.error(f"Configuration problem: {exc}")
     st.stop()
-audit = AuditLog(settings.audit_db)
+if settings.public_site:
+    # Public demo: each visitor gets a private history, so one person's checks never show up for another
+    # (or turn the next visitor's sample invoice into a "duplicate").
+    st.session_state.setdefault("audit_db", str(Path(tempfile.gettempdir()) / f"ledgerpilot_{uuid.uuid4().hex}.db"))
+    audit = AuditLog(st.session_state["audit_db"])
+else:
+    audit = AuditLog(settings.audit_db)
 
 
 @st.cache_resource
-def get_pipeline():
+def _shared_pipeline():
     return Pipeline(settings, audit)
+
+
+def get_pipeline():
+    if not settings.public_site:
+        return _shared_pipeline()
+    if "pipeline" not in st.session_state:
+        st.session_state["pipeline"] = Pipeline(settings, audit)
+    return st.session_state["pipeline"]
+
+
+@st.cache_resource
+def _live_check_times() -> list[float]:
+    """When live checks ran on this server, shared by every visitor (for the hourly cap)."""
+    return []
+
+
+def live_check_blocked() -> str | None:
+    """On the public demo, why another live check isn't allowed right now (None when it is)."""
+    if not settings.public_site:
+        return None
+    if st.session_state.get("live_checks", 0) >= settings.live_checks_per_visitor:
+        return (f"You've used your {settings.live_checks_per_visitor} live checks on this public demo. "
+                "Turn on Replay recorded runs in the sidebar to see recorded results for every case.")
+    times = _live_check_times()
+    times[:] = [t for t in times if time.time() - t < 3600]
+    if len(times) >= settings.live_checks_per_hour:
+        return ("The public demo has reached its live-check limit for this hour, which protects the team's shared "
+                "AMD quota. Turn on Replay recorded runs in the sidebar to see recorded results.")
+    return None
+
+
+def count_live_check() -> None:
+    st.session_state["live_checks"] = st.session_state.get("live_checks", 0) + 1
+    _live_check_times().append(time.time())
 
 
 @st.cache_data(ttl=120, show_spinner=False)
@@ -835,8 +887,15 @@ if page == "check":
         st.markdown('<div class="lp-section">Documents</div><p class="lp-section-sub">LedgerPilot needs all three: what was '
                     'ordered, what arrived, and what the supplier billed.</p>', unsafe_allow_html=True)
         st.session_state.setdefault("doc_mode", "Use a sample case")
-        mode = st.segmented_control("Source", ["Use a sample case", "Upload my own"], key="doc_mode",
+        sources = ["Use a sample case"] if settings.public_site else ["Use a sample case", "Upload my own"]
+        if st.session_state.get("doc_mode") not in sources:
+            st.session_state["doc_mode"] = "Use a sample case"
+        mode = st.segmented_control("Source", sources, key="doc_mode",
                                     label_visibility="collapsed") or "Use a sample case"
+        if settings.public_site:
+            left = max(settings.live_checks_per_visitor - st.session_state.get("live_checks", 0), 0)
+            st.caption(f"Public demo: live checks use the 24 synthetic sample cases only, {left} of "
+                       f"{settings.live_checks_per_visitor} left for you. Run the app locally to check your own documents.")
         docs, label = None, ""
         if mode == "Use a sample case":
             if not options:
@@ -881,6 +940,9 @@ if page == "check":
                     if mode == "Use a sample case" else
                     "Demo mode only replays recorded sample cases. Turn it off to check your own documents.")
             st.rerun()
+        if blocked_msg := live_check_blocked():
+            st.session_state["notice"] = blocked_msg
+            st.rerun()
         try:
             pipe = get_pipeline()
         except ConfigError as exc:
@@ -891,6 +953,7 @@ if page == "check":
         except Exception as exc:  # noqa: BLE001 - never show a stack trace to a clerk or a judge
             st.error(f"LedgerPilot couldn't start ({type(exc).__name__}). Check the settings and data files.")
             st.stop()
+        count_live_check()
         with st.status("Checking the invoice", expanded=True) as status:
             result = pipe.run(docs, label=label, progress=lambda m: status.write(m))
             status.update(label=STAMP[result.route.value][0], expanded=False,

@@ -333,3 +333,23 @@ def test_results_tab_without_measurements(configured, monkeypatch):
     at = goto(AppTest.from_file(APP, default_timeout=60).run(), "results")
     if not (ROOT / "docs" / "evaluation.md").exists():
         assert "No measured results yet" in all_markdown(at)
+
+
+def test_public_site_limits_live_checks_and_keeps_history_private(configured, monkeypatch):
+    monkeypatch.setenv("PUBLIC_SITE", "1")
+    monkeypatch.setenv("LIVE_CHECKS_PER_VISITOR", "1")
+    fresh_caches()
+    serve(configured, "case_01")
+    at = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_01")
+    assert ">Ready to pay</span>" in all_markdown(at)
+    assert any("Public demo" in c.value and "0 of 1 left" in c.value for c in at.caption)
+    # the second live check from the same visitor is refused without calling Evolus
+    calls_before = len(configured.calls)
+    serve(configured, "case_07")
+    at = check_case(at, "case_07")
+    assert any("used your 1 live checks" in i.value for i in at.info)
+    assert not [c for c in configured.calls[calls_before:] if "ask-file" in c["path"]]
+    # a new visitor has a private history: the same sample invoice is not a duplicate for them
+    serve(configured, "case_01")
+    other = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_01")
+    assert ">Ready to pay</span>" in all_markdown(other) and "Invoice number already processed" not in all_markdown(other)

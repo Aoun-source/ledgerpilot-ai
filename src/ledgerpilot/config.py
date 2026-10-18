@@ -83,6 +83,12 @@ class Settings:
     # Saved outputs of real live runs, replayed by the app's demo mode
     recordings_dir: Path = field(default_factory=lambda: Path(_get("RECORDINGS_DIR", str(ROOT / "data" / "recordings"))))
 
+    # Public deployment (PUBLIC_SITE=1): every visitor gets a private history, only the sample invoices can be
+    # checked live, and live checks are capped so strangers can't use up the team's shared quota.
+    public_site: bool = field(default_factory=lambda: (_get("PUBLIC_SITE") or "").lower() in {"1", "true", "yes"})
+    live_checks_per_visitor: int = field(default_factory=lambda: int(_get("LIVE_CHECKS_PER_VISITOR", "5")))
+    live_checks_per_hour: int = field(default_factory=lambda: int(_get("LIVE_CHECKS_PER_HOUR", "20")))
+
     # Seconds to wait for one Evolus call / one agent answer before giving the case to a person
     evolus_timeout: Decimal = field(default_factory=lambda: _decimal_env("EVOLUS_TIMEOUT", "90"))
     agent_timeout: Decimal = field(default_factory=lambda: _decimal_env("AGENT_TIMEOUT", "90"))
