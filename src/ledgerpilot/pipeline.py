@@ -21,7 +21,7 @@ from .agent_client import AgentVerdict, ClerkAgent
 from .audit import AuditLog
 from .config import Settings
 from .evolus_client import EvolusClient, EvolusError
-from .fraud import load_vendor_master, mask
+from .fraud import _ACCOUNT, load_vendor_master, mask, mask_accounts  # noqa: F401 (_ACCOUNT kept for callers)
 from .rules import confidence_reasons, evaluate, final_route, human_handoff
 from .schemas import (
     Discrepancy,
@@ -86,14 +86,6 @@ def unwrap(data: Any) -> dict[str, Any]:
 _SYNONYMS = {"quantity": "qty", "quantity_billed": "qty", "quantity_ordered": "qty", "price": "unit_price",
              "amount": "line_total", "total_due": "total", "iban": "bank_iban"}
 _GRN_SYNONYMS = {"qty": "qty_received", "quantity": "qty_received", "quantity_received": "qty_received"}
-
-
-_ACCOUNT = re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){10,30}\b")
-
-
-def mask_accounts(text: str) -> str:
-    """Mask anything shaped like an IBAN in free text, keeping the last 4 characters."""
-    return _ACCOUNT.sub(lambda m: mask(m.group(0).replace(" ", "")), text or "")
 
 
 def _snake(name: str) -> str:

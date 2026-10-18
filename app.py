@@ -22,10 +22,10 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from ledgerpilot import recording  # noqa: E402
-from ledgerpilot.agent_client import model_health, model_speed, model_usage  # noqa: E402
+from ledgerpilot.agent_client import ClerkAgent, model_health, model_speed, model_usage  # noqa: E402
 from ledgerpilot.audit import AuditLog  # noqa: E402
 from ledgerpilot.config import TOKEN_FACTORY_SIGN_IN, ConfigError, load_settings  # noqa: E402
-from ledgerpilot.fraud import mask  # noqa: E402
+from ledgerpilot.fraud import mask, mask_accounts  # noqa: E402
 from ledgerpilot.pipeline import CaseResult, Pipeline, load_case_folder  # noqa: E402
 from ledgerpilot.schemas import Route  # noqa: E402
 
@@ -526,7 +526,7 @@ missing = settings.missing()
 pending_count = len(audit.pending_review())
 
 PAGES = {"overview": ":material/space_dashboard: Overview", "check": ":material/fact_check: Check an invoice",
-         "queue": ":material/inbox: Review queue", "audit": ":material/history: Audit log",
+         "chat": ":material/forum: Ask the agent", "queue": ":material/inbox: Review queue", "audit": ":material/history: Audit log",
          "results": ":material/insights: Results", "settings": ":material/tune: Settings"}
 
 with st.sidebar:
@@ -985,6 +985,60 @@ if page == "check":
             st.markdown(empty_state("file-check", "Nothing checked yet", "Run a scenario above, or choose documents and "
                                     "press Run invoice check. The decision and its evidence appear here."),
                         unsafe_allow_html=True)
+
+
+# ------------------------------------------------------------------ ask the agent
+CHAT_STARTERS = ("Hi! Who are you and what do you do?", "What is a three-way match?",
+                 "What does invoice fraud usually look like?", "How do I verify a bank-account change safely?")
+
+
+def ask_starter(question: str) -> None:
+    st.session_state["chat_pending"] = question
+
+
+if page == "chat":
+    page_header("Ask the agent", "Chat with Detective Clerk, the Evolus agent behind LedgerPilot. Ask how a three-way "
+                "match works, what invoice fraud looks like, or how to verify a supplier safely.")
+    history: list[dict[str, str]] = st.session_state.setdefault("chat", [])
+    if settings.missing():
+        with st.container(key="card-chat-off"):
+            st.markdown(empty_state("bot", "The agent isn't connected here", "This deployment has no Evolus settings. "
+                                    "Run LedgerPilot with its .env, or open the agent in the Evolus portal."),
+                        unsafe_allow_html=True)
+    else:
+        if not history:
+            with st.container(key="card-chat-start"):
+                st.markdown('<div class="lp-section">Try asking</div><p class="lp-section-sub">Answers come from the '
+                            'agent on DeepSeek-V4-Flash (AMD Token Factory) through Evolus, using the vendor master and '
+                            'the AP fraud guide in its knowledge library.</p>', unsafe_allow_html=True)
+                cols = st.columns(2)
+                for i, q in enumerate(CHAT_STARTERS):
+                    cols[i % 2].button(q, key=f"starter-{i}", on_click=ask_starter, args=(q,), width="stretch")
+        for m in history:
+            with st.chat_message(m["role"], avatar=":material/person:" if m["role"] == "user" else ":material/smart_toy:"):
+                st.markdown(m["content"])
+        question = st.chat_input("Ask Detective Clerk about invoices, fraud or how LedgerPilot works")
+        question = question or st.session_state.pop("chat_pending", None)
+        if question:
+            used = sum(1 for m in history if m["role"] == "user")
+            if settings.public_site and used >= settings.chat_messages_per_visitor:
+                st.info(f"You've used your {settings.chat_messages_per_visitor} questions on this public demo.")
+            else:
+                history.append({"role": "user", "content": question[:2000]})
+                with st.chat_message("user", avatar=":material/person:"):
+                    st.markdown(history[-1]["content"])
+                with st.chat_message("assistant", avatar=":material/smart_toy:"), st.spinner("Detective Clerk is thinking"):
+                    try:
+                        answer = mask_accounts(ClerkAgent(settings).chat(history[-10:]))
+                    except Exception as exc:  # noqa: BLE001 - a clerk sees a sentence, never a stack trace
+                        answer = f"The agent didn't answer this time ({type(exc).__name__}). Please try again in a moment."
+                history.append({"role": "assistant", "content": answer or "The agent sent an empty reply. Please try again."})
+                st.rerun()
+        if history:
+            st.button("Start a new conversation", key="chat-reset", type="tertiary", icon=":material/refresh:",
+                      on_click=lambda: st.session_state.update(chat=[]))
+        st.caption("The agent explains and teaches; it never approves or releases a payment. Answers can be wrong, so "
+                   "check anything important against your own records.")
 
 
 # ------------------------------------------------------------------ review queue

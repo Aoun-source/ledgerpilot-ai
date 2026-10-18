@@ -99,6 +99,12 @@ class ClerkAgent:
         return verdict
 
 
+    def chat(self, messages: list[dict[str, str]]) -> str:
+        """A conversation with a person (no CASE): greetings, how LedgerPilot works, invoice-fraud basics."""
+        reply = self.client.chat.completions.create(model=self.model, messages=messages)
+        return (reply.choices[0].message.content or "").strip()
+
+
 _ITALIAN = {"il", "lo", "la", "gli", "della", "delle", "dei", "che", "non", "sono", "fattura", "fornitore",
             "nessuna", "discrepanza", "discrepanze", "quantità", "prezzo", "importo", "è", "per", "con", "nel"}
 

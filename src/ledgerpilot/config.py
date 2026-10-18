@@ -88,6 +88,7 @@ class Settings:
     public_site: bool = field(default_factory=lambda: (_get("PUBLIC_SITE") or "").lower() in {"1", "true", "yes"})
     live_checks_per_visitor: int = field(default_factory=lambda: int(_get("LIVE_CHECKS_PER_VISITOR", "5")))
     live_checks_per_hour: int = field(default_factory=lambda: int(_get("LIVE_CHECKS_PER_HOUR", "20")))
+    chat_messages_per_visitor: int = field(default_factory=lambda: int(_get("CHAT_MESSAGES_PER_VISITOR", "20")))
 
     # Seconds to wait for one Evolus call / one agent answer before giving the case to a person
     evolus_timeout: Decimal = field(default_factory=lambda: _decimal_env("EVOLUS_TIMEOUT", "90"))

@@ -31,6 +31,14 @@ def mask(iban: Optional[str]) -> Optional[str]:
     return "*" * max(len(iban) - 4, 0) + iban[-4:]
 
 
+_ACCOUNT = re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){10,30}\b")
+
+
+def mask_accounts(text: str) -> str:
+    """Mask anything shaped like an IBAN in free text, keeping the last 4 characters."""
+    return _ACCOUNT.sub(lambda m: mask(m.group(0).replace(" ", "")), text or "")
+
+
 def _norm(text: Optional[str]) -> str:
     return (text or "").strip().upper()
 

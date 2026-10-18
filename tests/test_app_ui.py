@@ -87,7 +87,7 @@ def test_unconfigured_app_renders_with_clear_guidance(monkeypatch, tmp_path):
     assert "AMD_API_KEY" in warnings and "notebooks.amd.com/tokenfactory" in warnings and "EVOLUS_API_KEY" in warnings
     assert "not set up" in all_markdown(at)
     assert at.sidebar.radio[0].options == [":material/space_dashboard: Overview", ":material/fact_check: Check an invoice",
-                                           ":material/inbox: Review queue (0)", ":material/history: Audit log",
+                                           ":material/forum: Ask the agent", ":material/inbox: Review queue (0)", ":material/history: Audit log",
                                            ":material/insights: Results", ":material/tune: Settings"]
     at = goto(at, "check")
     assert len(at.selectbox[0].options) == 24
@@ -353,3 +353,16 @@ def test_public_site_limits_live_checks_and_keeps_history_private(configured, mo
     serve(configured, "case_01")
     other = check_case(AppTest.from_file(APP, default_timeout=60).run(), "case_01")
     assert ">Ready to pay</span>" in all_markdown(other) and "Invoice number already processed" not in all_markdown(other)
+
+
+def test_ask_the_agent_chats_and_masks_accounts(configured):
+    configured.agent_reply = lambda case: "Hi! I'm Detective Clerk. Your vendor account GB82ACME00001234567801 is on file."
+    at = goto(AppTest.from_file(APP, default_timeout=60).run(), "chat")
+    next(b for b in at.button if b.key == "starter-0").click()
+    at.run()
+    msgs = [m for m in at.chat_message]
+    assert [m.name for m in msgs] == ["user", "assistant"] and not at.exception
+    text = " ".join(md.value for m in msgs for md in m.markdown)
+    assert "Detective Clerk" in text and "GB82ACME00001234567801" not in text and "7801" in text
+    at.chat_input[0].set_value("What is a three-way match?").run()
+    assert len(at.chat_message) == 4
