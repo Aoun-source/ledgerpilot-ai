@@ -32,6 +32,11 @@ Accounts-payable teams match invoices by hand. Two things slip through:
 
 Evolus building blocks used: document extractors, agent, knowledge library, AI Tool, workflow.
 
+**Talk to the agent.** Outside the app, the same agent (Detective Clerk) answers people in the Evolus chat or
+through Evolus's OpenAI-compatible endpoint: it explains what it does, what a three-way match is, the common
+invoice-fraud schemes and how to verify a supplier safely, using the vendor master and the AP fraud guide
+(`data/ap_fraud_guide.md`) in its knowledge library. It never approves or promises a payment in chat.
+
 ## Run it
 
 ### 1. Model on AMD
