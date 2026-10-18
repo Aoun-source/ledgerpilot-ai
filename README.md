@@ -192,7 +192,9 @@ AMD Token Factory. Details per case in [docs/evaluation.md](docs/evaluation.md);
 The one miss is case 03, a clean invoice that was **held, not paid**: the invoice extractor named a field
 `quantity` instead of `qty`, so the line looked unreadable. Extractor output is now normalised to our field
 names (commit `7e10a8f`, with a test); a re-run of case 03 after the fix routes it to ready to pay. The table
-above is the full run before that fix, unchanged.
+above is the full run before that fix, unchanged. The demo recordings of cases 03, 04, 06, 10, 12, 14, 15,
+18 and 19 were re-recorded after the fixes (English notes, masked account numbers, no false missing-field
+finding); each recording is labelled with when and how it was made.
 
 ## Project layout
 

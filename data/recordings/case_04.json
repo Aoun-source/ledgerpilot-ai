@@ -2,7 +2,7 @@
   "format": 1,
   "recorded": {
     "case": "case_04",
-    "at": "2026-10-18T11:49:35+00:00",
+    "at": "2026-10-18T11:58:13+00:00",
     "model": "DeepSeek-V4-Flash",
     "source": "eval/run_eval.py DeepSeek-V4-Flash, re-run after fixes"
   },
@@ -12,16 +12,15 @@
     "rule_route": "approve_for_payment",
     "agent": {
       "route": "approve_for_payment",
-      "explanation": "Supplier V004 is in the approved vendor master with matching bank IBAN ending 4404. The unit price of 120.0 matches the agreed price list for CTN-500. Quantities ordered, received)Skip. No discrepancies were found.",
+      "explanation": "Supplier V004 Ravi Textiles Pvt Ltd is in the approved vendor master with matching bank details. The PO, GRN and invoice all agree on quantity (12), unit price (120.0) and total (1440.0). The price matches the agreed price list for SKU CTN-500. No discrepancies were found.",
       "evidence": [
-        "Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN PK36RAVI0000001122334404",
-        "Agreed price for CTN-500 is 120.00, matching invoice unit price",
-        "PO, GRN and invoice all show qty 12 with no discrepancies"
+        "Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN ending 4404 and agreed price 120.00 for CTN-500",
+        "Invoice RT-8004 total 1440.0 matches PO-2026-1004 and GRN-5004"
       ],
       "supplier_question": "",
-      "raw": "I'll look up the supplier in the vendor master library.\nThe supplier V004 Ravi Textiles Pvt Ltd is in the approved vendor master. The bank IBAN on the invoice ends in 4404, matching the vendor master PK36RAVI0000001122334404. The price matches the agreed price list (CTN-500 at 120.00). No discrepancies. Route: approve_for_payment.\n\n{\"route\": \"approve_for_payment\", \"explanation\": \"Supplier V004 is in the approved vendor master with matching bank IBAN ending 4404. The unit price of 120.0 matches the agreed price list for CTN-500. Quantities ordered, received)Skip. No discrepancies were found.\", \"evidence\": [\"Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN PK36RAVI0000001122334404\", \"Agreed price for CTN-500 is 120.00, matching invoice unit price\", \"PO, GRN and invoice all show qty 12 with no discrepancies\"], \"supplier_question\": \"\"}",
-      "conversation_id": "4813f80c-2a4e-40dc-8ea9-d3040cbca30c",
-      "latency_s": 47.23476549999941,
+      "raw": "I'll look up the supplier in the vendor master library.\nThe supplier V004 Ravi Textiles Pvt Ltd is in the vendor master with matching bank IBAN ending 4404hola. The PO, GRN, and invoice all match: qty 12, unit price 120.0, total 1440.0. No discrepancies. Price matches the agreed price list (CTN-500 = 120.00). Route is approve_for_payment.\n\n{\"route\": \"approve_for_payment\", \"explanation\": \"Supplier V004 Ravi Textiles Pvt Ltd is in the approved vendor master with matching bank details. The PO, GRN and invoice all agree on quantity (12), unit price (120.0) and total (1440.0). The price matches the agreed price list for SKU CTN-500. No discrepancies were found.\", \"evidence\": [\"Vendor master lists V004 Ravi Textiles Pvt Ltd with IBAN ending 4404 and agreed price 120.00 for CTN-500\", \"Invoice RT-8004 total 1440.0 matches PO-2026-1004 and GRN-5004\"], \"supplier_question\": \"\"}",
+      "conversation_id": "077ea6bb-628d-4ef2-863c-6f7bfa3755e2",
+      "latency_s": 18.144206299999496,
       "parsed": true
     },
     "discrepancies": [],
@@ -67,9 +66,9 @@
           {
             "sku": "CTN-500",
             "description": "Cotton fabric roll, 50 m",
+            "qty": 12,
             "unit_price": 120.0,
-            "line_total": 1440.0,
-            "qty": 12
+            "line_total": 1440.0
           }
         ],
         "subtotal": 1440.0,
@@ -78,31 +77,31 @@
       }
     },
     "email_draft": "",
-    "workflow_execution_id": "824833f7-e9ca-f111-bf5b-6045bd9ce552",
+    "workflow_execution_id": "840afb25-ebca-f111-bf5b-6045bd9ce552",
     "timings": {
-      "extract_po_s": 4.710071499999685,
-      "extract_grn_s": 4.853454699999929,
-      "extract_invoice_s": 8.469096700000591,
-      "rules_s": 0.0019734999987122137,
-      "agent_s": 47.23476549999941,
-      "workflow_start_s": 0.17122569999992265,
-      "total_s": 65.44132929999978
+      "extract_po_s": 5.9066187999997055,
+      "extract_grn_s": 4.8889225000002625,
+      "extract_invoice_s": 6.329395300001124,
+      "rules_s": 0.0026527999998506857,
+      "agent_s": 18.144206299999496,
+      "workflow_start_s": 0.22377200000119046,
+      "total_s": 35.49961430000076
     },
     "trace": {
       "extract_po": {
-        "execution_id": "eb332ad0-e9ca-f111-bf5b-6045bd9ce552",
-        "audit_id": "ed332ad0-e9ca-f111-bf5b-6045bd9ce552"
+        "execution_id": "9b9bf811-ebca-f111-bf5b-6045bd9ce552",
+        "audit_id": "5fc40d19-ebca-f111-bf5b-6045bd9ce552"
       },
       "extract_grn": {
-        "execution_id": "ee332ad0-e9ca-f111-bf5b-6045bd9ce552",
-        "audit_id": "f0332ad0-e9ca-f111-bf5b-6045bd9ce552"
+        "execution_id": "60c40d19-ebca-f111-bf5b-6045bd9ce552",
+        "audit_id": "63c40d19-ebca-f111-bf5b-6045bd9ce552"
       },
       "extract_invoice": {
-        "execution_id": "f1332ad0-e9ca-f111-bf5b-6045bd9ce552",
-        "audit_id": "f80d49d7-e9ca-f111-bf5b-6045bd9ce552"
+        "execution_id": "64c40d19-ebca-f111-bf5b-6045bd9ce552",
+        "audit_id": "feacbd1f-ebca-f111-bf5b-6045bd9ce552"
       },
       "agent": {
-        "conversation_id": "4813f80c-2a4e-40dc-8ea9-d3040cbca30c",
+        "conversation_id": "077ea6bb-628d-4ef2-863c-6f7bfa3755e2",
         "parsed": true
       }
     },
@@ -111,21 +110,21 @@
       {
         "step": "Extract PO",
         "where": "Evolus extractor",
-        "seconds": 4.71,
+        "seconds": 5.91,
         "ok": true,
         "note": ""
       },
       {
         "step": "Extract GRN",
         "where": "Evolus extractor",
-        "seconds": 4.85,
+        "seconds": 4.89,
         "ok": true,
         "note": ""
       },
       {
         "step": "Extract INVOICE",
         "where": "Evolus extractor",
-        "seconds": 8.47,
+        "seconds": 6.33,
         "ok": true,
         "note": ""
       },
@@ -139,16 +138,16 @@
       {
         "step": "Agent review",
         "where": "Evolus agent on AMD Token Factory",
-        "seconds": 47.23,
+        "seconds": 18.14,
         "ok": true,
         "note": "route approve_for_payment"
       },
       {
         "step": "Start routing workflow",
         "where": "Evolus workflow",
-        "seconds": 0.17,
+        "seconds": 0.22,
         "ok": true,
-        "note": "execution 824833f7-e9ca-f111-bf5b-6045bd9ce552"
+        "note": "execution 840afb25-ebca-f111-bf5b-6045bd9ce552"
       }
     ]
   }

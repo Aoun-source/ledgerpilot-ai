@@ -2,9 +2,9 @@
   "format": 1,
   "recorded": {
     "case": "case_18",
-    "at": "2026-10-18T11:41:28+00:00",
+    "at": "2026-10-18T12:02:53+00:00",
     "model": "DeepSeek-V4-Flash",
-    "source": "eval/run_eval.py DeepSeek-V4-Flash"
+    "source": "eval/run_eval.py DeepSeek-V4-Flash, re-run after fixes"
   },
   "result": {
     "label": "case_18",
@@ -12,16 +12,15 @@
     "rule_route": "escalate_fraud",
     "agent": {
       "route": "escalate_fraud",
-      "explanation": "The invoice references supplier ID V099, which is not in the approved vendor master. The vendor master lists the legitimate supplier as V001 'Acme Office Supplies Ltd', while the invoice spells the name 'Acme Office Suplies Ltd' \u2014 a look-alike/misspelled supplier. This is a fraud signal and no payment should be released until the supplier is verified by phone.",
+      "explanation": "The supplier V099 is not present in the vendor master file, which is a mandatory check before any payment. The invoice total is $200.00 and the discrepancy list flags an unknown vendor, so this must be escalated for fraud review.",
       "evidence": [
-        "Vendor master lists only V001 as 'Acme Office Supplies Ltd' with IBAN GB82ACME00001234567801",
-        "Invoice uses supplier_id V099 and misspelled name 'Acme Office Suplies Ltd'",
-        "Discrepancy list flags UNKNOWN_VENDOR with route escalate_fraud"
+        "Discrepancy code UNKNOWN_VENDOR: supplier V099 not in vendor master",
+        "Invoice AC-8018 total $200.00"
       ],
-      "supplier_question": "Please confirm your correct supplier ID and legal registered name as per our vendor master.",
-      "raw": "I'll look up the vendor in the vendor master library.\nThe CASE shows supplier_id V099 with supplier name \"Acme Office Suplies Ltd\". The vendor master lists V001 as \"Acme Office Supplies Ltd\" (correct spelling). So V099 is an unknown supplier ID, and the name is misspelled (\"Suplies\" vs \"Supplies\"). This is a fake/look-alike supplier situation. The discrepancy list already flags UNKNOWN_VENDOR with route escalate_fraud.\n\nThe bank IBAN on the invoice is \"******************7801\" which is masked, so we can't compare it to the vendor master. But the primary issue is the unknown supplier ID.\n\nRoute: escalate_fraud.\n\n{\"route\": \"escalate_fraud\", \"explanation\": \"The invoice references supplier ID V099, which is not in the approved vendor master. The vendor master lists the legitimate supplier as V001 'Acme Office Supplies Ltd', while the invoice spells the name 'Acme Office Suplies Ltd' \u2014 a look-alike/misspelled supplier. This is a fraud signal and no payment should be released until the supplier is verified by phone.\", \"evidence\": [\"Vendor master lists only V001 as 'Acme Office Supplies Ltd' with IBAN GB82ACME00001234567801\", \"Invoice uses supplier_id V099 and misspelled name 'Acme Office Suplies Ltd'\", \"Discrepancy list flags UNKNOWN_VENDOR with route escalate_fraud\"], \"supplier_question\": \"Please confirm your correct supplier ID and legal registered name as per our vendor master.\"}",
-      "conversation_id": "f9418403-51b5-4f9e-9413-5409cf745f92",
-      "latency_s": 22.087586499999816,
+      "supplier_question": "Please provide your registered vendor identification and confirm your legal business name, as our records do not list supplier V099.",
+      "raw": "{\"route\": \"escalate_fraud\", \"explanation\": \"The supplier V099 is not present in the vendor master file, which is a mandatory check before any payment. The invoice total is $200.00 and the discrepancy list flags an unknown vendor, so this must be escalated for fraud review.\", \"evidence\": [\"Discrepancy code UNKNOWN_VENDOR: supplier V099 not in vendor master\", \"Invoice AC-8018 total $200.00\"], \"supplier_question\": \"Please provide your registered vendor identification and confirm your legal business name, as our records do not list supplier V099.\"}",
+      "conversation_id": "0c2e7079-0c4d-486e-bd52-cd44e95ef0f3",
+      "latency_s": 6.163864599999215,
       "parsed": true
     },
     "discrepancies": [
@@ -87,33 +86,33 @@
         "total": 200.0
       }
     },
-    "email_draft": "Subject: Fraud Review Required \u2013 Invoice AC-8018\n\nDear Finance Manager,\n\nPayment for invoice AC-8018 from Acme Office Suplies Ltd (Vendor V099), totaling USD 200.00, has been blocked as a possible fraud risk.\n\nThe supplier is not listed in the vendor master file. Please verify the invoice directly with the supplier by phone, using the contact details on file rather than any contact information printed on the invoice.\n\nKind regards,",
-    "workflow_execution_id": "728071d2-e8ca-f111-bf5b-6045bd9ce552",
+    "email_draft": "Subject: Payment Blocked for Invoice AC-8018 \u2013 Possible Fraud\n\nDear Finance Manager,\n\nPayment for invoice AC-8018 from Acme Office Suplies Ltd (V099), totaling USD 200.00, has been blocked due to a possible fraud concern.\n\nThe supplier is not listed in the vendor master file. Please verify the invoice directly with the supplier by phone, using the contact details on file rather than any contact information printed on the invoice.\n\nKind regards,",
+    "workflow_execution_id": "6cb286cf-ebca-f111-bf5b-6045bd9ce552",
     "timings": {
-      "extract_po_s": 4.512619799999811,
-      "extract_grn_s": 3.734443099998316,
-      "extract_invoice_s": 6.230070800000249,
-      "rules_s": 0.004694400000516907,
-      "agent_s": 22.087586499999816,
-      "email_s": 3.9727377999988676,
-      "workflow_start_s": 0.1719518000008975,
-      "total_s": 40.715234500001316
+      "extract_po_s": 5.420504699999583,
+      "extract_grn_s": 3.723373700000593,
+      "extract_invoice_s": 6.355018599999312,
+      "rules_s": 0.0027711999991879566,
+      "agent_s": 6.163864599999215,
+      "email_s": 4.278376000000208,
+      "workflow_start_s": 0.17238729999917268,
+      "total_s": 26.117052499999772
     },
     "trace": {
       "extract_po": {
-        "execution_id": "bf1986bc-e8ca-f111-bf5b-6045bd9ce552",
-        "audit_id": "c11986bc-e8ca-f111-bf5b-6045bd9ce552"
+        "execution_id": "552104c3-ebca-f111-bf5b-6045bd9ce552",
+        "audit_id": "5f2104c3-ebca-f111-bf5b-6045bd9ce552"
       },
       "extract_grn": {
-        "execution_id": "c21986bc-e8ca-f111-bf5b-6045bd9ce552",
-        "audit_id": "c71986bc-e8ca-f111-bf5b-6045bd9ce552"
+        "execution_id": "602104c3-ebca-f111-bf5b-6045bd9ce552",
+        "audit_id": "93b82ac9-ebca-f111-bf5b-6045bd9ce552"
       },
       "extract_invoice": {
-        "execution_id": "c81986bc-e8ca-f111-bf5b-6045bd9ce552",
-        "audit_id": "0fb144c5-e8ca-f111-bf5b-6045bd9ce552"
+        "execution_id": "94b82ac9-ebca-f111-bf5b-6045bd9ce552",
+        "audit_id": "a2b82ac9-ebca-f111-bf5b-6045bd9ce552"
       },
       "agent": {
-        "conversation_id": "f9418403-51b5-4f9e-9413-5409cf745f92",
+        "conversation_id": "0c2e7079-0c4d-486e-bd52-cd44e95ef0f3",
         "parsed": true
       }
     },
@@ -122,21 +121,21 @@
       {
         "step": "Extract PO",
         "where": "Evolus extractor",
-        "seconds": 4.51,
+        "seconds": 5.42,
         "ok": true,
         "note": ""
       },
       {
         "step": "Extract GRN",
         "where": "Evolus extractor",
-        "seconds": 3.73,
+        "seconds": 3.72,
         "ok": true,
         "note": ""
       },
       {
         "step": "Extract INVOICE",
         "where": "Evolus extractor",
-        "seconds": 6.23,
+        "seconds": 6.36,
         "ok": true,
         "note": ""
       },
@@ -150,14 +149,14 @@
       {
         "step": "Agent review",
         "where": "Evolus agent on AMD Token Factory",
-        "seconds": 22.09,
+        "seconds": 6.16,
         "ok": true,
         "note": "route escalate_fraud"
       },
       {
         "step": "Draft email",
         "where": "Evolus AI Tool",
-        "seconds": 3.97,
+        "seconds": 4.28,
         "ok": true,
         "note": ""
       },
@@ -166,7 +165,7 @@
         "where": "Evolus workflow",
         "seconds": 0.17,
         "ok": true,
-        "note": "execution 728071d2-e8ca-f111-bf5b-6045bd9ce552"
+        "note": "execution 6cb286cf-ebca-f111-bf5b-6045bd9ce552"
       }
     ]
   }
