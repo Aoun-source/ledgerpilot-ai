@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fake_services import FakeServices
 
-from ledgerpilot.agent_client import ClerkAgent, model_health, model_speed, model_usage
+from ledgerpilot.agent_client import ClerkAgent, direct_chat, model_health, model_speed, model_usage
 from ledgerpilot.audit import AuditLog
 from ledgerpilot.config import Settings
 from ledgerpilot.evolus_client import EvolusClient, EvolusError
@@ -230,6 +230,74 @@ def test_rate_limit_gets_a_plain_message(svc, settings):
     assert not s["ok"] and "Rate limited (429)" in s["detail"] and "shares one key" in s["detail"]
     svc.fail[r"/v1/models"] = [401]
     assert "Key rejected (401)" in model_health(settings)["detail"]
+
+
+
+# ------------------------------------------------------------- chat fallbacks
+EVOLUS_KEY_REJECTED = (422, {"error": {"message": "Your model 'deepseek-v4-flash' could not answer: The model endpoint "
+                                                  "rejected the API key.", "code": "own_models.unauthorized"}})
+KEY_DEAD = (401, {"error": {"message": "Invalid API token", "code": "invalid_api_key"}})
+HI = [{"role": "user", "content": "What is a three-way match?"}]
+
+
+def test_chat_answers_through_evolus_when_it_works(svc, settings):
+    svc.agent_reply = lambda case: "A three-way match compares the PO, the delivery note and the invoice."
+    r = ClerkAgent(settings).answer(HI)
+    assert r.source == "evolus" and r.text.startswith("A three-way match") and not r.note
+    assert [c["json"]["model"] for c in svc.calls if c["path"] == "/v1/chat/completions"] == ["app:agent"]
+
+
+def test_chat_falls_back_to_the_amd_model_when_evolus_rejects_its_key(svc, settings):
+    # Seen live: the Token Factory key saved in Evolus (Your models) was revoked, every chat failed with a 422
+    svc.model_fail["app:agent"] = [EVOLUS_KEY_REJECTED]
+    svc.agent_reply = lambda case: "Three documents must agree before paying."
+    r = ClerkAgent(settings).answer(HI)
+    assert r.source == "amd" and r.model == "ledgerpilot-model" and r.text == "Three documents must agree before paying."
+    assert "Your models" in r.note
+    system = svc.calls[-1]["json"]["messages"][0]
+    # the direct call carries the agent's instructions and knowledge, with bank accounts masked
+    assert system["role"] == "system" and "Detective Clerk" in system["content"] and "# LedgerPilot guide" in system["content"]
+    assert "GB82ACME00001234567801" not in system["content"] and "account ending 7801" in system["content"]
+
+
+def test_chat_tries_the_next_model_when_one_is_busy(svc, token_factory):
+    svc.model_fail["app:agent"] = [EVOLUS_KEY_REJECTED]
+    svc.model_fail["DeepSeek-V4-Flash"] = [(429, {"error": {"message": "at its concurrency limit"}})]
+    svc.agent_reply = lambda case: "Hello from the backup model."
+    r = ClerkAgent(token_factory).answer(HI)
+    assert r.source == "amd" and r.model == "DeepSeek-V4.1-Flash"
+
+
+def test_chat_answers_from_the_faq_when_every_model_is_down(svc, token_factory):
+    svc.model_fail["app:agent"] = [EVOLUS_KEY_REJECTED]
+    svc.model_fail["DeepSeek-V4-Flash"] = [KEY_DEAD]
+    r = ClerkAgent(token_factory).answer(HI)
+    assert r.source == "offline" and "three documents should agree" in r.text
+    assert "Your models" in r.note and "key was rejected (401)" in r.note
+    # a dead key fails every model the same way, so the other models aren't tried
+    assert svc.count(r"^/v1/chat/completions") == 2
+
+
+def test_chat_greeting_has_an_offline_answer(svc, token_factory):
+    token_factory.amd_api_key = None  # nothing to call
+    token_factory.evolus_agent_id = None
+    r = ClerkAgent(token_factory).answer([{"role": "user", "content": "Hi! Who are you and what do you do?"}])
+    assert r.source == "offline" and "Detective Clerk" in r.text and svc.count(r"chat/completions") == 0
+
+
+def test_direct_chat_gives_up_within_its_budget(settings):
+    settings.amd_base_url = "http://127.0.0.1:9/v1"
+    r = direct_chat(settings, HI, budget=8)
+    assert not r.text and r.note
+
+
+def test_token_factory_health_catches_a_revoked_key(svc, token_factory):
+    # Token Factory lists models without a key, so a revoked key used to read as "Online"
+    svc.fail[r"/v1/usage"] = [401]
+    h = model_health(token_factory)
+    assert not h["ok"] and h["key_rejected"] and "invalid or revoked" in h["detail"]
+    svc.fail[r"/v1/usage"] = [503]  # a usage outage isn't a key problem
+    assert model_health(token_factory)["ok"]
 
 
 # --------------------------------------------- full pipeline over real HTTP

@@ -505,6 +505,17 @@ CHAT_STARTERS = ("Hi! Who are you and what do you do?", "What is a three-way mat
                  "What does invoice fraud usually look like?", "How do I verify a bank-account change safely?")
 
 
+def chat_source_note(reply) -> str:
+    """A caption under a chat answer that came from a fallback, saying where it came from and why."""
+    # visitors to the public site don't need the repair steps; they are in the sidebar's "How to connect"
+    why = f" because {reply.note}" if reply.note and not settings.public_site else ""
+    if reply.source == "amd":
+        return f"Answered by {reply.model} on {settings.model_where} directly, without Evolus{why}."
+    if reply.source == "offline":
+        return f"Built-in answer from LedgerPilot's guide: the AI model is unavailable{why}."
+    return ""
+
+
 def ask_starter(question: str) -> None:
     st.session_state["chat_pending"] = question
     st.session_state["nav"] = "chat"
@@ -568,6 +579,8 @@ with st.sidebar:
     if health and health["ok"]:
         where = "AMD Token Factory" if settings.token_factory else "AMD Developer Cloud"
         model_row = ("on", "Online", f'{E(str(health["weights"]))} served on {where} · {health["latency_ms"]} ms')
+    elif health and health.get("key_rejected"):
+        model_row = ("off", "Key rejected", f"{E(settings.model_where)} refused AMD_API_KEY")
     elif health:
         model_row = ("off", "Unreachable", f"{E(settings.model_where)} endpoint not reachable")
     else:
@@ -659,9 +672,12 @@ if page == "overview":
 
     with st.container(key="card-agent"):
         agent_on = not missing
+        # chat still answers from the backups when the model is down, so the starters stay enabled
+        state = (("ok", "Online") if agent_on and (health or {}).get("ok") else
+                 ("hold", "Backup answers") if agent_on else ("hold", "Not connected"))
         st.markdown(f'<div class="lp-agent-head"><div class="ic">{icon("bot", 22)}</div><div>'
                     f'<div class="lp-section">Detective Clerk, your AI agent'
-                    f'<span class="lp-pill lp-{"ok" if agent_on else "hold"}">{"Online" if agent_on else "Not connected"}'
+                    f'<span class="lp-pill lp-{state[0]}">{state[1]}'
                     f'</span></div><p class="lp-section-sub">Ask about invoices, three-way matching or supplier fraud. '
                     f'It runs on Evolus with {E(settings.amd_model or "the model")} on {E(settings.model_where)}, '
                     f'and explains every decision LedgerPilot makes.</p></div></div>', unsafe_allow_html=True)
@@ -1043,6 +1059,8 @@ if page == "chat":
         for m in history:
             with st.chat_message(m["role"], avatar=":material/person:" if m["role"] == "user" else ":material/smart_toy:"):
                 st.markdown(m["content"])
+                if m.get("via"):
+                    st.caption(m["via"])
         question = st.chat_input("Ask Detective Clerk about invoices, fraud or how LedgerPilot works")
         question = question or st.session_state.pop("chat_pending", None)
         if question:
@@ -1054,12 +1072,17 @@ if page == "chat":
                 with st.chat_message("user", avatar=":material/person:"):
                     st.markdown(history[-1]["content"])
                 with st.chat_message("assistant", avatar=":material/smart_toy:"), st.spinner("Detective Clerk is thinking"):
+                    # the model only sees the text of earlier turns, never our captions
+                    turns = [{"role": m["role"], "content": m["content"]} for m in history[-10:]]
                     try:
-                        answer = mask_accounts(ClerkAgent(settings).chat(history[-10:]))
-                        answer = re.sub(r"\)Skip\.?", ".", answer)  # a stray token this model sometimes emits
+                        reply = ClerkAgent(settings).answer(turns)
+                        answer = re.sub(r"\)Skip\b\.?", ".", mask_accounts(reply.text))  # a stray token this model sometimes emits
+                        via = chat_source_note(reply)
                     except Exception as exc:  # noqa: BLE001 - a clerk sees a sentence, never a stack trace
                         answer = f"The agent didn't answer this time ({type(exc).__name__}). Please try again in a moment."
-                history.append({"role": "assistant", "content": answer or "The agent sent an empty reply. Please try again."})
+                        via = ""
+                history.append({"role": "assistant", "content": answer or "The agent sent an empty reply. Please try again.",
+                                "via": via})
                 st.rerun()
         if history:
             st.button("Start a new conversation", key="chat-reset", type="tertiary", icon=":material/refresh:",

@@ -20,6 +20,8 @@ class FakeServices:
     def __init__(self) -> None:
         self.calls: list[dict[str, Any]] = []
         self.fail: dict[str, list[int]] = defaultdict(list)  # path regex -> status codes to return first
+        # chat model name -> (status, error body) to return first, e.g. Evolus's 422 when its AMD key is rejected
+        self.model_fail: dict[str, list[tuple[int, dict]]] = defaultdict(list)
         self.extract_data: Callable[[str, str], Any] = lambda extractor_id, filename: {"ok": True}
         self.agent_reply: Callable[[dict], str] = lambda case: json.dumps({"route": case.get("rule_route", "hold_for_review"),
                                                                           "explanation": "Checked against the vendor master.",
@@ -115,6 +117,8 @@ class FakeServices:
                 if path == "/v1/chat/completions":
                     payload = json.loads(body)
                     call["json"] = payload
+                    if svc.model_fail[payload["model"]]:
+                        return self._send(*svc.model_fail[payload["model"]].pop(0))
                     text = payload["messages"][-1]["content"]
                     # the case JSON follows "CASE:"; any instruction after the object is ignored
                     case = (json.JSONDecoder().raw_decode(text.split("CASE:", 1)[1].lstrip())[0]

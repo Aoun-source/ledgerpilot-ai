@@ -7,6 +7,8 @@
 3. The Evolus API key works and your agent is listed.
 4. One extractor call returns JSON for a sample invoice.
 5. The agent answers through Evolus (on a vLLM droplet, watch /tmp/vllm.log: the request arrives there).
+6. The agent chats through Evolus, as on the Ask the agent page (a failure here usually means the AMD key
+   saved in Evolus, under Your models, is wrong or revoked).
 
 On Token Factory it also prints your team's remaining usage. The run makes only a few model
 calls, but they count toward the limits your team shares.
@@ -82,11 +84,19 @@ def check_agent():
     return f"route={v.route} parsed={v.parsed} {v.latency_s:.1f}s"
 
 
+def check_chat():
+    text = ClerkAgent(s).chat([{"role": "user", "content": "In one sentence, what is a three-way match?"}])
+    if not text:
+        raise RuntimeError("the agent sent an empty reply")
+    return text[:120]
+
+
 step(f"AMD model endpoint reachable ({s.model_where})", check_model)
 step("Tool calling on the AMD model", check_tools)
 step("Evolus API key + agent", check_evolus_models)
 step("Evolus invoice extractor", check_extractor)
 step("Agent answers via Evolus (AMD model)", check_agent)
+step("Agent chats via Evolus (Ask the agent page)", check_chat)
 if s.token_factory:
     u = model_usage(s)
     print("\nToken Factory usage (shared by your team): " + (json.dumps(u["usage"])[:500] if u["ok"] else u["detail"]))

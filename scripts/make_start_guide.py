@@ -251,7 +251,7 @@ def story() -> list:
           gap(),
           step("1", "Upload the vendor master to your Evolus library:", code(rf"{PY} scripts\upload_library.py")),
           step("2", "The go/no-go check:", code(rf"{PY} scripts\smoke_test.py")),
-          box("ok", "five lines starting with `PASS`, then `ALL GOOD`. If any line says `FAIL`, stop and fix it "
+          box("ok", "six lines starting with `PASS`, then `ALL GOOD`. If any line says `FAIL`, stop and fix it "
                     "first (see \"If something goes wrong\")."),
           gap(),
           step("3", "The full evaluation on all 24 sample invoices (several minutes, uses Evolus credits):",

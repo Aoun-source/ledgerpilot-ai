@@ -1,4 +1,5 @@
-"""Upload the vendor master + AP policy and the AP fraud guide to your Evolus knowledge library (via API).
+"""Upload the vendor master + AP policy, the AP fraud guide, the LedgerPilot guide and FAQ to your Evolus
+knowledge library (via API).
 
     python scripts/upload_library.py
 """
@@ -17,10 +18,12 @@ s = load_settings()
 if not s.library_id:
     sys.exit("Set EVOLUS_LIBRARY_ID in .env first.")
 client = EvolusClient(s)
-# The vendor master (supplier IDs, names, bank accounts, AP policy) and a short fraud guide the agent can
-# teach from. A document already in the library is skipped, so the script is safe to run again.
+# The vendor master (supplier IDs, names, bank accounts, AP policy), a short fraud guide the agent can teach
+# from, and a guide + FAQ so it can explain LedgerPilot itself. A document already in the library is skipped,
+# so the script is safe to run again.
 present = {d.get("title") for d in (client.list_library_documents() or []) if isinstance(d, dict)}
-for doc in (ROOT / "data" / "vendor_master.pdf", ROOT / "data" / "ap_fraud_guide.md"):
+DOCS = ("vendor_master.pdf", "ap_fraud_guide.md", "ledgerpilot_guide.md", "ledgerpilot_faq.md")
+for doc in (ROOT / "data" / name for name in DOCS):
     if doc.name in present:
         print(f"{doc.name}: already in the library, skipped")
         continue

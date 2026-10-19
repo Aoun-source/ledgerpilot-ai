@@ -42,6 +42,9 @@ Click **Test connection**.
 - Instructions: paste `AGENT_INSTRUCTIONS` from `src/ledgerpilot/agent_client.py`.
 - Temperature: low (0 to 0.2). Request parameters are ignored; the agent's settings apply.
 - Attach the knowledge library from step 4.
+- **What it knows → Personal library:** upload `data/vendor_master.csv` (RAG library), then
+  `data/ledgerpilot_guide.md`, `data/ledgerpilot_faq.md` and `data/ap_fraud_guide.md`. The guide and FAQ
+  let the agent explain LedgerPilot itself (pages, routes, every check, results, AMD and Evolus).
 - Copy its **agent ID** into `.env` as `EVOLUS_AGENT_ID`.
 
 ## 3. Create three document extractors (JSON output)
@@ -99,8 +102,8 @@ or unreadable. Never guess."*
 
 ## 4. Knowledge library "Vendor master and AP policy"
 
-Create the library, copy its ID to `EVOLUS_LIBRARY_ID`, then upload through the API
-(this also counts as API usage for judging):
+Create the library, copy its ID to `EVOLUS_LIBRARY_ID`, then upload the vendor master, the AP fraud
+guide, the LedgerPilot guide and the FAQ through the API (this also counts as API usage for judging):
 
 ```bash
 python scripts/upload_library.py
@@ -134,4 +137,16 @@ queries and fraud alerts.
 python scripts/smoke_test.py
 ```
 
-All five lines should say PASS. On Token Factory it also prints your team's remaining usage.
+All six lines should say PASS. On Token Factory it also prints your team's remaining usage.
+
+## If the agent stops answering
+
+- **422 `own_models.unauthorized`** ("The model endpoint rejected the API key"): the Token Factory key saved
+  in Evolus is wrong or revoked. Redeem a fresh key at
+  [notebooks.amd.com/tokenfactory](https://notebooks.amd.com/tokenfactory), then paste it in three places:
+  Evolus → **Your models** → **Edit**, `AMD_API_KEY` in `.env`, and the Streamlit Cloud secrets. Click
+  **Test again** in Your models and rerun the smoke test.
+- The app's sidebar shows **Key rejected** when `AMD_API_KEY` stops working.
+- While the agent is down, the Ask the agent page still answers: first from the AMD model directly (with
+  the same instructions and knowledge, trying other Token Factory models when one is busy), then from the
+  built-in FAQ. Each such answer has a caption saying where it came from and why.

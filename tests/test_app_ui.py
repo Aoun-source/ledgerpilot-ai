@@ -140,7 +140,7 @@ def test_token_factory_sidebar_shows_usage(configured, svc, monkeypatch):
     next(b for b in at.button if b.label == "Check team usage").click()
     at.run()
     assert not at.exception and at.json
-    assert svc.count(r"^/v1/usage") == 1
+    assert svc.count(r"^/v1/usage\?include_recent") == 1  # the button; the health check also verifies the key there
     next(b for b in at.button if b.label == "Measure model speed").click()
     at.run()
     assert any("Rate limits left" in c.value for c in at.caption)
@@ -366,3 +366,15 @@ def test_ask_the_agent_chats_and_masks_accounts(configured):
     assert "Detective Clerk" in text and "GB82ACME00001234567801" not in text and "7801" in text
     at.chat_input[0].set_value("What is a three-way match?").run()
     assert len(at.chat_message) == 4
+    assert not [c for m in at.chat_message for c in m.caption]  # answered by the agent: no fallback note
+
+
+def test_ask_the_agent_still_answers_when_every_model_is_down(configured):
+    # Seen live: the AMD key was revoked, Evolus answered 422 and the chat only showed an error
+    configured.model_fail["app:agent"] = [(422, {"error": {"code": "own_models.unauthorized", "message": "rejected"}})]
+    configured.model_fail["ledgerpilot-model"] = [(401, {"error": {"message": "Invalid API token"}})]
+    at = goto(AppTest.from_file(APP, default_timeout=60).run(), "chat")
+    at.chat_input[0].set_value("What is a three-way match?").run()
+    reply = at.chat_message[1]
+    assert not at.exception and "three documents should agree" in " ".join(md.value for md in reply.markdown)
+    assert any("Built-in answer" in c.value and "Your models" in c.value for c in reply.caption)

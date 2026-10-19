@@ -34,8 +34,10 @@ Evolus building blocks used: document extractors, agent, knowledge library, AI T
 
 **Talk to the agent.** Outside the app, the same agent (Detective Clerk) answers people in the Evolus chat or
 through Evolus's OpenAI-compatible endpoint: it explains what it does, what a three-way match is, the common
-invoice-fraud schemes and how to verify a supplier safely, using the vendor master and the AP fraud guide
-(`data/ap_fraud_guide.md`) in its knowledge library. It never approves or promises a payment in chat.
+invoice-fraud schemes and how to verify a supplier safely, using the vendor master, the AP fraud guide
+(`data/ap_fraud_guide.md`) and the LedgerPilot guide and FAQ (`data/ledgerpilot_guide.md`,
+`data/ledgerpilot_faq.md`) in its knowledge. It never approves or promises a payment in chat. If the agent
+can't answer, the app's chat falls back to the AMD model directly, then to the built-in FAQ, and says so.
 
 ## Run it
 
@@ -107,7 +109,7 @@ pip install -r requirements.txt
 cp .env.example .env               # Windows: copy .env.example .env  -- then fill it in
 python -m pytest -q                # offline tests, no keys needed
 python scripts/upload_library.py   # vendor master -> Evolus library (needs keys)
-python scripts/smoke_test.py       # live check: all five lines should say PASS
+python scripts/smoke_test.py       # live check: all six lines should say PASS
 streamlit run app.py               # http://localhost:8501
 ```
 

@@ -15,9 +15,11 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 import requests
-from openai import AuthenticationError, OpenAI, PermissionDeniedError, RateLimitError
+from openai import (APIConnectionError, APIStatusError, APITimeoutError, AuthenticationError, OpenAI,
+                    PermissionDeniedError, RateLimitError)
 
-from .config import Settings
+from .config import ROOT, TOKEN_FACTORY_SIGN_IN, Settings
+from .fraud import load_vendor_master, mask
 from .schemas import Route
 
 AGENT_INSTRUCTIONS = """You are Detective Clerk, LedgerPilot's accounts-payable assistant for a mid-sized company.
@@ -33,9 +35,11 @@ B) Any other message comes from a person chatting with you. Answer naturally and
 greet them back, explain what you do, and teach accounts-payable basics when asked, for example what a
 three-way match is, common invoice fraud (bank-account change requests, fake or look-alike suppliers,
 duplicate invoices, overbilling, business email compromise) and how to verify a supplier safely (call the
-number already in the vendor master, never the one on the invoice or in the email). Use the "Vendor master
-and AP policy" library when it helps. Keep answers short and practical. Never approve, release or promise a
-payment in chat, never reveal a full bank account, and say so politely if asked.
+number already in the vendor master, never the one on the invoice or in the email). For questions about
+LedgerPilot itself (its pages, routes, checks, results, the AMD model and Evolus), answer from the LedgerPilot
+guide and FAQ in your knowledge; for fraud and suppliers, use the AP fraud guide and the vendor master. If
+your knowledge doesn't cover something, say so instead of guessing. Keep answers short and practical. Never
+approve, release or promise a payment in chat, never reveal a full bank account, and say so politely if asked.
 
 Rules for a CASE:
 1. Never recompute, round or change any number. Quote numbers exactly as given in the CASE.
@@ -103,6 +107,149 @@ class ClerkAgent:
         """A conversation with a person (no CASE): greetings, how LedgerPilot works, invoice-fraud basics."""
         reply = self.client.chat.completions.create(model=self.model, messages=messages)
         return (reply.choices[0].message.content or "").strip()
+
+    def answer(self, messages: list[dict[str, str]]) -> ChatReply:
+        """Chat that always answers: the Evolus agent first, then the AMD models directly with the same
+        instructions and knowledge, then the built-in FAQ. Each fallback says why it was needed."""
+        problems = []
+        if not self.s.missing():
+            try:
+                text = self.chat(messages)
+                if text:
+                    return ChatReply(text, "evolus", "Detective Clerk on Evolus")
+                problems.append("the Evolus agent sent an empty reply")
+            except Exception as exc:  # noqa: BLE001 - every failure has a fallback below
+                problems.append(chat_error(exc))
+        reply = direct_chat(self.s, messages)
+        if reply.text:
+            reply.note = "; ".join(problems)
+            return reply
+        problems.append(reply.note)
+        return offline_answer(messages[-1]["content"] if messages else "", "; ".join(p for p in problems if p))
+
+
+@dataclass
+class ChatReply:
+    text: str
+    source: str  # "evolus", "amd" (the AMD model called directly) or "offline" (the built-in FAQ)
+    model: str
+    note: str = ""  # why a fallback answered, in words a clerk understands
+
+
+# Tried in order when the agent can't answer; Token Factory's catalog changes, so a missing one is skipped.
+CHAT_FALLBACK_MODELS = ("DeepSeek-V4-Flash", "DeepSeek-V4.1-Flash", "Qwen3.8-Flash-Next", "GLM-5.3-Flash",
+                        "Gemma-4-31B-IT")
+KNOWLEDGE_FILES = ("ledgerpilot_guide.md", "ledgerpilot_faq.md", "ap_fraud_guide.md")
+
+
+def chat_error(exc: Exception) -> str:
+    """What went wrong with a chat call, in one sentence that says what to fix."""
+    body = getattr(exc, "body", None)
+    err = body.get("error", body) if isinstance(body, dict) else {}
+    code = str(err.get("code", "")) if isinstance(err, dict) else ""
+    if code == "own_models.unauthorized":
+        return ("the AMD model key saved in Evolus (Your models) was rejected: redeem a fresh Token Factory key "
+                "and paste it there")
+    if code.startswith("own_models"):
+        return "Evolus couldn't reach the AMD model (" + code + ")"
+    if isinstance(exc, AuthenticationError):
+        return "the API key was rejected (401)"
+    if isinstance(exc, PermissionDeniedError):
+        return "access was refused (403)"
+    if isinstance(exc, RateLimitError):
+        return "the model is busy or rate limited (429)"
+    if isinstance(exc, APITimeoutError):
+        return "the model took too long to answer"
+    if isinstance(exc, APIConnectionError):
+        return "the model service couldn't be reached"
+    if isinstance(exc, APIStatusError):
+        return f"the model service returned an error ({exc.status_code})"
+    return f"{type(exc).__name__}"
+
+
+def knowledge_text(settings: Settings) -> str:
+    """The agent's knowledge as one block, for answering without Evolus. Bank accounts are masked."""
+    parts = []
+    for name in KNOWLEDGE_FILES:
+        try:
+            parts.append((ROOT / "data" / name).read_text(encoding="utf-8"))
+        except OSError:
+            continue
+    try:
+        vendors = load_vendor_master(settings.vendor_master_path)
+        parts.append("# Vendor master\n\n" + "\n".join(
+            f"- {v.supplier_id}: {v.name}, pays in {v.currency}, account ending {mask(v.iban)[-4:]}"
+            for v in vendors.values()))
+    except Exception:  # noqa: BLE001 - the guides alone are still useful
+        pass
+    return "\n\n".join(parts)
+
+
+def direct_chat(settings: Settings, messages: list[dict[str, str]], budget: float = 75.0) -> ChatReply:
+    """Ask the AMD model directly with the agent's instructions and knowledge, trying the next model when one
+    is busy or missing, within `budget` seconds in all. Stops at the first key error, since every model
+    shares the same key."""
+    if problem := settings.model_problem():
+        return ChatReply("", "amd", "", problem)
+    system = (AGENT_INSTRUCTIONS + "\n\nYour knowledge (the same documents as your Evolus library):\n\n"
+              + knowledge_text(settings))
+    models = [settings.amd_model] + ([m for m in CHAT_FALLBACK_MODELS if m != settings.amd_model]
+                                     if settings.token_factory else [])
+    deadline = time.monotonic() + budget
+    problem = "no model answered"
+    for model in models:
+        left = deadline - time.monotonic()
+        if left < 5:
+            break
+        try:
+            reply = model_client(settings, min(left, 45.0)).chat.completions.create(
+                model=model, max_tokens=1500, temperature=0.2, extra_body=model_extra_body(settings),
+                messages=[{"role": "system", "content": system}, *messages])
+            text = (reply.choices[0].message.content or "").strip()
+            if text:
+                return ChatReply(text, "amd", model)
+            problem = f"{model} sent an empty reply"
+        except (AuthenticationError, PermissionDeniedError) as exc:
+            return ChatReply("", "amd", model, "the AMD model " + chat_error(exc).replace("the API key", "key"))
+        except Exception as exc:  # noqa: BLE001 - try the next model
+            problem = f"{model}: {chat_error(exc)}"
+    return ChatReply("", "amd", "", problem)
+
+
+def _faq() -> list[tuple[str, str]]:
+    try:
+        text = (ROOT / "data" / "ledgerpilot_faq.md").read_text(encoding="utf-8")
+    except OSError:
+        return []
+    sections = re.split(r"^## ", text, flags=re.M)[1:]
+    return [(s.split("\n", 1)[0].strip(), s.split("\n", 1)[1].strip()) for s in sections if "\n" in s]
+
+
+_STOP = {"a", "an", "the", "is", "are", "do", "does", "i", "you", "your", "what", "how", "why", "can", "to", "of",
+         "and", "or", "in", "on", "it", "this", "me", "my", "be", "about", "with", "for", "who", "which"}
+
+
+def _words(text: str) -> set[str]:
+    return {w.rstrip("s") for w in re.findall(r"[a-z0-9-]+", text.lower()) if w not in _STOP}
+
+
+def offline_answer(question: str, why: str = "") -> ChatReply:
+    """The closest FAQ answer, used only when no model can answer. Honest about being a fallback."""
+    asked = _words(question)
+    best, score = None, 0.0
+    if _faq() and re.search(r"\b(hi|hello|hey|who are you|what do you do)\b", question.lower()):
+        best, score = _faq()[0], 1.0  # the FAQ opens with "Who are you and what do you do?"
+    for q, a in _faq():
+        overlap = len(asked & _words(q)) + 0.25 * len(asked & _words(a))
+        if overlap > score:
+            best, score = (q, a), overlap
+    if best and score >= 1:
+        text = f"**{best[0]}**\n\n{best[1]}"
+    else:
+        topics = "; ".join(q for q, _ in _faq()[:8])
+        text = ("I can't reach the AI model right now, so I can only answer common questions from LedgerPilot's "
+                "guide. Try asking about: " + topics + ".")
+    return ChatReply(text, "offline", "", why)
 
 
 _ITALIAN = {"il", "lo", "la", "gli", "della", "delle", "dei", "che", "non", "sono", "fattura", "fornitore",
@@ -192,9 +339,26 @@ def model_health(settings: Settings, timeout: float = 10.0) -> dict[str, Any]:
                                            f"Set AMD_MODEL to one of: {', '.join(models)}"[:300], "models": models}
         served = served or (data[0] if data else None)
         weights = (getattr(served, "root", None) or served.id) if served else None
+        if settings.token_factory and (rejected := _key_rejected(settings, timeout)):
+            # Token Factory lists its models without a key, so the list alone can't prove the key works
+            return {"ok": False, "key_rejected": True, "models": models, "detail": rejected}
         return {"ok": True, "models": models, "weights": weights, "latency_ms": latency_ms}
     except Exception as exc:  # noqa: BLE001 - surface any connection problem to the UI
         return {"ok": False, "detail": _model_error(exc)}
+
+
+def _key_rejected(settings: Settings, timeout: float) -> str | None:
+    """Why Token Factory refuses the key (checked on /usage, which costs no tokens), or None. A slow or
+    failing usage endpoint isn't a key problem, so only 401/403 count."""
+    try:
+        resp = requests.get(settings.amd_base_url.rstrip("/") + "/usage",
+                            headers={"Authorization": f"Bearer {settings.amd_api_key}"}, timeout=timeout)
+    except requests.RequestException:
+        return None
+    if resp.status_code in (401, 403):
+        return (f"AMD_API_KEY was rejected ({resp.status_code}): the Token Factory key is invalid or revoked. "
+                f"Redeem a fresh one at {TOKEN_FACTORY_SIGN_IN}, then update .env and the key in Evolus (Your models).")
+    return None
 
 
 def model_speed(settings: Settings, max_tokens: int = 64, timeout: float = 30.0) -> dict[str, Any]:
